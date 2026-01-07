@@ -61,7 +61,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         } else {
           dispatch({ type: 'LOGIN_ERROR' });
         }
-      } catch {
+      } catch (error) {
+        console.error('Failed to check auth:', error);
         dispatch({ type: 'LOGIN_ERROR' });
       }
     };

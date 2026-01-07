@@ -14,8 +14,8 @@ function loadGames(userId: string): GameEntry[] {
       const allGames = JSON.parse(stored) as GameEntry[];
       return allGames.filter(game => game.userId === userId);
     }
-  } catch {
-    console.error('Failed to load games');
+  } catch (error) {
+    console.error('Failed to load games:', error);
   }
   return [];
 }
@@ -27,8 +27,8 @@ function saveGames(games: GameEntry[]): void {
     const allGames = stored ? JSON.parse(stored) as GameEntry[] : [];
     const otherUsersGames = allGames.filter(g => !games.some(ng => ng.userId === g.userId));
     localStorage.setItem(GAMES_STORAGE_KEY, JSON.stringify([...otherUsersGames, ...games]));
-  } catch {
-    console.error('Failed to save games');
+  } catch (error) {
+    console.error('Failed to save games:', error);
   }
 }
 
