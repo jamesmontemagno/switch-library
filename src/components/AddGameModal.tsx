@@ -152,11 +152,12 @@ export function AddGameModal({ onClose, onAdd }: AddGameModalProps) {
         
         // Build metadata - store IDs as-is for now, can be enriched later
         // TheGamesDB returns numeric IDs for genres, developers, and publishers
+        // These can be resolved to names via additional API calls or lookup tables
         const metadata: GameMetadata = {
-          genres: gameData.genres?.length ? [`IDs: ${gameData.genres.join(', ')}`] : undefined,
+          genres: gameData.genres?.map(String),
           releaseDate: gameData.release_date,
-          developer: gameData.developers?.length ? `ID: ${gameData.developers[0]}` : undefined,
-          publisher: gameData.publishers?.length ? `ID: ${gameData.publishers[0]}` : undefined,
+          developer: gameData.developers?.[0]?.toString(),
+          publisher: gameData.publishers?.[0]?.toString(),
           summary: gameData.overview,
           players: gameData.players,
           rating: gameData.rating,
@@ -210,12 +211,12 @@ export function AddGameModal({ onClose, onAdd }: AddGameModalProps) {
         setBarcode(barcodes[0].rawValue);
         stopBarcodeScanning();
       } else {
-        // Keep detecting
-        requestAnimationFrame(detectBarcode);
+        // Keep detecting with a small delay to reduce CPU usage
+        setTimeout(() => requestAnimationFrame(detectBarcode), 100);
       }
     } catch (error) {
       console.error('Barcode detection error:', error);
-      requestAnimationFrame(detectBarcode);
+      setTimeout(() => requestAnimationFrame(detectBarcode), 100);
     }
   };
 
@@ -242,7 +243,8 @@ export function AddGameModal({ onClose, onAdd }: AddGameModalProps) {
       const Tesseract = await import('tesseract.js');
       
       const { data: { text } } = await Tesseract.recognize(file, 'eng', {
-        logger: (m) => console.log(m),
+        // Only log in development mode
+        logger: import.meta.env.DEV ? (m) => console.log(m) : undefined,
       });
 
       // Extract potential game titles from the text
