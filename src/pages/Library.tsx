@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import type { GameEntry, Platform, Format } from '../types';
+import type { GameEntry, Platform } from '../types';
 import { loadGames, saveGame, deleteGame as deleteGameFromDb } from '../services/database';
+import { AddGameModal } from '../components/AddGameModal';
 import './Library.css';
 
 export function Library() {
@@ -191,100 +192,4 @@ function GameCard({ game, onDelete }: GameCardProps) {
   );
 }
 
-interface AddGameModalProps {
-  onClose: () => void;
-  onAdd: (game: Omit<GameEntry, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => void | Promise<void>;
-}
 
-function AddGameModal({ onClose, onAdd }: AddGameModalProps) {
-  const [title, setTitle] = useState('');
-  const [platform, setPlatform] = useState<Platform>('Nintendo Switch');
-  const [format, setFormat] = useState<Format>('Physical');
-  const [barcode, setBarcode] = useState('');
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim()) return;
-
-    onAdd({
-      title: title.trim(),
-      platform,
-      format,
-      barcode: barcode.trim() || undefined,
-      status: 'Owned',
-    });
-  };
-
-  return (
-    <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <div className="modal" onClick={e => e.stopPropagation()}>
-        <header className="modal-header">
-          <h2 id="modal-title">Add Game</h2>
-          <button onClick={onClose} className="modal-close" aria-label="Close">
-            ✕
-          </button>
-        </header>
-        <form onSubmit={handleSubmit} className="modal-form">
-          <div className="form-group">
-            <label htmlFor="title">Game Title *</label>
-            <input
-              id="title"
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter game title"
-              required
-              autoFocus
-            />
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="platform">Platform</label>
-              <select
-                id="platform"
-                value={platform}
-                onChange={(e) => setPlatform(e.target.value as Platform)}
-              >
-                <option value="Nintendo Switch">Nintendo Switch</option>
-                <option value="Nintendo Switch 2">Nintendo Switch 2</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="format">Format</label>
-              <select
-                id="format"
-                value={format}
-                onChange={(e) => setFormat(e.target.value as Format)}
-              >
-                <option value="Physical">Physical</option>
-                <option value="Digital">Digital</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="barcode">Barcode (optional)</label>
-            <input
-              id="barcode"
-              type="text"
-              value={barcode}
-              onChange={(e) => setBarcode(e.target.value)}
-              placeholder="Enter UPC/EAN barcode"
-            />
-          </div>
-
-          <div className="modal-actions">
-            <button type="button" onClick={onClose} className="btn-cancel">
-              Cancel
-            </button>
-            <button type="submit" className="btn-submit" disabled={!title.trim()}>
-              Add Game
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
