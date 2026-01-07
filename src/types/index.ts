@@ -23,19 +23,22 @@ export interface GameEntry {
   status: GameStatus;
   condition?: GameCondition;
   notes?: string;
-  igdbId?: number;
+  // TheGamesDB integration
+  thegamesdbId?: number;
   coverUrl?: string;
-  igdbMetadata?: IGDBMetadata;
+  gameMetadata?: GameMetadata;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface IGDBMetadata {
+export interface GameMetadata {
   genres?: string[];
   releaseDate?: string;
   developer?: string;
   publisher?: string;
   summary?: string;
+  players?: number;
+  rating?: string;
 }
 
 export interface ShareProfile {

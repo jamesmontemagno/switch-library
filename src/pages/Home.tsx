@@ -44,7 +44,7 @@ export function Home() {
             <div className="feature-icon">🎮</div>
             <h3>Game Database</h3>
             <p>
-              Powered by IGDB for rich game metadata including cover art, 
+              Powered by TheGamesDB for rich game metadata including cover art, 
               release dates, and more.
             </p>
           </div>

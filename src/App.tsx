@@ -6,10 +6,13 @@ import { Home } from './pages/Home';
 import { Library } from './pages/Library';
 import { NotFound } from './pages/NotFound';
 
+// Get base path from Vite config
+const basePath = import.meta.env.BASE_URL || '/';
+
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter basename="/switch-library">
+      <BrowserRouter basename={basePath}>
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />

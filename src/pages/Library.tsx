@@ -1,45 +1,34 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import type { GameEntry, Platform, Format } from '../types';
+import { loadGames, saveGame, deleteGame as deleteGameFromDb } from '../services/database';
 import './Library.css';
-
-// For MVP, we'll use localStorage for game storage
-// In production, this would be connected to a backend
-const GAMES_STORAGE_KEY = 'switch-library-games';
-
-function loadGames(userId: string): GameEntry[] {
-  try {
-    const stored = localStorage.getItem(GAMES_STORAGE_KEY);
-    if (stored) {
-      const allGames = JSON.parse(stored) as GameEntry[];
-      return allGames.filter(game => game.userId === userId);
-    }
-  } catch (error) {
-    console.error('Failed to load games:', error);
-  }
-  return [];
-}
-
-function saveGames(games: GameEntry[]): void {
-  try {
-    // Load existing games from other users
-    const stored = localStorage.getItem(GAMES_STORAGE_KEY);
-    const allGames = stored ? JSON.parse(stored) as GameEntry[] : [];
-    const otherUsersGames = allGames.filter(g => !games.some(ng => ng.userId === g.userId));
-    localStorage.setItem(GAMES_STORAGE_KEY, JSON.stringify([...otherUsersGames, ...games]));
-  } catch (error) {
-    console.error('Failed to save games:', error);
-  }
-}
 
 export function Library() {
   const { user } = useAuth();
-  const [games, setGames] = useState<GameEntry[]>(() => 
-    user ? loadGames(user.id) : []
-  );
+  const [games, setGames] = useState<GameEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [filterPlatform, setFilterPlatform] = useState<Platform | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Load games on mount
+  const fetchGames = useCallback(async () => {
+    if (!user) return;
+    setIsLoading(true);
+    try {
+      const userGames = await loadGames(user.id);
+      setGames(userGames);
+    } catch (error) {
+      console.error('Failed to load games:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchGames();
+  }, [fetchGames]);
 
   const filteredGames = games.filter(game => {
     const matchesPlatform = filterPlatform === 'all' || game.platform === filterPlatform;
@@ -47,7 +36,7 @@ export function Library() {
     return matchesPlatform && matchesSearch;
   });
 
-  const addGame = (game: Omit<GameEntry, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
+  const addGame = async (game: Omit<GameEntry, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
     if (!user) return;
     
     const newGame: GameEntry = {
@@ -58,16 +47,18 @@ export function Library() {
       updatedAt: new Date().toISOString(),
     };
     
-    const updatedGames = [...games, newGame];
-    setGames(updatedGames);
-    saveGames(updatedGames);
+    const savedGame = await saveGame(newGame, games);
+    if (savedGame) {
+      setGames(prev => [...prev, savedGame]);
+    }
     setShowAddModal(false);
   };
 
-  const deleteGame = (id: string) => {
-    const updatedGames = games.filter(g => g.id !== id);
-    setGames(updatedGames);
-    saveGames(updatedGames);
+  const handleDeleteGame = async (id: string) => {
+    const success = await deleteGameFromDb(id);
+    if (success) {
+      setGames(prev => prev.filter(g => g.id !== id));
+    }
   };
 
   const stats = {
@@ -77,6 +68,17 @@ export function Library() {
     physical: games.filter(g => g.format === 'Physical').length,
     digital: games.filter(g => g.format === 'Digital').length,
   };
+
+  if (isLoading) {
+    return (
+      <div className="library">
+        <div className="loading-container">
+          <div className="loading-spinner" aria-label="Loading" />
+          <p>Loading your library...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="library">
@@ -135,7 +137,7 @@ export function Library() {
       ) : (
         <div className="games-grid">
           {filteredGames.map(game => (
-            <GameCard key={game.id} game={game} onDelete={() => deleteGame(game.id)} />
+            <GameCard key={game.id} game={game} onDelete={() => handleDeleteGame(game.id)} />
           ))}
         </div>
       )}
@@ -191,7 +193,7 @@ function GameCard({ game, onDelete }: GameCardProps) {
 
 interface AddGameModalProps {
   onClose: () => void;
-  onAdd: (game: Omit<GameEntry, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => void;
+  onAdd: (game: Omit<GameEntry, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => void | Promise<void>;
 }
 
 function AddGameModal({ onClose, onAdd }: AddGameModalProps) {

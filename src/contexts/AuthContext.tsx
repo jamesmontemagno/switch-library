@@ -1,6 +1,7 @@
 import { useReducer, useEffect, type ReactNode } from 'react';
 import type { User, AuthState } from '../types';
 import { AuthContext } from './AuthContextType';
+import { supabase, isSupabaseConfigured } from '../services/supabase';
 
 const STORAGE_KEY = 'switch-library-auth';
 
@@ -47,49 +48,96 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+// Map Supabase user to our User type
+function mapSupabaseUser(supabaseUser: { id: string; user_metadata?: Record<string, unknown>; created_at?: string }): User {
+  const metadata = supabaseUser.user_metadata || {};
+  return {
+    id: supabaseUser.id,
+    githubId: (metadata.provider_id as number) || 0,
+    login: (metadata.user_name as string) || (metadata.preferred_username as string) || 'user',
+    displayName: (metadata.full_name as string) || (metadata.name as string) || 'User',
+    avatarUrl: (metadata.avatar_url as string) || 'https://github.com/identicons/user.png',
+    createdAt: supabaseUser.created_at || new Date().toISOString(),
+  };
+}
+
 export function AuthProvider({ children }: AuthProviderProps) {
   const [state, dispatch] = useReducer(authReducer, initialState);
+  const useSupabase = isSupabaseConfigured();
 
   // Check for existing session on mount
   useEffect(() => {
-    const checkAuth = () => {
-      try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-          const user = JSON.parse(stored) as User;
-          dispatch({ type: 'LOGIN_SUCCESS', payload: user });
-        } else {
+    const checkAuth = async () => {
+      if (useSupabase) {
+        // Check Supabase session
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user) {
+            const user = mapSupabaseUser(session.user);
+            dispatch({ type: 'LOGIN_SUCCESS', payload: user });
+          } else {
+            dispatch({ type: 'LOGIN_ERROR' });
+          }
+        } catch (error) {
+          console.error('Failed to check Supabase auth:', error);
           dispatch({ type: 'LOGIN_ERROR' });
         }
-      } catch (error) {
-        console.error('Failed to check auth:', error);
-        dispatch({ type: 'LOGIN_ERROR' });
+      } else {
+        // Fallback to localStorage
+        try {
+          const stored = localStorage.getItem(STORAGE_KEY);
+          if (stored) {
+            const user = JSON.parse(stored) as User;
+            dispatch({ type: 'LOGIN_SUCCESS', payload: user });
+          } else {
+            dispatch({ type: 'LOGIN_ERROR' });
+          }
+        } catch (error) {
+          console.error('Failed to check auth:', error);
+          dispatch({ type: 'LOGIN_ERROR' });
+        }
       }
     };
 
-    // Check for OAuth callback
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
-    
-    if (code) {
-      // Handle OAuth callback - in production this would exchange the code for a token
-      // For now, we'll clear the URL and check local storage
-      window.history.replaceState({}, document.title, window.location.pathname);
-      checkAuth();
-    } else {
-      checkAuth();
-    }
-  }, []);
+    checkAuth();
 
-  const login = () => {
-    // GitHub OAuth configuration
-    // In production, you would set up a GitHub OAuth App and use its client ID
-    // The redirect URI should be your GitHub Pages URL
-    const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
-    
-    if (!clientId) {
+    // Listen for auth state changes (Supabase)
+    if (useSupabase) {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+        if (session?.user) {
+          const user = mapSupabaseUser(session.user);
+          dispatch({ type: 'LOGIN_SUCCESS', payload: user });
+        } else {
+          dispatch({ type: 'LOGOUT' });
+        }
+      });
+
+      return () => {
+        subscription.unsubscribe();
+      };
+    }
+  }, [useSupabase]);
+
+  const login = async () => {
+    if (useSupabase) {
+      // Use Supabase GitHub OAuth
+      dispatch({ type: 'LOGIN_START' });
+      // Build redirect URL properly to avoid malformed URLs
+      const baseUrl = import.meta.env.BASE_URL || '/';
+      const redirectTo = new URL(baseUrl, window.location.origin).href;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          redirectTo,
+        },
+      });
+      if (error) {
+        console.error('Supabase OAuth error:', error);
+        dispatch({ type: 'LOGIN_ERROR' });
+      }
+    } else {
       // Demo mode: Create a mock user for testing
-      console.warn('GitHub OAuth not configured. Using demo mode.');
+      console.warn('Supabase not configured. Using demo mode.');
       const mockUser: User = {
         id: 'demo-user-' + Date.now(),
         githubId: 12345678,
@@ -100,17 +148,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(mockUser));
       dispatch({ type: 'LOGIN_SUCCESS', payload: mockUser });
-      return;
     }
-
-    // Redirect to GitHub OAuth
-    const redirectUri = `${window.location.origin}${import.meta.env.BASE_URL}`;
-    const scope = 'read:user';
-    const authUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}`;
-    window.location.href = authUrl;
   };
 
-  const logout = () => {
+  const logout = async () => {
+    if (useSupabase) {
+      await supabase.auth.signOut();
+    }
     localStorage.removeItem(STORAGE_KEY);
     dispatch({ type: 'LOGOUT' });
   };
