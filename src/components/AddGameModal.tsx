@@ -11,6 +11,24 @@ import {
 } from '../services/thegamesdb';
 import './AddGameModal.css';
 
+// Type declaration for BarcodeDetector API (not yet in standard TypeScript types)
+interface BarcodeDetector {
+  detect(image: ImageBitmapSource): Promise<DetectedBarcode[]>;
+}
+
+interface DetectedBarcode {
+  rawValue: string;
+  format: string;
+}
+
+declare global {
+  interface Window {
+    BarcodeDetector?: {
+      new (options?: { formats?: string[] }): BarcodeDetector;
+    };
+  }
+}
+
 interface AddGameModalProps {
   onClose: () => void;
   onAdd: (game: Omit<GameEntry, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => void | Promise<void>;
@@ -132,12 +150,13 @@ export function AddGameModal({ onClose, onAdd }: AddGameModalProps) {
         const cover = getBoxartUrl(imagesData, gameId, 'medium');
         setCoverUrl(cover);
         
-        // Build metadata
+        // Build metadata - store IDs as-is for now, can be enriched later
+        // TheGamesDB returns numeric IDs for genres, developers, and publishers
         const metadata: GameMetadata = {
-          genres: gameData.genres ? gameData.genres.map(g => `Genre ${g}`) : undefined,
+          genres: gameData.genres?.length ? [`IDs: ${gameData.genres.join(', ')}`] : undefined,
           releaseDate: gameData.release_date,
-          developer: gameData.developers ? `Developer ${gameData.developers[0]}` : undefined,
-          publisher: gameData.publishers ? `Publisher ${gameData.publishers[0]}` : undefined,
+          developer: gameData.developers?.length ? `ID: ${gameData.developers[0]}` : undefined,
+          publisher: gameData.publishers?.length ? `ID: ${gameData.publishers[0]}` : undefined,
           summary: gameData.overview,
           players: gameData.players,
           rating: gameData.rating,
@@ -156,7 +175,7 @@ export function AddGameModal({ onClose, onAdd }: AddGameModalProps) {
   };
 
   const startBarcodeScanning = async () => {
-    if (!('BarcodeDetector' in window)) {
+    if (!window.BarcodeDetector) {
       alert('Barcode scanning is not supported in this browser. Please enter the barcode manually.');
       return;
     }
@@ -181,11 +200,10 @@ export function AddGameModal({ onClose, onAdd }: AddGameModalProps) {
   };
 
   const detectBarcode = async () => {
-    if (!videoRef.current || !streamRef.current) return;
+    if (!videoRef.current || !streamRef.current || !window.BarcodeDetector) return;
 
     try {
-      // @ts-expect-error - BarcodeDetector is not in TypeScript types yet
-      const barcodeDetector = new BarcodeDetector({ formats: ['ean_13', 'upc_a', 'upc_e'] });
+      const barcodeDetector = new window.BarcodeDetector({ formats: ['ean_13', 'upc_a', 'upc_e'] });
       const barcodes = await barcodeDetector.detect(videoRef.current);
       
       if (barcodes.length > 0) {
