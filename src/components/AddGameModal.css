@@ -1,0 +1,351 @@
+/* AddGameModal specific styles */
+
+.add-game-modal {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Input with actions */
+.input-with-actions {
+  position: relative;
+}
+
+/* Helper actions */
+.helper-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.btn-helper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background: #f0f0f0;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-helper:hover:not(:disabled) {
+  background: #e0e0e0;
+}
+
+.btn-helper:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (prefers-color-scheme: dark) {
+  .btn-helper {
+    background: #444;
+    color: white;
+  }
+  .btn-helper:hover:not(:disabled) {
+    background: #555;
+  }
+}
+
+.helper-status {
+  font-size: 0.875rem;
+  color: #666;
+  font-style: italic;
+}
+
+@media (prefers-color-scheme: dark) {
+  .helper-status {
+    color: #aaa;
+  }
+}
+
+/* OCR Suggestions */
+.ocr-suggestions {
+  margin-top: 0.75rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .ocr-suggestions {
+    background: #1a1a1a;
+    border-color: #444;
+  }
+}
+
+.ocr-suggestions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.btn-close-suggestions {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  color: #666;
+  padding: 0.25rem;
+}
+
+.btn-close-suggestions:hover {
+  color: #e60012;
+}
+
+.ocr-suggestion-item {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
+  text-align: left;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.9375rem;
+}
+
+.ocr-suggestion-item:last-child {
+  margin-bottom: 0;
+}
+
+.ocr-suggestion-item:hover {
+  background: #f0f0f0;
+  border-color: #e60012;
+}
+
+@media (prefers-color-scheme: dark) {
+  .ocr-suggestion-item {
+    background: #2a2a2a;
+    border-color: #444;
+    color: white;
+  }
+  .ocr-suggestion-item:hover {
+    background: #333;
+    border-color: #e60012;
+  }
+}
+
+/* TheGamesDB Search Button */
+.btn-search {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 102, 204, 0.2);
+}
+
+.btn-search:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+}
+
+.btn-search:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Search Messages */
+.search-message {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  font-size: 0.875rem;
+  background: #f0f4ff;
+  border: 1px solid #d0e0ff;
+  border-radius: 6px;
+  color: #333;
+}
+
+.search-message.error {
+  background: #fff0f0;
+  border-color: #ffd0d0;
+  color: #c00;
+}
+
+@media (prefers-color-scheme: dark) {
+  .search-message {
+    background: #1a2a3a;
+    border-color: #2a3a4a;
+    color: #aaa;
+  }
+  .search-message.error {
+    background: #3a1a1a;
+    border-color: #4a2a2a;
+    color: #faa;
+  }
+}
+
+/* Search Results */
+.search-results {
+  margin-top: 0.75rem;
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: white;
+}
+
+@media (prefers-color-scheme: dark) {
+  .search-results {
+    background: #1a1a1a;
+    border-color: #444;
+  }
+}
+
+.search-results-header {
+  padding: 0.75rem 1rem;
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+  position: sticky;
+  top: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .search-results-header {
+    background: #2a2a2a;
+    border-color: #444;
+  }
+}
+
+.search-result-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0.875rem 1rem;
+  text-align: left;
+  background: white;
+  border: none;
+  border-bottom: 1px solid #e0e0e0;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.search-result-item:hover {
+  background: #f8f9fa;
+}
+
+@media (prefers-color-scheme: dark) {
+  .search-result-item {
+    background: #1a1a1a;
+    border-color: #444;
+    color: white;
+  }
+  .search-result-item:hover {
+    background: #2a2a2a;
+  }
+}
+
+.result-title {
+  font-weight: 500;
+  font-size: 0.9375rem;
+}
+
+.result-date {
+  font-size: 0.8125rem;
+  color: #666;
+  margin-left: 0.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .result-date {
+    color: #aaa;
+  }
+}
+
+/* Selected Game Preview */
+.selected-game-preview {
+  margin-top: 0.75rem;
+  padding: 1rem;
+  background: #e8f5e9;
+  border: 1px solid #a5d6a7;
+  border-radius: 8px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .selected-game-preview {
+    background: #1a3a1a;
+    border-color: #2a5a2a;
+  }
+}
+
+.preview-label {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #2d6a2d;
+}
+
+@media (prefers-color-scheme: dark) {
+  .preview-label {
+    color: #8fc78f;
+  }
+}
+
+.preview-cover {
+  max-width: 120px;
+  max-height: 160px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Barcode Scanner */
+.barcode-scanner {
+  margin-top: 0.75rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  text-align: center;
+}
+
+@media (prefers-color-scheme: dark) {
+  .barcode-scanner {
+    background: #1a1a1a;
+    border-color: #444;
+  }
+}
+
+.scanner-video {
+  width: 100%;
+  max-width: 400px;
+  border-radius: 8px;
+  background: #000;
+}
+
+.scanner-instruction {
+  margin: 0.5rem 0 0;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+@media (prefers-color-scheme: dark) {
+  .scanner-instruction {
+    color: #aaa;
+  }
+}
