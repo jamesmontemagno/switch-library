@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  // Base path - use '/' for server deployment or '/switch-library/' for GitHub Pages
+  // Base path - use '/' for custom domain
   base: process.env.VITE_BASE_PATH || '/',
   server: {
     proxy: {

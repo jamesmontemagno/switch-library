@@ -40,7 +40,6 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_THEGAMESDB_API_KEY: ${{ secrets.VITE_THEGAMESDB_API_KEY }}
-          VITE_BASE_PATH: /switch-library/
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
