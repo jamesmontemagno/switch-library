@@ -5,8 +5,12 @@ on:
   # Runs on pushes to main and pull requests
   push:
     branches: ['main']
+    paths-ignore:
+      - '.github/workflows/main_myswitchlibrary.yml'
   pull_request:
     branches: ['main']
+    paths-ignore:
+      - '.github/workflows/main_myswitchlibrary.yml'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
