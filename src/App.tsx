@@ -5,6 +5,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { Home } from './pages/Home';
 import { Library } from './pages/Library';
 import { Search } from './pages/Search';
+import { GameDetails } from './pages/GameDetails';
 import { NotFound } from './pages/NotFound';
 
 // Get base path from Vite config
@@ -23,6 +24,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Library />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="game/:id"
+              element={
+                <ProtectedRoute>
+                  <GameDetails />
                 </ProtectedRoute>
               }
             />

@@ -1,4 +1,4 @@
-# Switch Library
+# My Switch Library
 
 A web app for tracking your Nintendo Switch and Nintendo Switch 2 game collection.
 

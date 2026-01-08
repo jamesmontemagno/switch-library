@@ -1,4 +1,4 @@
--- Supabase Schema for Switch Library
+-- Supabase Schema for My Switch Library
 -- Run this in your Supabase SQL Editor to set up the database
 -- NOTE: JWT secret is managed by Supabase automatically - do not set manually
 
@@ -20,14 +20,11 @@ create table if not exists public.games (
   title text not null,
   platform text not null check (platform in ('Nintendo Switch', 'Nintendo Switch 2')),
   format text not null default 'Physical' check (format in ('Physical', 'Digital')),
-  barcode text,
-  eshop_url text,
   status text not null default 'Owned' check (status in ('Owned', 'Wishlist', 'Borrowed', 'Lent', 'Sold')),
   condition text check (condition in ('New', 'Like New', 'Good', 'Fair', 'Poor')),
   notes text,
   thegamesdb_id integer,
   cover_url text,
-  game_metadata jsonb,
   purchase_date date,
   completed boolean default false,
   completed_date date,

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import type { GameEntry, Platform, Format } from '../types';
 import { 
@@ -6,11 +6,11 @@ import {
   getGameImages, 
   getBoxartUrl,
   PLATFORM_IDS,
-  REGION_LABELS,
-  DEFAULT_REGIONS,
   isTheGamesDBConfigured,
+  getStoredAllowance,
+  isAllowanceExhausted,
 } from '../services/thegamesdb';
-import { saveGame } from '../services/database';
+import { saveGame, loadGames } from '../services/database';
 import './Search.css';
 
 type SortOption = 'relevance' | 'release_desc' | 'release_asc' | 'title_asc' | 'title_desc';
@@ -35,17 +35,26 @@ export function Search() {
   const [hasSearched, setHasSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
+  // User's existing games (for demo mode support)
+  const [userGames, setUserGames] = useState<GameEntry[]>([]);
+  
   // Filters
   const [platform, setPlatform] = useState<'all' | Platform>('all');
   const [yearFrom, setYearFrom] = useState('');
   const [yearTo, setYearTo] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('relevance');
   const [onlyWithBoxart, setOnlyWithBoxart] = useState(false);
-  const [selectedRegions, setSelectedRegions] = useState<number[]>(DEFAULT_REGIONS);
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   
   // View
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMoreResults, setHasMoreResults] = useState(false);
+  
+  // API Allowance
+  const [showAllowanceWarning, setShowAllowanceWarning] = useState(false);
+  const [allowanceInfo, setAllowanceInfo] = useState<{ remaining: number; extra: number } | null>(null);
   
   // Adding state
   const [addingGameId, setAddingGameId] = useState<number | null>(null);
@@ -58,13 +67,34 @@ export function Search() {
   const searchRequestIdRef = useRef(0);
   const hasTheGamesDB = isTheGamesDBConfigured();
 
-  const handleSearch = useCallback(async () => {
+  // Load user's games on mount (for demo mode)
+  useEffect(() => {
+    if (user) {
+      loadGames(user.id).then(games => setUserGames(games));
+    }
+    
+    // Check API allowance on mount
+    const stored = getStoredAllowance();
+    if (stored) {
+      setAllowanceInfo({ remaining: stored.remaining, extra: stored.extra });
+      if (isAllowanceExhausted()) {
+        setShowAllowanceWarning(true);
+      }
+    }
+  }, [user]);
+
+  const handleSearch = useCallback(async (page: number = 1) => {
     if (!query.trim() || !hasTheGamesDB) return;
     
     const requestId = ++searchRequestIdRef.current;
     setIsSearching(true);
     setError(null);
     setHasSearched(true);
+    
+    // Reset to page 1 if this is a new search (not pagination)
+    if (page === 1) {
+      setCurrentPage(1);
+    }
     
     try {
       // Determine platform ID - always restrict to Switch platforms
@@ -78,10 +108,25 @@ export function Search() {
       
       const result = await searchGames(query.trim(), {
         platformId,
-        regions: selectedRegions.length > 0 ? selectedRegions : undefined,
+        page,
       });
       
       if (requestId !== searchRequestIdRef.current) return;
+      
+      // Update allowance info
+      if (result.remaining_monthly_allowance !== undefined) {
+        setAllowanceInfo({
+          remaining: result.remaining_monthly_allowance,
+          extra: result.extra_allowance || 0
+        });
+        
+        // Show warning if allowance is exhausted or low
+        if (result.remaining_monthly_allowance === 0) {
+          setShowAllowanceWarning(true);
+        } else if (result.remaining_monthly_allowance < 50 && !hasSearched) {
+          setShowAllowanceWarning(true);
+        }
+      }
       
       if (result.count === 0) {
         setResults([]);
@@ -147,6 +192,10 @@ export function Search() {
       });
       
       setResults(filtered);
+      
+      // Assume there are more results if we got a full page
+      // TheGamesDB typically returns 20 results per page
+      setHasMoreResults(filtered.length >= 20);
     } catch (err) {
       if (requestId === searchRequestIdRef.current) {
         setError('Search failed. Please try again.');
@@ -157,7 +206,7 @@ export function Search() {
         setIsSearching(false);
       }
     }
-  }, [query, platform, yearFrom, yearTo, sortBy, onlyWithBoxart, hasTheGamesDB]);
+  }, [query, platform, yearFrom, yearTo, sortBy, onlyWithBoxart, hasTheGamesDB, currentPage]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -180,18 +229,16 @@ export function Search() {
         status: 'Owned',
         thegamesdbId: quickAddGame.id,
         coverUrl: quickAddGame.boxartUrl,
-        gameMetadata: {
-          releaseDate: quickAddGame.releaseDate,
-          summary: quickAddGame.overview,
-          players: quickAddGame.players,
-          rating: quickAddGame.rating,
-        },
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
       
-      await saveGame(newGame);
-      setAddedGames(prev => new Set(prev).add(quickAddGame.id));
+      // Pass userGames for demo mode (localStorage) support
+      const savedGame = await saveGame(newGame, userGames);
+      if (savedGame) {
+        setUserGames(prev => [...prev, savedGame]);
+        setAddedGames(prev => new Set(prev).add(quickAddGame.id));
+      }
       setQuickAddGame(null);
     } catch (err) {
       console.error('Failed to add game:', err);
@@ -238,7 +285,7 @@ export function Search() {
             autoFocus
           />
           <button
-            onClick={handleSearch}
+            onClick={() => handleSearch(1)}
             disabled={!query.trim() || isSearching}
             className="search-btn-main"
           >
@@ -302,14 +349,6 @@ export function Search() {
           <span>With Boxart Only</span>
         </label>
         
-        <button
-          type="button"
-          className="btn-advanced-filters"
-          onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-        >
-          {showAdvancedFilters ? '▼' : '▶'} More Filters
-        </button>
-        
         <div className="view-toggle">
           <button
             className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
@@ -327,61 +366,6 @@ export function Search() {
           </button>
         </div>
       </div>
-
-      {/* Advanced Filters (Regions) */}
-      {showAdvancedFilters && (
-        <div className="advanced-filters-panel">
-          <div className="filter-section">
-            <h4>🌍 Regions</h4>
-            <p className="filter-hint">Filter results by game region (English regions selected by default)</p>
-            <div className="region-toggles">
-              {Object.entries(REGION_LABELS).map(([id, label]) => {
-                const regionId = parseInt(id);
-                const isSelected = selectedRegions.includes(regionId);
-                return (
-                  <label key={id} className="region-toggle">
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => {
-                        if (isSelected) {
-                          setSelectedRegions(prev => prev.filter(r => r !== regionId));
-                        } else {
-                          setSelectedRegions(prev => [...prev, regionId]);
-                        }
-                      }}
-                    />
-                    <span>{label}</span>
-                  </label>
-                );
-              })}
-            </div>
-            <div className="region-quick-actions">
-              <button
-                type="button"
-                className="btn-region-preset"
-                onClick={() => setSelectedRegions(DEFAULT_REGIONS)}
-              >
-                English Only
-              </button>
-              <button
-                type="button"
-                className="btn-region-preset"
-                onClick={() => setSelectedRegions(Object.keys(REGION_LABELS).map(Number))}
-              >
-                All Regions
-              </button>
-              <button
-                type="button"
-                className="btn-region-preset"
-                onClick={() => setSelectedRegions([])}
-              >
-                Clear
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Results */}
       <div className="search-results-container">
@@ -411,6 +395,36 @@ export function Search() {
             <div className="results-count">
               Found {results.length} game{results.length !== 1 ? 's' : ''}
             </div>
+            
+            {/* Pagination Controls - Top */}
+            {(currentPage > 1 || hasMoreResults) && (
+              <div className="pagination-controls">
+                <button
+                  onClick={() => {
+                    setCurrentPage(prev => prev - 1);
+                    handleSearch(currentPage - 1);
+                  }}
+                  disabled={currentPage === 1 || isSearching}
+                  className="btn-pagination"
+                >
+                  ← Previous
+                </button>
+                <span className="page-indicator">
+                  Page {currentPage}
+                </span>
+                <button
+                  onClick={() => {
+                    setCurrentPage(prev => prev + 1);
+                    handleSearch(currentPage + 1);
+                  }}
+                  disabled={!hasMoreResults || isSearching}
+                  className="btn-pagination"
+                >
+                  Next →
+                </button>
+              </div>
+            )}
+            
             <div className={`results-${viewMode}`}>
               {results.map((game) => (
                 <article key={game.id} className={`result-card ${viewMode}`}>
@@ -463,6 +477,35 @@ export function Search() {
                 </article>
               ))}
             </div>
+            
+            {/* Pagination Controls - Bottom */}
+            {(currentPage > 1 || hasMoreResults) && (
+              <div className="pagination-controls pagination-bottom">
+                <button
+                  onClick={() => {
+                    setCurrentPage(prev => prev - 1);
+                    handleSearch(currentPage - 1);
+                  }}
+                  disabled={currentPage === 1 || isSearching}
+                  className="btn-pagination"
+                >
+                  ← Previous
+                </button>
+                <span className="page-indicator">
+                  Page {currentPage}
+                </span>
+                <button
+                  onClick={() => {
+                    setCurrentPage(prev => prev + 1);
+                    handleSearch(currentPage + 1);
+                  }}
+                  disabled={!hasMoreResults || isSearching}
+                  className="btn-pagination"
+                >
+                  Next →
+                </button>
+              </div>
+            )}
           </>
         )}
 
@@ -482,6 +525,51 @@ export function Search() {
           </div>
         )}
       </div>
+
+      {/* API Allowance Warning Modal */}
+      {showAllowanceWarning && allowanceInfo && (
+        <div className="modal-overlay" onClick={() => setShowAllowanceWarning(false)}>
+          <div className="allowance-warning-modal" onClick={(e) => e.stopPropagation()}>
+            <header className="modal-header">
+              <h2>{allowanceInfo.remaining === 0 ? '⚠️ API Limit Reached' : '⚠️ API Limit Warning'}</h2>
+              <button onClick={() => setShowAllowanceWarning(false)} className="modal-close">✕</button>
+            </header>
+            <div className="allowance-warning-content">
+              {allowanceInfo.remaining === 0 ? (
+                <>
+                  <p className="warning-message">
+                    You have exhausted your monthly API allowance for TheGamesDB.
+                  </p>
+                  <p className="warning-detail">
+                    You will not be able to search for new games until your allowance resets at the start of next month.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="warning-message">
+                    Your TheGamesDB API allowance is running low.
+                  </p>
+                  <p className="warning-detail">
+                    Remaining requests: <strong>{allowanceInfo.remaining}</strong>
+                    {allowanceInfo.extra > 0 && <> (+ {allowanceInfo.extra} extra)</>}
+                  </p>
+                  <p className="warning-hint">
+                    Consider limiting your searches to preserve your allowance for the rest of the month.
+                  </p>
+                </>
+              )}
+              <div className="allowance-actions">
+                <button 
+                  className="btn-understand" 
+                  onClick={() => setShowAllowanceWarning(false)}
+                >
+                  I Understand
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Quick Add Modal */}
       {quickAddGame && (
