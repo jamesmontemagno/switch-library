@@ -21,7 +21,7 @@ export function Home() {
           Track Your Nintendo Switch Collection
         </h1>
         <p className="hero-subtitle">
-          Scan barcodes, search games, and share your library with friends.
+          Search games, manually add titles, and share your library with friends.
           Keep track of every game you own across Nintendo Switch and Switch 2.
         </p>
         <button onClick={handleGetStarted} className="hero-cta">
@@ -32,11 +32,11 @@ export function Home() {
       <section className="features">
         <div className="feature-grid">
           <div className="feature-card">
-            <div className="feature-icon">📷</div>
-            <h3>Barcode Scanning</h3>
+            <div className="feature-icon">✍️</div>
+            <h3>Easy Entry</h3>
             <p>
-              Quickly add games by scanning their barcode with your phone camera.
-              No typing required.
+              Quickly add games manually or search TheGamesDB to find your titles
+              with rich metadata.
             </p>
           </div>
 
