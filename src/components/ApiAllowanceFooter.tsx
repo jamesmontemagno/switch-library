@@ -2,17 +2,16 @@ import { useState, useEffect } from 'react';
 import { getStoredAllowance, isTheGamesDBConfigured } from '../services/thegamesdb';
 import './ApiAllowanceFooter.css';
 
+function getInitialAllowance() {
+  const stored = getStoredAllowance();
+  return stored ? { remaining: stored.remaining, extra: stored.extra } : null;
+}
+
 export function ApiAllowanceIndicator() {
-  const [allowance, setAllowance] = useState<{ remaining: number; extra: number } | null>(null);
+  const [allowance, setAllowance] = useState<{ remaining: number; extra: number } | null>(getInitialAllowance);
   const hasTheGamesDB = isTheGamesDBConfigured();
 
   useEffect(() => {
-    // Check allowance on mount
-    const stored = getStoredAllowance();
-    if (stored) {
-      setAllowance({ remaining: stored.remaining, extra: stored.extra });
-    }
-
     // Listen for storage changes (when search updates the allowance)
     const handleStorageChange = () => {
       const updated = getStoredAllowance();

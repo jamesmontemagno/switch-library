@@ -206,6 +206,7 @@ export function Search() {
         setIsSearching(false);
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, platform, yearFrom, yearTo, sortBy, onlyWithBoxart, hasTheGamesDB, currentPage]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

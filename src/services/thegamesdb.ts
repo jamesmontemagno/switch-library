@@ -108,7 +108,7 @@ export function getStoredAllowance(): AllowanceInfo | null {
   return null;
 }
 
-export function storeAllowance(remaining: number, _extra: number = 0): void {
+export function storeAllowance(remaining: number): void {
   try {
     localStorage.setItem(ALLOWANCE_STORAGE_KEY, remaining.toString());
     localStorage.setItem(ALLOWANCE_TIMESTAMP_KEY, Date.now().toString());
@@ -267,7 +267,7 @@ export async function searchGames(
     
     // Store API allowance if available
     if (data.remaining_monthly_allowance !== undefined) {
-      storeAllowance(data.remaining_monthly_allowance, data.extra_allowance || 0);
+      storeAllowance(data.remaining_monthly_allowance);
     }
     
     const games = data.data?.games || [];
@@ -319,7 +319,7 @@ export async function getGameById(gameId: number): Promise<TheGamesDBGame | null
     
     // Store API allowance if available
     if (data.remaining_monthly_allowance !== undefined) {
-      storeAllowance(data.remaining_monthly_allowance, data.extra_allowance || 0);
+      storeAllowance(data.remaining_monthly_allowance);
     }
     
     const games = data.data?.games;
@@ -432,7 +432,7 @@ export async function getGenres(): Promise<Record<number, string>> {
     const data = await response.json();
     
     if (data.remaining_monthly_allowance !== undefined) {
-      storeAllowance(data.remaining_monthly_allowance, data.extra_allowance || 0);
+      storeAllowance(data.remaining_monthly_allowance);
     }
     
     const genres: Record<number, string> = {};
@@ -461,7 +461,7 @@ export async function getDevelopers(): Promise<Record<number, string>> {
     const data = await response.json();
     
     if (data.remaining_monthly_allowance !== undefined) {
-      storeAllowance(data.remaining_monthly_allowance, data.extra_allowance || 0);
+      storeAllowance(data.remaining_monthly_allowance);
     }
     
     const developers: Record<number, string> = {};
@@ -490,7 +490,7 @@ export async function getPublishers(): Promise<Record<number, string>> {
     const data = await response.json();
     
     if (data.remaining_monthly_allowance !== undefined) {
-      storeAllowance(data.remaining_monthly_allowance, data.extra_allowance || 0);
+      storeAllowance(data.remaining_monthly_allowance);
     }
     
     const publishers: Record<number, string> = {};
