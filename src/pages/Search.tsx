@@ -34,7 +34,6 @@ export function Search() {
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [debugUrl, setDebugUrl] = useState<string | null>(null);
   
   // User's existing games (for demo mode support)
   const [userGames, setUserGames] = useState<GameEntry[]>([]);
@@ -113,10 +112,6 @@ export function Search() {
       });
       
       if (requestId !== searchRequestIdRef.current) return;
-      
-      // Store debug URL
-      console.log('Debug URL:', result.debugUrl);
-      setDebugUrl(result.debugUrl || null);
       
       // Update allowance info
       if (result.remaining_monthly_allowance !== undefined) {
@@ -400,23 +395,6 @@ export function Search() {
             <div className="results-count">
               Found {results.length} game{results.length !== 1 ? 's' : ''}
             </div>
-            {debugUrl && (
-              <details className="debug-section">
-                <summary>🔍 Debug: API Query</summary>
-                <div className="debug-content">
-                  <code>{debugUrl}</code>
-                  <button 
-                    className="btn-copy-url"
-                    onClick={() => {
-                      navigator.clipboard.writeText(debugUrl);
-                    }}
-                    title="Copy URL"
-                  >
-                    📋 Copy
-                  </button>
-                </div>
-              </details>
-            )}
             
             {/* Pagination Controls - Top */}
             {(currentPage > 1 || hasMoreResults) && (

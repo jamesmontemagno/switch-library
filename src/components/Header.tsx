@@ -13,7 +13,7 @@ export function Header() {
       <div className="header-content">
         <Link to="/" className="logo">
           <img src={`${import.meta.env.BASE_URL}switch.svg`} alt="Switch" className="logo-icon" />
-          <span className="logo-text">Switch Library</span>
+          <span className="logo-text">My Switch Library</span>
         </Link>
 
         <nav className="nav" aria-label="Main navigation">

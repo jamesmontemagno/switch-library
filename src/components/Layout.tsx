@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import { Header } from './Header';
+import { ApiAllowanceIndicator } from './ApiAllowanceFooter';
 import './Layout.css';
 
 export function Layout() {
@@ -11,9 +12,10 @@ export function Layout() {
       </main>
       <footer className="footer">
         <p>
-          &copy; {new Date().getFullYear()} Switch Library. 
+          &copy; {new Date().getFullYear()} My Switch Library. 
           Built with ❤️ for Nintendo fans.
         </p>
+        <ApiAllowanceIndicator />
       </footer>
     </div>
   );

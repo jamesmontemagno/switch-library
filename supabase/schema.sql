@@ -1,4 +1,4 @@
--- Supabase Schema for Switch Library
+-- Supabase Schema for My Switch Library
 -- Run this in your Supabase SQL Editor to set up the database
 -- NOTE: JWT secret is managed by Supabase automatically - do not set manually
 
