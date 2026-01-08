@@ -6,8 +6,6 @@ import {
   getGameImages, 
   getBoxartUrl,
   PLATFORM_IDS,
-  REGION_LABELS,
-  DEFAULT_REGIONS,
   isTheGamesDBConfigured,
 } from '../services/thegamesdb';
 import { saveGame, loadGames } from '../services/database';
@@ -34,6 +32,7 @@ export function Search() {
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [debugUrl, setDebugUrl] = useState<string | null>(null);
   
   // User's existing games (for demo mode support)
   const [userGames, setUserGames] = useState<GameEntry[]>([]);
@@ -44,8 +43,6 @@ export function Search() {
   const [yearTo, setYearTo] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('relevance');
   const [onlyWithBoxart, setOnlyWithBoxart] = useState(false);
-  const [selectedRegions, setSelectedRegions] = useState<number[]>(DEFAULT_REGIONS);
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   
   // View
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -88,8 +85,10 @@ export function Search() {
       
       const result = await searchGames(query.trim(), {
         platformId,
-        regions: selectedRegions.length > 0 ? selectedRegions : undefined,
       });
+      
+      // Store debug URL
+      setDebugUrl(result.debugUrl || null);
       
       if (requestId !== searchRequestIdRef.current) return;
       
@@ -167,7 +166,7 @@ export function Search() {
         setIsSearching(false);
       }
     }
-  }, [query, platform, yearFrom, yearTo, sortBy, onlyWithBoxart, selectedRegions, hasTheGamesDB]);
+  }, [query, platform, yearFrom, yearTo, sortBy, onlyWithBoxart, hasTheGamesDB]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -316,14 +315,6 @@ export function Search() {
           <span>With Boxart Only</span>
         </label>
         
-        <button
-          type="button"
-          className="btn-advanced-filters"
-          onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-        >
-          {showAdvancedFilters ? '▼' : '▶'} More Filters
-        </button>
-        
         <div className="view-toggle">
           <button
             className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
@@ -341,61 +332,6 @@ export function Search() {
           </button>
         </div>
       </div>
-
-      {/* Advanced Filters (Regions) */}
-      {showAdvancedFilters && (
-        <div className="advanced-filters-panel">
-          <div className="filter-section">
-            <h4>🌍 Regions</h4>
-            <p className="filter-hint">Filter results by game region (English regions selected by default)</p>
-            <div className="region-toggles">
-              {Object.entries(REGION_LABELS).map(([id, label]) => {
-                const regionId = parseInt(id);
-                const isSelected = selectedRegions.includes(regionId);
-                return (
-                  <label key={id} className="region-toggle">
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => {
-                        if (isSelected) {
-                          setSelectedRegions(prev => prev.filter(r => r !== regionId));
-                        } else {
-                          setSelectedRegions(prev => [...prev, regionId]);
-                        }
-                      }}
-                    />
-                    <span>{label}</span>
-                  </label>
-                );
-              })}
-            </div>
-            <div className="region-quick-actions">
-              <button
-                type="button"
-                className="btn-region-preset"
-                onClick={() => setSelectedRegions(DEFAULT_REGIONS)}
-              >
-                English Only
-              </button>
-              <button
-                type="button"
-                className="btn-region-preset"
-                onClick={() => setSelectedRegions(Object.keys(REGION_LABELS).map(Number))}
-              >
-                All Regions
-              </button>
-              <button
-                type="button"
-                className="btn-region-preset"
-                onClick={() => setSelectedRegions([])}
-              >
-                Clear
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Results */}
       <div className="search-results-container">
@@ -425,6 +361,23 @@ export function Search() {
             <div className="results-count">
               Found {results.length} game{results.length !== 1 ? 's' : ''}
             </div>
+            {debugUrl && (
+              <details className="debug-section">
+                <summary>🔍 Debug: API Query</summary>
+                <div className="debug-content">
+                  <code>{debugUrl}</code>
+                  <button 
+                    className="btn-copy-url"
+                    onClick={() => {
+                      navigator.clipboard.writeText(debugUrl);
+                    }}
+                    title="Copy URL"
+                  >
+                    📋 Copy
+                  </button>
+                </div>
+              </details>
+            )}
             <div className={`results-${viewMode}`}>
               {results.map((game) => (
                 <article key={game.id} className={`result-card ${viewMode}`}>

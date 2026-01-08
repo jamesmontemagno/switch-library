@@ -22,6 +22,7 @@ export interface TheGamesDBGame {
 export interface TheGamesDBSearchResult {
   count: number;
   games: TheGamesDBGame[];
+  debugUrl?: string; // For debugging purposes
 }
 
 export interface TheGamesDBImage {
@@ -58,48 +59,8 @@ export const SWITCH_PLATFORM_IDS = [
   PLATFORM_IDS.NINTENDO_SWITCH_2,
 ];
 
-// Region IDs from TheGamesDB
-export const REGION_IDS = {
-  US: 1,      // United States
-  UK: 2,      // United Kingdom  
-  EU: 3,      // Europe
-  JP: 4,      // Japan
-  AU: 5,      // Australia
-  SS: 6,      // Sweden
-  DK: 7,      // Denmark
-  FI: 8,      // Finland
-  FR: 9,      // France
-  DE: 10,     // Germany
-  IT: 11,     // Italy
-  NL: 12,     // Netherlands
-  KR: 13,     // South Korea
-  TW: 14,     // Taiwan
-  CN: 15,     // China
-  ES: 16,     // Spain
-  WW: 17,     // World
-};
-
-// Region labels for UI
-export const REGION_LABELS: Record<number, string> = {
-  [REGION_IDS.US]: 'United States',
-  [REGION_IDS.UK]: 'United Kingdom',
-  [REGION_IDS.EU]: 'Europe',
-  [REGION_IDS.JP]: 'Japan',
-  [REGION_IDS.AU]: 'Australia',
-  [REGION_IDS.FR]: 'France',
-  [REGION_IDS.DE]: 'Germany',
-  [REGION_IDS.IT]: 'Italy',
-  [REGION_IDS.ES]: 'Spain',
-  [REGION_IDS.KR]: 'South Korea',
-  [REGION_IDS.WW]: 'Worldwide',
-};
-
-// Default English-speaking regions
-export const DEFAULT_REGIONS = [REGION_IDS.US, REGION_IDS.UK, REGION_IDS.EU, REGION_IDS.AU, REGION_IDS.WW];
-
 export interface SearchOptions {
   platformId?: number;        // Specific platform (defaults to Switch)
-  regions?: number[];         // Region IDs to filter by
   includeFields?: string[];   // Additional fields to include (boxart, platform, etc.)
 }
 
@@ -133,28 +94,19 @@ export async function searchGames(
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/Games/ByGameName?${params}`);
+    const url = `${API_BASE_URL}/Games/ByGameName?${params}`;
+    const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`TheGamesDB API error: ${response.status}`);
     }
     const data = await response.json();
     
-    let games = data.data?.games || [];
-    
-    // Filter by regions if specified (client-side filtering since API may not support it directly)
-    // Note: TheGamesDB doesn't always include region_id in search results,
-    // so this filter is best-effort
-    if (options.regions && options.regions.length > 0) {
-      games = games.filter((game: TheGamesDBGame) => {
-        // If no region_id, include it (assume worldwide)
-        if (!game.region_id) return true;
-        return options.regions!.includes(game.region_id);
-      });
-    }
+    const games = data.data?.games || [];
     
     return {
       count: games.length,
       games,
+      debugUrl: url,
     };
   } catch (error) {
     console.error('Failed to search games:', error);

@@ -15,12 +15,11 @@ export function EditGameModal({ game, onClose, onSave }: EditGameModalProps) {
   const [status, setStatus] = useState<GameStatus>(game.status);
   const [condition, setCondition] = useState<GameCondition | ''>(game.condition || '');
   const [notes, setNotes] = useState(game.notes || '');
-  const [eshopUrl, setEshopUrl] = useState(game.eshopUrl || '');
   const [purchaseDate, setPurchaseDate] = useState(game.purchaseDate || '');
   const [completed, setCompleted] = useState(game.completed || false);
   const [completedDate, setCompletedDate] = useState(game.completedDate || '');
   const [showAdditionalDetails, setShowAdditionalDetails] = useState(
-    Boolean(game.purchaseDate || game.completed || game.completedDate || game.notes || game.eshopUrl)
+    Boolean(game.purchaseDate || game.completed || game.completedDate || game.notes)
   );
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -35,7 +34,6 @@ export function EditGameModal({ game, onClose, onSave }: EditGameModalProps) {
       status,
       condition: condition || undefined,
       notes: notes.trim() || undefined,
-      eshopUrl: eshopUrl.trim() || undefined,
       purchaseDate: purchaseDate || undefined,
       completed: completed || undefined,
       completedDate: completedDate || undefined,
@@ -150,17 +148,6 @@ export function EditGameModal({ game, onClose, onSave }: EditGameModalProps) {
             
             {showAdditionalDetails && (
               <div className="additional-details">
-                <div className="form-group">
-                  <label htmlFor="eshopUrl">eShop URL (optional)</label>
-                  <input
-                    id="eshopUrl"
-                    type="url"
-                    value={eshopUrl}
-                    onChange={(e) => setEshopUrl(e.target.value)}
-                    placeholder="https://..."
-                  />
-                </div>
-
                 <div className="form-group">
                   <label htmlFor="purchaseDate">Purchase Date</label>
                   <input

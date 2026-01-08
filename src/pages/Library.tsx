@@ -191,14 +191,23 @@ interface GameCardProps {
 }
 
 function GameCard({ game, onDelete, onEdit }: GameCardProps) {
+  const navigate = useNavigate();
   const formatDate = (dateStr: string | undefined) => {
     if (!dateStr) return null;
     const date = new Date(dateStr);
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't navigate if clicking on action buttons
+    if ((e.target as HTMLElement).closest('.game-actions')) {
+      return;
+    }
+    navigate(`/game/${game.id}`);
+  };
+
   return (
-    <article className="game-card">
+    <article className="game-card" onClick={handleCardClick} style={{ cursor: 'pointer' }}>
       <div className="game-cover">
         {game.coverUrl ? (
           <img src={game.coverUrl} alt={game.title} />
