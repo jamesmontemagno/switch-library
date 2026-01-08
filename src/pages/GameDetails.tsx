@@ -208,6 +208,30 @@ export function GameDetails() {
                     <span className="info-value">{apiData.rating}</span>
                   </div>
                 )}
+                {apiData.coop && (
+                  <div className="info-item">
+                    <span className="info-label">Co-op</span>
+                    <span className="info-value">{apiData.coop}</span>
+                  </div>
+                )}
+                {apiData.publishers && apiData.publishers.length > 0 && (
+                  <div className="info-item">
+                    <span className="info-label">Publishers</span>
+                    <span className="info-value">{apiData.publishers.join(', ')}</span>
+                  </div>
+                )}
+                {apiData.developers && apiData.developers.length > 0 && (
+                  <div className="info-item">
+                    <span className="info-label">Developers</span>
+                    <span className="info-value">{apiData.developers.join(', ')}</span>
+                  </div>
+                )}
+                {apiData.genres && apiData.genres.length > 0 && (
+                  <div className="info-item">
+                    <span className="info-label">Genres</span>
+                    <span className="info-value">{apiData.genres.join(', ')}</span>
+                  </div>
+                )}
                 {game.thegamesdbId && (
                   <div className="info-item">
                     <span className="info-label">TheGamesDB ID</span>
@@ -223,6 +247,73 @@ export function GameDetails() {
                   </div>
                 )}
               </div>
+              
+              {/* System Requirements Section */}
+              {(apiData.os || apiData.processor || apiData.ram || apiData.hdd || apiData.video || apiData.sound) && (
+                <>
+                  <h3>System Requirements</h3>
+                  <div className="info-grid">
+                    {apiData.os && (
+                      <div className="info-item">
+                        <span className="info-label">OS</span>
+                        <span className="info-value">{apiData.os}</span>
+                      </div>
+                    )}
+                    {apiData.processor && (
+                      <div className="info-item">
+                        <span className="info-label">Processor</span>
+                        <span className="info-value">{apiData.processor}</span>
+                      </div>
+                    )}
+                    {apiData.ram && (
+                      <div className="info-item">
+                        <span className="info-label">RAM</span>
+                        <span className="info-value">{apiData.ram}</span>
+                      </div>
+                    )}
+                    {apiData.hdd && (
+                      <div className="info-item">
+                        <span className="info-label">Storage</span>
+                        <span className="info-value">{apiData.hdd}</span>
+                      </div>
+                    )}
+                    {apiData.video && (
+                      <div className="info-item">
+                        <span className="info-label">Video</span>
+                        <span className="info-value">{apiData.video}</span>
+                      </div>
+                    )}
+                    {apiData.sound && (
+                      <div className="info-item">
+                        <span className="info-label">Sound</span>
+                        <span className="info-value">{apiData.sound}</span>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+              
+              {/* YouTube & Alternates */}
+              {apiData.youtube && (
+                <div className="youtube-section">
+                  <h3>Trailer</h3>
+                  <a 
+                    href={`https://www.youtube.com/watch?v=${apiData.youtube}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="youtube-link"
+                  >
+                    🎥 Watch on YouTube
+                  </a>
+                </div>
+              )}
+              
+              {apiData.alternates && (
+                <div className="alternates-section">
+                  <h3>Alternate Names</h3>
+                  <p>{apiData.alternates}</p>
+                </div>
+              )}
             </section>
           )}
         </div>
