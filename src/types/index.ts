@@ -27,6 +27,10 @@ export interface GameEntry {
   thegamesdbId?: number;
   coverUrl?: string;
   gameMetadata?: GameMetadata;
+  // Purchase and completion tracking
+  purchaseDate?: string;
+  completed?: boolean;
+  completedDate?: string;
   createdAt: string;
   updatedAt: string;
 }

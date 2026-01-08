@@ -20,6 +20,9 @@ export function Header() {
           <Link to="/" className={`nav-link ${isActive('/') ? 'active' : ''}`}>
             Home
           </Link>
+          <Link to="/search" className={`nav-link ${isActive('/search') ? 'active' : ''}`}>
+            Search
+          </Link>
           {isAuthenticated && (
             <Link to="/library" className={`nav-link ${isActive('/library') ? 'active' : ''}`}>
               My Library

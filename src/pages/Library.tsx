@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/useAuth';
 import type { GameEntry, Platform } from '../types';
 import { loadGames, saveGame, deleteGame as deleteGameFromDb } from '../services/database';
 import { AddGameModal } from '../components/AddGameModal';
+import { EditGameModal } from '../components/EditGameModal';
 import './Library.css';
 
 export function Library() {
@@ -10,6 +11,7 @@ export function Library() {
   const [games, setGames] = useState<GameEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingGame, setEditingGame] = useState<GameEntry | null>(null);
   const [filterPlatform, setFilterPlatform] = useState<Platform | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -62,12 +64,21 @@ export function Library() {
     }
   };
 
+  const handleEditGame = async (updatedGame: GameEntry) => {
+    const savedGame = await saveGame(updatedGame, games);
+    if (savedGame) {
+      setGames(prev => prev.map(g => g.id === savedGame.id ? savedGame : g));
+    }
+    setEditingGame(null);
+  };
+
   const stats = {
     total: games.length,
     switch: games.filter(g => g.platform === 'Nintendo Switch').length,
     switch2: games.filter(g => g.platform === 'Nintendo Switch 2').length,
     physical: games.filter(g => g.format === 'Physical').length,
     digital: games.filter(g => g.format === 'Digital').length,
+    completed: games.filter(g => g.completed).length,
   };
 
   if (isLoading) {
@@ -87,7 +98,7 @@ export function Library() {
         <div>
           <h1>My Library</h1>
           <p className="library-stats">
-            {stats.total} games • {stats.switch} Switch • {stats.switch2} Switch 2
+            {stats.total} games • {stats.completed} completed • {stats.switch} Switch • {stats.switch2} Switch 2
           </p>
         </div>
         <button onClick={() => setShowAddModal(true)} className="btn-add">
@@ -138,7 +149,12 @@ export function Library() {
       ) : (
         <div className="games-grid">
           {filteredGames.map(game => (
-            <GameCard key={game.id} game={game} onDelete={() => handleDeleteGame(game.id)} />
+            <GameCard 
+              key={game.id} 
+              game={game} 
+              onDelete={() => handleDeleteGame(game.id)}
+              onEdit={() => setEditingGame(game)}
+            />
           ))}
         </div>
       )}
@@ -149,6 +165,14 @@ export function Library() {
           onAdd={addGame}
         />
       )}
+      
+      {editingGame && (
+        <EditGameModal
+          game={editingGame}
+          onClose={() => setEditingGame(null)}
+          onSave={handleEditGame}
+        />
+      )}
     </div>
   );
 }
@@ -156,9 +180,16 @@ export function Library() {
 interface GameCardProps {
   game: GameEntry;
   onDelete: () => void;
+  onEdit: () => void;
 }
 
-function GameCard({ game, onDelete }: GameCardProps) {
+function GameCard({ game, onDelete, onEdit }: GameCardProps) {
+  const formatDate = (dateStr: string | undefined) => {
+    if (!dateStr) return null;
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  };
+
   return (
     <article className="game-card">
       <div className="game-cover">
@@ -167,6 +198,11 @@ function GameCard({ game, onDelete }: GameCardProps) {
         ) : (
           <div className="cover-placeholder">
             <span>🎮</span>
+          </div>
+        )}
+        {game.completed && (
+          <div className="completed-badge" title="Completed">
+            ✓
           </div>
         )}
       </div>
@@ -180,13 +216,36 @@ function GameCard({ game, onDelete }: GameCardProps) {
             {game.format}
           </span>
         </div>
-        <button 
-          onClick={onDelete} 
-          className="delete-btn"
-          aria-label={`Delete ${game.title}`}
-        >
-          🗑️
-        </button>
+        {(game.purchaseDate || game.completedDate) && (
+          <div className="game-dates">
+            {game.purchaseDate && (
+              <span className="date-info" title="Purchase Date">
+                🛒 {formatDate(game.purchaseDate)}
+              </span>
+            )}
+            {game.completedDate && (
+              <span className="date-info" title="Completion Date">
+                🏆 {formatDate(game.completedDate)}
+              </span>
+            )}
+          </div>
+        )}
+        <div className="game-actions">
+          <button 
+            onClick={onEdit} 
+            className="edit-btn"
+            aria-label={`Edit ${game.title}`}
+          >
+            ✏️
+          </button>
+          <button 
+            onClick={onDelete} 
+            className="delete-btn"
+            aria-label={`Delete ${game.title}`}
+          >
+            🗑️
+          </button>
+        </div>
       </div>
     </article>
   );

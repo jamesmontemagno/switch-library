@@ -28,6 +28,9 @@ create table if not exists public.games (
   thegamesdb_id integer,
   cover_url text,
   game_metadata jsonb,
+  purchase_date date,
+  completed boolean default false,
+  completed_date date,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );

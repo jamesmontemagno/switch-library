@@ -107,6 +107,9 @@ function mapSupabaseGameToEntry(row: Record<string, unknown>): GameEntry {
     thegamesdbId: row.thegamesdb_id as number | undefined,
     coverUrl: row.cover_url as string | undefined,
     gameMetadata: row.game_metadata as GameEntry['gameMetadata'],
+    purchaseDate: row.purchase_date as string | undefined,
+    completed: row.completed as boolean | undefined,
+    completedDate: row.completed_date as string | undefined,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };
@@ -128,6 +131,9 @@ function mapEntryToSupabaseGame(entry: GameEntry): Record<string, unknown> {
     thegamesdb_id: entry.thegamesdbId,
     cover_url: entry.coverUrl,
     game_metadata: entry.gameMetadata,
+    purchase_date: entry.purchaseDate,
+    completed: entry.completed,
+    completed_date: entry.completedDate,
     created_at: entry.createdAt,
     updated_at: entry.updatedAt,
   };

@@ -6,9 +6,11 @@ import {
   getGameImages, 
   getBoxartUrl,
   PLATFORM_IDS,
+  DEFAULT_REGIONS,
   isTheGamesDBConfigured,
   type TheGamesDBGame 
 } from '../services/thegamesdb';
+import { usePreferences } from '../hooks/usePreferences';
 import './AddGameModal.css';
 
 // Type declaration for BarcodeDetector API (not yet in standard TypeScript types)
@@ -41,17 +43,34 @@ interface SearchResultItem {
   title: string;
   releaseDate?: string;
   platform: string;
+  overview?: string;
+  boxartUrl?: string;
 }
 
 export function AddGameModal({ onClose, onAdd }: AddGameModalProps) {
+  const [mode, setMode] = useState<'search' | 'manual'>('search');
+  const [searchQuery, setSearchQuery] = useState('');
   const [title, setTitle] = useState('');
   const [platform, setPlatform] = useState<Platform>('Nintendo Switch');
   const [format, setFormat] = useState<Format>('Physical');
   const [barcode, setBarcode] = useState('');
   
+  // Preferences
+  const { preferences, updatePreferences } = usePreferences();
+  const [showSettings, setShowSettings] = useState(false);
+  
+  // Additional details (optional)
+  const [showAdditionalDetails, setShowAdditionalDetails] = useState(false);
+  const [purchaseDate, setPurchaseDate] = useState('');
+  const [completed, setCompleted] = useState(false);
+  const [completedDate, setCompletedDate] = useState('');
+  
   // TheGamesDB search state
   const [searchState, setSearchState] = useState<SearchState>('idle');
   const [searchResults, setSearchResults] = useState<SearchResultItem[]>([]);
+  const [sortBy, setSortBy] = useState<'release_desc' | 'release_asc' | 'title_asc'>('release_desc');
+  const [filterYear, setFilterYear] = useState('');
+  const [onlyBoxart, setOnlyBoxart] = useState(false);
   const [selectedGame, setSelectedGame] = useState<TheGamesDBGame | null>(null);
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [gameMetadata, setGameMetadata] = useState<GameMetadata | null>(null);
@@ -84,7 +103,8 @@ export function AddGameModal({ onClose, onAdd }: AddGameModalProps) {
   }, []);
 
   const handleSearchTheGamesDB = async () => {
-    if (!title.trim() || !hasTheGamesDB) return;
+    const query = searchQuery.trim() || title.trim();
+    if (!query || !hasTheGamesDB) return;
 
     // Abort any previous search
     if (abortControllerRef.current) {
@@ -106,7 +126,10 @@ export function AddGameModal({ onClose, onAdd }: AddGameModalProps) {
         ? PLATFORM_IDS.NINTENDO_SWITCH 
         : PLATFORM_IDS.NINTENDO_SWITCH_2;
       
-      const result = await searchGames(title.trim(), platformId);
+      const result = await searchGames(query, { 
+        platformId,
+        regions: DEFAULT_REGIONS,
+      });
       
       // Check if this is still the latest request
       if (requestId !== searchRequestIdRef.current) {
@@ -116,13 +139,36 @@ export function AddGameModal({ onClose, onAdd }: AddGameModalProps) {
       if (result.count === 0) {
         setSearchState('no-results');
       } else {
-        const results: SearchResultItem[] = result.games.map(game => ({
-          id: game.id,
-          title: game.game_title,
-          releaseDate: game.release_date,
-          platform: 'Nintendo Switch', // Simplified
-        }));
-        setSearchResults(results);
+        // Fetch images for all results to show boxart
+        const resultsWithImages = await Promise.all(
+          result.games.map(async (game) => {
+            const images = await getGameImages(game.id);
+            const boxartUrl = getBoxartUrl(images, game.id, 'small');
+            return {
+              id: game.id,
+              title: game.game_title,
+              releaseDate: game.release_date,
+              platform: 'Nintendo Switch',
+              overview: game.overview,
+              boxartUrl: boxartUrl || undefined,
+            };
+          })
+        );
+        let filtered = resultsWithImages;
+        if (onlyBoxart) {
+          filtered = filtered.filter(r => !!r.boxartUrl);
+        }
+        if (filterYear) {
+          filtered = filtered.filter(r => r.releaseDate?.startsWith(filterYear));
+        }
+        const parseDate = (d?: string) => (d ? new Date(d).getTime() : 0);
+        filtered = [...filtered].sort((a, b) => {
+          if (sortBy === 'title_asc') return a.title.localeCompare(b.title);
+          if (sortBy === 'release_asc') return parseDate(a.releaseDate) - parseDate(b.releaseDate);
+          // default release_desc
+          return parseDate(b.releaseDate) - parseDate(a.releaseDate);
+        });
+        setSearchResults(filtered);
         setSearchState('results');
       }
     } catch (error) {
@@ -276,6 +322,9 @@ export function AddGameModal({ onClose, onAdd }: AddGameModalProps) {
     onAdd({
       title: title.trim(),
       platform,
+      purchaseDate: purchaseDate || undefined,
+      completed: completed || undefined,
+      completedDate: completedDate || undefined,
       format,
       barcode: barcode.trim() || undefined,
       status: 'Owned',
@@ -286,10 +335,17 @@ export function AddGameModal({ onClose, onAdd }: AddGameModalProps) {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && hasTheGamesDB && title.trim() && searchState === 'idle') {
+    if (e.key === 'Enter' && hasTheGamesDB && (searchQuery.trim() || title.trim()) && searchState === 'idle') {
       e.preventDefault();
       handleSearchTheGamesDB();
     }
+  };
+
+  const toggleRegion = (region: string) => {
+    const regions = preferences.searchRegions.includes(region)
+      ? preferences.searchRegions.filter(r => r !== region)
+      : [...preferences.searchRegions, region];
+    updatePreferences({ searchRegions: regions.length > 0 ? regions : ['US'] });
   };
 
   return (
@@ -302,6 +358,22 @@ export function AddGameModal({ onClose, onAdd }: AddGameModalProps) {
           </button>
         </header>
         <form onSubmit={handleSubmit} className="modal-form">
+          <div className="mode-tabs">
+            <button
+              type="button"
+              className={`mode-tab ${mode === 'search' ? 'active' : ''}`}
+              onClick={() => setMode('search')}
+            >
+              🔎 Search
+            </button>
+            <button
+              type="button"
+              className={`mode-tab ${mode === 'manual' ? 'active' : ''}`}
+              onClick={() => setMode('manual')}
+            >
+              ✍️ Manual
+            </button>
+          </div>
           <div className="form-group">
             <label htmlFor="title">Game Title *</label>
             <div className="input-with-actions">
@@ -310,7 +382,7 @@ export function AddGameModal({ onClose, onAdd }: AddGameModalProps) {
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                onKeyDown={handleKeyDown}
+                onKeyDown={mode === 'search' ? undefined : handleKeyDown}
                 placeholder="Enter game title"
                 required
                 autoFocus
@@ -361,17 +433,91 @@ export function AddGameModal({ onClose, onAdd }: AddGameModalProps) {
             )}
           </div>
 
-          {/* TheGamesDB Search */}
-          {hasTheGamesDB && (
+          {/* TheGamesDB Search - Search Mode */}
+          {mode === 'search' && hasTheGamesDB && (
             <div className="form-group">
-              <button
-                type="button"
-                onClick={handleSearchTheGamesDB}
-                disabled={!title.trim() || searchState === 'searching'}
-                className="btn-search"
-              >
-                {searchState === 'searching' ? '🔍 Searching...' : '🔍 Search TheGamesDB'}
-              </button>
+              <div className="form-group">
+                <label htmlFor="searchQuery">Search</label>
+                <input
+                  id="searchQuery"
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Search games..."
+                />
+              </div>
+
+              <div className="search-header">
+                <button
+                  type="button"
+                  onClick={handleSearchTheGamesDB}
+                  disabled={!(searchQuery.trim() || title.trim()) || searchState === 'searching'}
+                  className="btn-search"
+                >
+                  {searchState === 'searching' ? '🔍 Searching...' : '🔍 Search TheGamesDB'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowSettings(!showSettings)}
+                  className="btn-settings"
+                  title="Search preferences"
+                >
+                  ⚙️
+                </button>
+              </div>
+
+              <div className="search-filters">
+                <div className="filter-group">
+                  <label htmlFor="sortBy">Sort</label>
+                  <select id="sortBy" value={sortBy} onChange={e => setSortBy(e.target.value as any)}>
+                    <option value="release_desc">Release Date ↓</option>
+                    <option value="release_asc">Release Date ↑</option>
+                    <option value="title_asc">Title A-Z</option>
+                  </select>
+                </div>
+                <div className="filter-group">
+                  <label htmlFor="filterYear">Year</label>
+                  <input
+                    id="filterYear"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="\\d{4}"
+                    maxLength={4}
+                    placeholder="YYYY"
+                    value={filterYear}
+                    onChange={e => setFilterYear(e.target.value)}
+                  />
+                </div>
+                <label className="filter-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={onlyBoxart}
+                    onChange={e => setOnlyBoxart(e.target.checked)}
+                  />
+                  <span>Only with boxart</span>
+                </label>
+              </div>
+              
+              {/* Search Settings */}
+              {showSettings && (
+                <div className="search-settings">
+                  <h4>Search Regions</h4>
+                  <p className="settings-description">Select which regions to include in game searches</p>
+                  <div className="region-toggles">
+                    {['US', 'EU', 'JP', 'AU', 'KR'].map(region => (
+                      <label key={region} className="region-toggle">
+                        <input
+                          type="checkbox"
+                          checked={preferences.searchRegions.includes(region)}
+                          onChange={() => toggleRegion(region)}
+                        />
+                        <span>{region}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
               
               {searchState === 'no-results' && (
                 <p className="search-message">No results found. You can still add the game manually.</p>
@@ -389,12 +535,28 @@ export function AddGameModal({ onClose, onAdd }: AddGameModalProps) {
                       key={result.id}
                       type="button"
                       onClick={() => handleSelectGame(result.id)}
-                      className="search-result-item"
+                      className="search-result-item-detailed"
                     >
-                      <span className="result-title">{result.title}</span>
-                      {result.releaseDate && (
-                        <span className="result-date">{result.releaseDate}</span>
+                      {result.boxartUrl && (
+                        <img 
+                          src={result.boxartUrl} 
+                          alt={result.title} 
+                          className="result-boxart"
+                        />
                       )}
+                      <div className="result-details">
+                        <span className="result-title">{result.title}</span>
+                        {result.releaseDate && (
+                          <span className="result-date">📅 {result.releaseDate}</span>
+                        )}
+                        {result.overview && (
+                          <p className="result-overview">
+                            {result.overview.length > 150 
+                              ? `${result.overview.substring(0, 150)}...` 
+                              : result.overview}
+                          </p>
+                        )}
+                      </div>
                     </button>
                   ))}
                 </div>
@@ -411,6 +573,7 @@ export function AddGameModal({ onClose, onAdd }: AddGameModalProps) {
             </div>
           )}
 
+          {(mode === 'manual' || selectedGame) && (
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="platform">Platform</label>
@@ -436,7 +599,9 @@ export function AddGameModal({ onClose, onAdd }: AddGameModalProps) {
               </select>
             </div>
           </div>
+          )}
 
+          {(mode === 'manual' || selectedGame) && (
           <div className="form-group">
             <label htmlFor="barcode">Barcode (optional)</label>
             <div className="input-with-actions">
@@ -476,6 +641,60 @@ export function AddGameModal({ onClose, onAdd }: AddGameModalProps) {
               <div className="barcode-scanner">
                 <video ref={videoRef} className="scanner-video" playsInline />
                 <p className="scanner-instruction">Point camera at barcode</p>
+              </div>
+            )}
+          </div>
+          )}
+
+          {/* Additional Details (Optional) */}
+          <div className="form-group">
+            <button
+              type="button"
+              onClick={() => setShowAdditionalDetails(!showAdditionalDetails)}
+              className="btn-toggle-section"
+            >
+              {showAdditionalDetails ? '▼' : '▶'} Additional Details (Optional)
+            </button>
+            
+            {showAdditionalDetails && (
+              <div className="additional-details">
+                <div className="form-group">
+                  <label htmlFor="purchaseDate">Purchase Date</label>
+                  <input
+                    id="purchaseDate"
+                    type="date"
+                    value={purchaseDate}
+                    onChange={(e) => setPurchaseDate(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={completed}
+                      onChange={(e) => {
+                        setCompleted(e.target.checked);
+                        if (!e.target.checked) {
+                          setCompletedDate('');
+                        }
+                      }}
+                    />
+                    <span>Completed/Beaten</span>
+                  </label>
+                </div>
+
+                {completed && (
+                  <div className="form-group">
+                    <label htmlFor="completedDate">Completion Date</label>
+                    <input
+                      id="completedDate"
+                      type="date"
+                      value={completedDate}
+                      onChange={(e) => setCompletedDate(e.target.value)}
+                    />
+                  </div>
+                )}
               </div>
             )}
           </div>
