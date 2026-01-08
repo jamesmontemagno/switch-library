@@ -112,7 +112,8 @@ begin
   new.updated_at = timezone('utc'::text, now());
   return new;
 end;
-$$ language plpgsql;
+$$ language plpgsql
+set search_path = '';
 
 -- Triggers for updated_at
 create trigger on_profiles_updated
@@ -137,6 +138,7 @@ begin
   );
   return new;
 end;
+set search_path = ''
 $$ language plpgsql security definer;
 
 -- Trigger to create profile on signup
