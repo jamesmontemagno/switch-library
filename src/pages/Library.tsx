@@ -1,13 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import type { GameEntry, Platform } from '../types';
 import { loadGames, saveGame, deleteGame as deleteGameFromDb } from '../services/database';
-import { AddGameModal } from '../components/AddGameModal';
+import { ManualAddGameModal } from '../components/ManualAddGameModal';
 import { EditGameModal } from '../components/EditGameModal';
 import './Library.css';
 
 export function Library() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [games, setGames] = useState<GameEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -101,9 +103,14 @@ export function Library() {
             {stats.total} games • {stats.completed} completed • {stats.switch} Switch • {stats.switch2} Switch 2
           </p>
         </div>
-        <button onClick={() => setShowAddModal(true)} className="btn-add">
-          + Add Game
-        </button>
+        <div className="header-actions">
+          <button onClick={() => navigate('/search')} className="btn-search">
+            🔍 Search Games
+          </button>
+          <button onClick={() => setShowAddModal(true)} className="btn-add">
+            + Add Manually
+          </button>
+        </div>
       </header>
 
       <div className="library-toolbar">
@@ -160,7 +167,7 @@ export function Library() {
       )}
 
       {showAddModal && (
-        <AddGameModal
+        <ManualAddGameModal
           onClose={() => setShowAddModal(false)}
           onAdd={addGame}
         />

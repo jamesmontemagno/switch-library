@@ -18,7 +18,6 @@ export interface GameEntry {
   title: string;
   platform: Platform;
   format: Format;
-  barcode?: string;
   eshopUrl?: string;
   status: GameStatus;
   condition?: GameCondition;

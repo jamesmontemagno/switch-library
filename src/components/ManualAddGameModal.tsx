@@ -1,55 +1,43 @@
 import { useState } from 'react';
-import type { GameEntry, Platform, Format, GameStatus, GameCondition } from '../types';
+import type { GameEntry, Platform, Format } from '../types';
 import './AddGameModal.css';
 
-interface EditGameModalProps {
-  game: GameEntry;
+interface ManualAddGameModalProps {
   onClose: () => void;
-  onSave: (game: GameEntry) => void | Promise<void>;
+  onAdd: (game: Omit<GameEntry, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => void | Promise<void>;
 }
 
-export function EditGameModal({ game, onClose, onSave }: EditGameModalProps) {
-  const [title, setTitle] = useState(game.title);
-  const [platform, setPlatform] = useState<Platform>(game.platform);
-  const [format, setFormat] = useState<Format>(game.format);
-  const [status, setStatus] = useState<GameStatus>(game.status);
-  const [condition, setCondition] = useState<GameCondition | ''>(game.condition || '');
-  const [notes, setNotes] = useState(game.notes || '');
-  const [eshopUrl, setEshopUrl] = useState(game.eshopUrl || '');
-  const [purchaseDate, setPurchaseDate] = useState(game.purchaseDate || '');
-  const [completed, setCompleted] = useState(game.completed || false);
-  const [completedDate, setCompletedDate] = useState(game.completedDate || '');
-  const [showAdditionalDetails, setShowAdditionalDetails] = useState(
-    Boolean(game.purchaseDate || game.completed || game.completedDate || game.notes || game.eshopUrl)
-  );
+export function ManualAddGameModal({ onClose, onAdd }: ManualAddGameModalProps) {
+  const [title, setTitle] = useState('');
+  const [platform, setPlatform] = useState<Platform>('Nintendo Switch');
+  const [format, setFormat] = useState<Format>('Physical');
+  
+  // Additional details (optional)
+  const [showAdditionalDetails, setShowAdditionalDetails] = useState(false);
+  const [purchaseDate, setPurchaseDate] = useState('');
+  const [completed, setCompleted] = useState(false);
+  const [completedDate, setCompletedDate] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
 
-    const updatedGame: GameEntry = {
-      ...game,
+    onAdd({
       title: title.trim(),
       platform,
-      format,
-      status,
-      condition: condition || undefined,
-      notes: notes.trim() || undefined,
-      eshopUrl: eshopUrl.trim() || undefined,
       purchaseDate: purchaseDate || undefined,
       completed: completed || undefined,
       completedDate: completedDate || undefined,
-      updatedAt: new Date().toISOString(),
-    };
-
-    onSave(updatedGame);
+      format,
+      status: 'Owned',
+    });
   };
 
   return (
     <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <div className="modal add-game-modal" onClick={e => e.stopPropagation()}>
         <header className="modal-header">
-          <h2 id="modal-title">Edit Game</h2>
+          <h2 id="modal-title">Add Game Manually</h2>
           <button onClick={onClose} className="modal-close" aria-label="Close">
             ✕
           </button>
@@ -94,51 +82,7 @@ export function EditGameModal({ game, onClose, onSave }: EditGameModalProps) {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="status">Status</label>
-              <select
-                id="status"
-                value={status}
-                onChange={(e) => setStatus(e.target.value as GameStatus)}
-              >
-                <option value="Owned">Owned</option>
-                <option value="Wishlist">Wishlist</option>
-                <option value="Borrowed">Borrowed</option>
-                <option value="Lent">Lent</option>
-                <option value="Sold">Sold</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="condition">Condition</label>
-              <select
-                id="condition"
-                value={condition}
-                onChange={(e) => setCondition(e.target.value as GameCondition | '')}
-              >
-                <option value="">Not specified</option>
-                <option value="New">New</option>
-                <option value="Like New">Like New</option>
-                <option value="Good">Good</option>
-                <option value="Fair">Fair</option>
-                <option value="Poor">Poor</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="notes">Notes (optional)</label>
-            <textarea
-              id="notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Add notes about this game..."
-              rows={3}
-            />
-          </div>
-
-          {/* Additional Details */}
+          {/* Additional Details (Optional) */}
           <div className="form-group">
             <button
               type="button"
@@ -150,17 +94,6 @@ export function EditGameModal({ game, onClose, onSave }: EditGameModalProps) {
             
             {showAdditionalDetails && (
               <div className="additional-details">
-                <div className="form-group">
-                  <label htmlFor="eshopUrl">eShop URL (optional)</label>
-                  <input
-                    id="eshopUrl"
-                    type="url"
-                    value={eshopUrl}
-                    onChange={(e) => setEshopUrl(e.target.value)}
-                    placeholder="https://..."
-                  />
-                </div>
-
                 <div className="form-group">
                   <label htmlFor="purchaseDate">Purchase Date</label>
                   <input
@@ -207,7 +140,7 @@ export function EditGameModal({ game, onClose, onSave }: EditGameModalProps) {
               Cancel
             </button>
             <button type="submit" className="btn-submit" disabled={!title.trim()}>
-              Save Changes
+              Add Game
             </button>
           </div>
         </form>

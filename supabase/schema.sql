@@ -20,7 +20,6 @@ create table if not exists public.games (
   title text not null,
   platform text not null check (platform in ('Nintendo Switch', 'Nintendo Switch 2')),
   format text not null default 'Physical' check (format in ('Physical', 'Digital')),
-  barcode text,
   eshop_url text,
   status text not null default 'Owned' check (status in ('Owned', 'Wishlist', 'Borrowed', 'Lent', 'Sold')),
   condition text check (condition in ('New', 'Like New', 'Good', 'Fair', 'Poor')),
