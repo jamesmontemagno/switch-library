@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import type { GameEntry } from '../types';
 import { loadGames, saveGame } from '../services/database';
-import { getGameById, getGameImages, getBoxartUrl } from '../services/thegamesdb';
+import { getGameById, getGameImages, getBoxartUrl, getGenres, getDevelopers, getPublishers, mapIdsToNames } from '../services/thegamesdb';
 import type { TheGamesDBGame } from '../services/thegamesdb';
 import { EditGameModal } from '../components/EditGameModal';
 import './GameDetails.css';
@@ -16,6 +16,11 @@ export function GameDetails() {
   const [apiData, setApiData] = useState<TheGamesDBGame | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [editingGame, setEditingGame] = useState<GameEntry | null>(null);
+  
+  // Lookup data for mapping IDs to names
+  const [genreNames, setGenreNames] = useState<string[]>([]);
+  const [developerNames, setDeveloperNames] = useState<string[]>([]);
+  const [publisherNames, setPublisherNames] = useState<string[]>([]);
 
   useEffect(() => {
     async function fetchGameDetails() {
@@ -39,7 +44,21 @@ export function GameDetails() {
         // If we have a TheGamesDB ID, fetch additional details
         if (foundGame.thegamesdbId) {
           const gameData = await getGameById(foundGame.thegamesdbId);
+          console.log('API Data:', gameData);
           setApiData(gameData);
+          
+          // Fetch lookup data for genres, developers, publishers
+          if (gameData) {
+            const [genres, developers, publishers] = await Promise.all([
+              getGenres(),
+              getDevelopers(),
+              getPublishers()
+            ]);
+            
+            setGenreNames(mapIdsToNames(gameData.genres, genres));
+            setDeveloperNames(mapIdsToNames(gameData.developers, developers));
+            setPublisherNames(mapIdsToNames(gameData.publishers, publishers));
+          }
           
           // If we don't have a cover URL yet, try to get one
           if (!foundGame.coverUrl && gameData) {
@@ -214,22 +233,28 @@ export function GameDetails() {
                     <span className="info-value">{apiData.coop}</span>
                   </div>
                 )}
-                {apiData.publishers && apiData.publishers.length > 0 && (
+                {publisherNames.length > 0 && (
                   <div className="info-item">
                     <span className="info-label">Publishers</span>
-                    <span className="info-value">{apiData.publishers.join(', ')}</span>
+                    <span className="info-value">{publisherNames.join(', ')}</span>
                   </div>
                 )}
-                {apiData.developers && apiData.developers.length > 0 && (
+                {developerNames.length > 0 && (
                   <div className="info-item">
                     <span className="info-label">Developers</span>
-                    <span className="info-value">{apiData.developers.join(', ')}</span>
+                    <span className="info-value">{developerNames.join(', ')}</span>
                   </div>
                 )}
-                {apiData.genres && apiData.genres.length > 0 && (
+                {genreNames.length > 0 && (
                   <div className="info-item">
                     <span className="info-label">Genres</span>
-                    <span className="info-value">{apiData.genres.join(', ')}</span>
+                    <span className="info-value">{genreNames.join(', ')}</span>
+                  </div>
+                )}
+                {apiData.last_updated && (
+                  <div className="info-item">
+                    <span className="info-label">Last Updated</span>
+                    <span className="info-value">{formatDate(apiData.last_updated)}</span>
                   </div>
                 )}
                 {game.thegamesdbId && (
@@ -308,10 +333,10 @@ export function GameDetails() {
                 </div>
               )}
               
-              {apiData.alternates && (
+              {apiData.alternates && apiData.alternates.length > 0 && (
                 <div className="alternates-section">
                   <h3>Alternate Names</h3>
-                  <p>{apiData.alternates}</p>
+                  <p>{apiData.alternates.join(', ')}</p>
                 </div>
               )}
             </section>
