@@ -167,7 +167,7 @@ export function Search() {
         setIsSearching(false);
       }
     }
-  }, [query, platform, yearFrom, yearTo, sortBy, onlyWithBoxart, hasTheGamesDB]);
+  }, [query, platform, yearFrom, yearTo, sortBy, onlyWithBoxart, selectedRegions, hasTheGamesDB]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {

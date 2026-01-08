@@ -467,7 +467,9 @@
   }
   
   .result-overview {
-    color: #999
+    color: #999;
+  }
+}
 
 .search-result-item-detailed:last-child {
   border-bottom: none;
