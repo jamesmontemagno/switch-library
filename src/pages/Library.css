@@ -1,5 +1,5 @@
 .library {
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
@@ -9,19 +9,27 @@
   align-items: flex-start;
   flex-wrap: wrap;
   gap: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .library-header {
+    border-bottom-color: #333;
+  }
 }
 
 .library-header h1 {
   margin: 0;
-  font-size: 2rem;
+  font-size: 2.25rem;
   font-weight: 700;
 }
 
 .library-stats {
-  margin: 0.25rem 0 0;
+  margin: 0.5rem 0 0;
   color: #666;
-  font-size: 0.9375rem;
+  font-size: 1rem;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -34,6 +42,7 @@
   display: flex;
   gap: 0.75rem;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .btn-add,
@@ -41,33 +50,34 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
+  padding: 0.875rem 1.75rem;
   font-size: 1rem;
   font-weight: 600;
   color: white;
   border: none;
   border-radius: 10px;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: all 0.2s;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 }
 
 .btn-add {
   background: linear-gradient(135deg, #e60012 0%, #c4000f 100%);
-  box-shadow: 0 2px 8px rgba(230, 0, 18, 0.2);
 }
 
 .btn-add:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(230, 0, 18, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(230, 0, 18, 0.35);
 }
 
 .btn-search {
   background: linear-gradient(135deg, #0096d6 0%, #0077b3 100%);
-  box-shadow: 0 2px 8px rgba(0, 150, 214, 0.2);
 }
 
 .btn-search:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 150, 214, 0.35);
+}
   box-shadow: 0 4px 12px rgba(0, 150, 214, 0.3);
 }
 

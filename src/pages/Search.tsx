@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import type { GameEntry, Platform, Format } from '../types';
 import { 
@@ -10,7 +10,7 @@ import {
   DEFAULT_REGIONS,
   isTheGamesDBConfigured,
 } from '../services/thegamesdb';
-import { saveGame } from '../services/database';
+import { saveGame, loadGames } from '../services/database';
 import './Search.css';
 
 type SortOption = 'relevance' | 'release_desc' | 'release_asc' | 'title_asc' | 'title_desc';
@@ -35,6 +35,9 @@ export function Search() {
   const [hasSearched, setHasSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
+  // User's existing games (for demo mode support)
+  const [userGames, setUserGames] = useState<GameEntry[]>([]);
+  
   // Filters
   const [platform, setPlatform] = useState<'all' | Platform>('all');
   const [yearFrom, setYearFrom] = useState('');
@@ -57,6 +60,13 @@ export function Search() {
   
   const searchRequestIdRef = useRef(0);
   const hasTheGamesDB = isTheGamesDBConfigured();
+
+  // Load user's games on mount (for demo mode)
+  useEffect(() => {
+    if (user) {
+      loadGames(user.id).then(games => setUserGames(games));
+    }
+  }, [user]);
 
   const handleSearch = useCallback(async () => {
     if (!query.trim() || !hasTheGamesDB) return;
@@ -190,8 +200,12 @@ export function Search() {
         updatedAt: new Date().toISOString(),
       };
       
-      await saveGame(newGame);
-      setAddedGames(prev => new Set(prev).add(quickAddGame.id));
+      // Pass userGames for demo mode (localStorage) support
+      const savedGame = await saveGame(newGame, userGames);
+      if (savedGame) {
+        setUserGames(prev => [...prev, savedGame]);
+        setAddedGames(prev => new Set(prev).add(quickAddGame.id));
+      }
       setQuickAddGame(null);
     } catch (err) {
       console.error('Failed to add game:', err);

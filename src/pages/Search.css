@@ -3,22 +3,25 @@
 .search-page {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem 1rem;
+  padding: 1.5rem 1rem;
 }
 
 .search-header {
   text-align: center;
   margin-bottom: 2rem;
+  padding: 1rem 0;
 }
 
 .search-header h1 {
-  font-size: 2rem;
+  font-size: 2.25rem;
   margin: 0 0 0.5rem;
+  font-weight: 700;
 }
 
 .search-header p {
   color: #666;
   margin: 0;
+  font-size: 1.0625rem;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -34,51 +37,56 @@
 
 .search-input-wrapper {
   display: flex;
-  max-width: 600px;
+  max-width: 700px;
   margin: 0 auto;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 24px rgba(230, 0, 18, 0.15);
   border-radius: 12px;
   overflow: hidden;
 }
 
 .search-input-main {
   flex: 1;
-  padding: 1rem 1.25rem;
+  padding: 1rem 1.5rem;
   font-size: 1.125rem;
-  border: 2px solid #e0e0e0;
+  border: 2px solid #e60012;
   border-right: none;
   border-radius: 12px 0 0 12px;
   outline: none;
-  transition: border-color 0.2s;
+  transition: all 0.2s;
 }
 
 .search-input-main:focus {
-  border-color: #e60012;
+  border-color: #c4000f;
+  box-shadow: 0 0 0 3px rgba(230, 0, 18, 0.1);
 }
 
 @media (prefers-color-scheme: dark) {
   .search-input-main {
     background: #2a2a2a;
-    border-color: #444;
+    border-color: #e60012;
     color: white;
   }
   .search-input-main:focus {
-    border-color: #e60012;
+    border-color: #ff0015;
+  }
+  .search-input-wrapper {
+    box-shadow: 0 4px 24px rgba(230, 0, 18, 0.25);
   }
 }
 
 .search-btn-main {
-  padding: 1rem 1.5rem;
-  font-size: 1.25rem;
+  padding: 1rem 2rem;
+  font-size: 1.5rem;
   background: linear-gradient(135deg, #e60012 0%, #c4000f 100%);
   color: white;
   border: none;
   border-radius: 0 12px 12px 0;
   cursor: pointer;
-  transition: transform 0.2s, opacity 0.2s;
+  transition: all 0.2s;
 }
 
 .search-btn-main:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ff0015 0%, #e60012 100%);
   transform: scale(1.02);
 }
 
@@ -93,15 +101,18 @@
   flex-wrap: wrap;
   gap: 1rem;
   align-items: flex-end;
-  padding: 1rem;
-  background: #f8f9fa;
+  padding: 1.25rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border: 1px solid #e0e0e0;
   border-radius: 12px;
   margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 @media (prefers-color-scheme: dark) {
   .search-filters-bar {
-    background: #1a1a1a;
+    background: linear-gradient(135deg, #1a1a1a 0%, #242424 100%);
+    border-color: #333;
   }
 }
 
