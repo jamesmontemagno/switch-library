@@ -132,9 +132,22 @@ begin
   values (
     new.id,
     (new.raw_user_meta_data->>'provider_id')::bigint,
-    coalesce(new.raw_user_meta_data->>'user_name', new.raw_user_meta_data->>'preferred_username'),
-    coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name'),
-    new.raw_user_meta_data->>'avatar_url'
+    coalesce(
+      new.raw_user_meta_data->>'user_name', 
+      new.raw_user_meta_data->>'preferred_username',
+      new.raw_user_meta_data->>'display_name',
+      split_part(new.email, '@', 1)
+    ),
+    coalesce(
+      new.raw_user_meta_data->>'full_name', 
+      new.raw_user_meta_data->>'name',
+      new.raw_user_meta_data->>'display_name',
+      split_part(new.email, '@', 1)
+    ),
+    coalesce(
+      new.raw_user_meta_data->>'avatar_url',
+      'https://github.com/identicons/user.png'
+    )
   );
   return new;
 end;
