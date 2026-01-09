@@ -42,17 +42,16 @@ export function Auth() {
     e.preventDefault();
     setError(null);
     setSuccess(null);
-    setIsLoading(true);
 
     try {
       if (mode === 'reset') {
         // Handle password reset
         if (!email) {
           setError('Please enter your email address');
-          setIsLoading(false);
           return;
         }
 
+        setIsLoading(true);
         const { error: resetError } = await resetPassword(email);
         if (resetError) {
           setError(resetError.message || 'Failed to send reset email');
@@ -64,22 +63,20 @@ export function Auth() {
         // Handle sign up
         if (!email || !password || !confirmPassword) {
           setError('Please fill in all fields');
-          setIsLoading(false);
           return;
         }
 
         if (password !== confirmPassword) {
           setError('Passwords do not match');
-          setIsLoading(false);
           return;
         }
 
         if (password.length < 6) {
           setError('Password must be at least 6 characters');
-          setIsLoading(false);
           return;
         }
 
+        setIsLoading(true);
         const { error: signupError } = await signUpWithEmail(email, password);
         if (signupError) {
           setError(signupError.message || 'Failed to create account');
@@ -92,10 +89,10 @@ export function Auth() {
         // Handle sign in
         if (!email || !password) {
           setError('Please enter your email and password');
-          setIsLoading(false);
           return;
         }
 
+        setIsLoading(true);
         const { error: loginError } = await loginWithEmail(email, password);
         if (loginError) {
           setError(loginError.message || 'Invalid email or password');

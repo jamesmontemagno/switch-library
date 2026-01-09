@@ -67,10 +67,11 @@ function mapSupabaseUser(supabaseUser: { id: string; email?: string; user_metada
   }
   
   // For email/password users
+  const username = email.split('@')[0] || 'user';
   return {
     id: supabaseUser.id,
-    login: email.split('@')[0] || 'user',
-    displayName: (metadata.display_name as string) || email.split('@')[0] || 'User',
+    login: username,
+    displayName: (metadata.display_name as string) || username,
     avatarUrl: 'https://github.com/identicons/user.png',
     email,
     createdAt: supabaseUser.created_at || new Date().toISOString(),
@@ -190,10 +191,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } else {
       // Demo mode
       console.warn('Supabase not configured. Using demo mode.');
+      const username = email.split('@')[0];
       const mockUser: User = {
         id: 'demo-user-' + Date.now(),
-        login: email.split('@')[0],
-        displayName: email.split('@')[0],
+        login: username,
+        displayName: username,
         avatarUrl: 'https://github.com/identicons/user.png',
         email,
         createdAt: new Date().toISOString(),
@@ -207,12 +209,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signUpWithEmail = async (email: string, password: string) => {
     if (useSupabase) {
       dispatch({ type: 'LOGIN_START' });
+      const username = email.split('@')[0];
       const { data, error } = await supabase.auth.signUp({ 
         email, 
         password,
         options: {
           data: {
-            display_name: email.split('@')[0],
+            display_name: username,
           },
         },
       });
@@ -236,10 +239,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } else {
       // Demo mode
       console.warn('Supabase not configured. Using demo mode.');
+      const username = email.split('@')[0];
       const mockUser: User = {
         id: 'demo-user-' + Date.now(),
-        login: email.split('@')[0],
-        displayName: email.split('@')[0],
+        login: username,
+        displayName: username,
         avatarUrl: 'https://github.com/identicons/user.png',
         email,
         createdAt: new Date().toISOString(),
