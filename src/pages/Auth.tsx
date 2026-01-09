@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import './Auth.css';
@@ -19,16 +19,19 @@ export function Auth() {
   const [searchParams] = useSearchParams();
 
   // If user is already authenticated, redirect to library
-  if (isAuthenticated) {
-    navigate('/library');
-    return null;
-  }
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/library');
+    }
+  }, [isAuthenticated, navigate]);
 
   // Check if this is a password reset callback
-  const isReset = searchParams.get('reset') === 'true';
-  if (isReset && mode !== 'reset') {
-    setMode('reset');
-  }
+  useEffect(() => {
+    const isReset = searchParams.get('reset') === 'true';
+    if (isReset && mode !== 'reset') {
+      setMode('reset');
+    }
+  }, [searchParams, mode]);
 
   const handleGitHubLogin = () => {
     setError(null);
