@@ -99,29 +99,52 @@ Without an API key, the app works but won't have game search functionality.
 
 ## Deployment
 
-### Server Deployment
+### Recommended: Netlify (with API Proxy)
 
-Build the app and deploy the `dist` folder to any static hosting:
+For production deployments with game search functionality, **Netlify is recommended** as it supports serverless functions to handle API proxying and avoid CORS issues.
 
-```bash
-npm run build
-```
+1. **Connect your repository to Netlify:**
+   - Sign up at [netlify.com](https://netlify.com)
+   - Click "Add new site" → "Import an existing project"
+   - Connect your GitHub repository
 
-Deploy to:
-- Vercel
-- Netlify
-- Railway
-- Any static host
+2. **Configure build settings:**
+   - Build command: `npm run build`
+   - Publish directory: `dist`
+   - Node version: 20 or higher
 
-### GitHub Pages (Optional)
+3. **Add environment variables:**
+   ```
+   VITE_SUPABASE_URL=https://your-project.supabase.co
+   VITE_SUPABASE_ANON_KEY=your-anon-key
+   VITE_THEGAMESDB_API_KEY=your-api-key
+   ```
 
-To deploy to GitHub Pages, set the base path:
+4. **Deploy:**
+   - Netlify will automatically deploy on push to `main`
+   - The `netlify.toml` configuration includes serverless functions for API proxying
 
-```env
-VITE_BASE_PATH=/switch-library/
-```
+### Alternative: GitHub Pages
 
-The GitHub Actions workflow will automatically deploy on push to `main`.
+⚠️ **Note:** GitHub Pages only supports static hosting and cannot proxy API requests. Game search features will not work due to CORS restrictions.
+
+To deploy to GitHub Pages:
+
+1. Set the base path:
+   ```env
+   VITE_BASE_PATH=/switch-library/
+   ```
+
+2. The GitHub Actions workflow will automatically deploy on push to `main`.
+
+### Other Static Hosts
+
+You can also deploy to:
+- **Vercel** - Supports serverless functions (similar to Netlify)
+- **Railway** - Supports full-stack deployments
+- **Cloudflare Pages** - Supports Workers for API proxying
+
+For any static-only hosting, you'll need to set up a separate backend or API proxy to avoid CORS issues with TheGamesDB API.
 
 ## Demo Mode
 
