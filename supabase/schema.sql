@@ -146,7 +146,8 @@ begin
     ),
     coalesce(
       new.raw_user_meta_data->>'avatar_url',
-      'https://github.com/identicons/user.png'
+      -- Fallback avatar for email/password users
+      'https://ui-avatars.com/api/?name=' || split_part(new.email, '@', 1) || '&background=e60012&color=fff'
     )
   );
   return new;

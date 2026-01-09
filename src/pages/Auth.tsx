@@ -84,9 +84,9 @@ export function Auth() {
         if (signupError) {
           setError(signupError.message || 'Failed to create account');
         } else {
-          setSuccess('Account created! You may need to verify your email.');
-          // Navigate to library after a short delay
-          setTimeout(() => navigate('/library'), 2000);
+          // On successful signup, user is already authenticated
+          // Navigate to library immediately (auth context will handle the redirect)
+          navigate('/library');
         }
       } else {
         // Handle sign in

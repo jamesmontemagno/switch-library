@@ -177,8 +177,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return { error };
       }
       if (data.user) {
-        const user = mapSupabaseUser(data.user);
-        dispatch({ type: 'LOGIN_SUCCESS', payload: user });
+        try {
+          const user = mapSupabaseUser(data.user);
+          dispatch({ type: 'LOGIN_SUCCESS', payload: user });
+        } catch (mappingError) {
+          console.error('User mapping error:', mappingError);
+          dispatch({ type: 'LOGIN_ERROR' });
+          return { error: new Error('Failed to process user data') };
+        }
       }
       return { error: null };
     } else {
@@ -216,9 +222,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return { error };
       }
       if (data.user) {
-        // Note: User might need to confirm email depending on Supabase settings
-        const user = mapSupabaseUser(data.user);
-        dispatch({ type: 'LOGIN_SUCCESS', payload: user });
+        try {
+          // Note: User might need to confirm email depending on Supabase settings
+          const user = mapSupabaseUser(data.user);
+          dispatch({ type: 'LOGIN_SUCCESS', payload: user });
+        } catch (mappingError) {
+          console.error('User mapping error:', mappingError);
+          dispatch({ type: 'LOGIN_ERROR' });
+          return { error: new Error('Failed to process user data') };
+        }
       }
       return { error: null };
     } else {
@@ -240,8 +252,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const resetPassword = async (email: string) => {
     if (useSupabase) {
-      const baseUrl = import.meta.env.BASE_URL || '/';
-      const redirectTo = new URL('/auth?reset=true', new URL(baseUrl, window.location.origin).href).href;
+      const redirectTo = new URL('/auth?reset=true', window.location.origin).href;
       const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
       if (error) {
         console.error('Password reset error:', error);
