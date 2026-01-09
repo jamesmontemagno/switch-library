@@ -19,7 +19,7 @@ function validatePassword(password: string): string | null {
   if (!/[0-9]/.test(password)) {
     return 'Password must contain at least one digit';
   }
-  if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
+  if (!/[!@#$%^&*()_+\-=[\]{}';:"\\|,.<>/?]/.test(password)) {
     return 'Password must contain at least one symbol';
   }
   return null;
