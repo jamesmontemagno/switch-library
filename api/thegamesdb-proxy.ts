@@ -1,6 +1,16 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 /**
+ * Helper function to convert query parameters to a clean record
+ */
+function normalizeQueryParams(params: Record<string, string | string[]>): Record<string, string> {
+  return Object.entries(params).reduce((acc, [key, value]) => {
+    acc[key] = Array.isArray(value) ? value[0] : value || '';
+    return acc;
+  }, {} as Record<string, string>);
+}
+
+/**
  * Vercel serverless function to proxy requests to TheGamesDB API
  * This solves CORS issues by making API calls from the server side
  */
@@ -15,12 +25,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { path, ...queryParams } = req.query;
     
     // Build the query string
-    const queryString = new URLSearchParams(
-      Object.entries(queryParams).reduce((acc, [key, value]) => {
-        acc[key] = Array.isArray(value) ? value[0] : value || '';
-        return acc;
-      }, {} as Record<string, string>)
-    ).toString();
+    const queryString = new URLSearchParams(normalizeQueryParams(queryParams)).toString();
     
     // Build the target URL
     const pathStr = Array.isArray(path) ? path.join('/') : path || '';

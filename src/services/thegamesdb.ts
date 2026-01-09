@@ -2,7 +2,8 @@
 // API Documentation: https://api.thegamesdb.net/
 
 // Always use proxy to avoid CORS issues in both development and production
-// The proxy is configured in vite.config.ts for dev and netlify.toml for production
+// Development: Proxy configured in vite.config.ts (already set up)
+// Production: Serverless functions in netlify/functions/ or api/ directories
 const API_BASE_URL = '/api/thegamesdb';
 const API_KEY = import.meta.env.VITE_THEGAMESDB_API_KEY || '';
 

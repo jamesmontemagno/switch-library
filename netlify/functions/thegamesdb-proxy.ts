@@ -17,11 +17,24 @@ const handler: Handler = async (event: HandlerEvent) => {
   }
 
   try {
-    // Get the path after /api/thegamesdb/
-    const path = event.path.replace("/.netlify/functions/thegamesdb-proxy/", "");
+    // Extract the API path from the event
+    // When called via redirect from /api/thegamesdb/*, the path will be /.netlify/functions/thegamesdb-proxy/*
+    // We need to extract everything after the function name
+    let apiPath = "";
+    
+    if (event.path.includes("/.netlify/functions/thegamesdb-proxy/")) {
+      apiPath = event.path.split("/.netlify/functions/thegamesdb-proxy/")[1] || "";
+    } else if (event.path.includes("/.netlify/functions/thegamesdb-proxy")) {
+      // If there's no trailing slash and path, check rawUrl
+      const rawUrl = event.rawUrl || "";
+      const match = rawUrl.match(/\/api\/thegamesdb\/(.*?)(?:\?|$)/);
+      if (match) {
+        apiPath = match[1];
+      }
+    }
     
     // Build the target URL
-    const targetUrl = `https://api.thegamesdb.net/v1/${path}${event.rawQuery ? '?' + event.rawQuery : ''}`;
+    const targetUrl = `https://api.thegamesdb.net/v1/${apiPath}${event.rawQuery ? '?' + event.rawQuery : ''}`;
     
     console.log("Proxying request to:", targetUrl);
 
