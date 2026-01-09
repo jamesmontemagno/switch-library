@@ -36,6 +36,30 @@ export const supabase = {
       }
       return supabaseClient.auth.signInWithOAuth(options);
     },
+    signInWithPassword: async (credentials: { email: string; password: string }) => {
+      if (!supabaseClient) {
+        return { data: { user: null, session: null }, error: new Error('Supabase not configured') };
+      }
+      return supabaseClient.auth.signInWithPassword(credentials);
+    },
+    signUp: async (credentials: { email: string; password: string; options?: { data?: Record<string, unknown> } }) => {
+      if (!supabaseClient) {
+        return { data: { user: null, session: null }, error: new Error('Supabase not configured') };
+      }
+      return supabaseClient.auth.signUp(credentials);
+    },
+    resetPasswordForEmail: async (email: string, options?: { redirectTo?: string }) => {
+      if (!supabaseClient) {
+        return { data: {}, error: new Error('Supabase not configured') };
+      }
+      return supabaseClient.auth.resetPasswordForEmail(email, options);
+    },
+    updateUser: async (attributes: { password?: string; email?: string; data?: Record<string, unknown> }) => {
+      if (!supabaseClient) {
+        return { data: { user: null }, error: new Error('Supabase not configured') };
+      }
+      return supabaseClient.auth.updateUser(attributes);
+    },
     signOut: async () => {
       if (!supabaseClient) {
         return { error: null };

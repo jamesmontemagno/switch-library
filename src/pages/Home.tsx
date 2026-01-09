@@ -3,14 +3,14 @@ import { useAuth } from '../hooks/useAuth';
 import './Home.css';
 
 export function Home() {
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   const handleGetStarted = () => {
     if (isAuthenticated) {
       navigate('/library');
     } else {
-      login();
+      navigate('/auth');
     }
   };
 

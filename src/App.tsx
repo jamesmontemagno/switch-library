@@ -3,6 +3,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { Layout } from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Home } from './pages/Home';
+import { Auth } from './pages/Auth';
 import { Library } from './pages/Library';
 import { Search } from './pages/Search';
 import { GameDetails } from './pages/GameDetails';
@@ -18,6 +19,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
+            <Route path="auth" element={<Auth />} />
             <Route path="search" element={<Search />} />
             <Route
               path="library"
