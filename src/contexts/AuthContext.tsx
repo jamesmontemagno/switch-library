@@ -49,14 +49,31 @@ interface AuthProviderProps {
 }
 
 // Map Supabase user to our User type
-function mapSupabaseUser(supabaseUser: { id: string; user_metadata?: Record<string, unknown>; created_at?: string }): User {
+function mapSupabaseUser(supabaseUser: { id: string; email?: string; user_metadata?: Record<string, unknown>; created_at?: string }): User {
   const metadata = supabaseUser.user_metadata || {};
+  const email = supabaseUser.email || '';
+  
+  // For GitHub OAuth users
+  if (metadata.provider_id) {
+    return {
+      id: supabaseUser.id,
+      githubId: (metadata.provider_id as number) || 0,
+      login: (metadata.user_name as string) || (metadata.preferred_username as string) || 'user',
+      displayName: (metadata.full_name as string) || (metadata.name as string) || 'User',
+      avatarUrl: (metadata.avatar_url as string) || 'https://github.com/identicons/user.png',
+      email,
+      createdAt: supabaseUser.created_at || new Date().toISOString(),
+    };
+  }
+  
+  // For email/password users
+  const username = email.split('@')[0] || 'user';
   return {
     id: supabaseUser.id,
-    githubId: (metadata.provider_id as number) || 0,
-    login: (metadata.user_name as string) || (metadata.preferred_username as string) || 'user',
-    displayName: (metadata.full_name as string) || (metadata.name as string) || 'User',
-    avatarUrl: (metadata.avatar_url as string) || 'https://github.com/identicons/user.png',
+    login: username,
+    displayName: (metadata.display_name as string) || username,
+    avatarUrl: 'https://github.com/identicons/user.png',
+    email,
     createdAt: supabaseUser.created_at || new Date().toISOString(),
   };
 }
@@ -151,6 +168,107 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const loginWithEmail = async (email: string, password: string) => {
+    if (useSupabase) {
+      dispatch({ type: 'LOGIN_START' });
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        console.error('Email login error:', error);
+        dispatch({ type: 'LOGIN_ERROR' });
+        return { error };
+      }
+      if (data.user) {
+        try {
+          const user = mapSupabaseUser(data.user);
+          dispatch({ type: 'LOGIN_SUCCESS', payload: user });
+        } catch (mappingError) {
+          console.error('User mapping error:', mappingError);
+          dispatch({ type: 'LOGIN_ERROR' });
+          return { error: new Error('Failed to process user data') };
+        }
+      }
+      return { error: null };
+    } else {
+      // Demo mode
+      console.warn('Supabase not configured. Using demo mode.');
+      const username = email.split('@')[0];
+      const mockUser: User = {
+        id: 'demo-user-' + Date.now(),
+        login: username,
+        displayName: username,
+        avatarUrl: 'https://github.com/identicons/user.png',
+        email,
+        createdAt: new Date().toISOString(),
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(mockUser));
+      dispatch({ type: 'LOGIN_SUCCESS', payload: mockUser });
+      return { error: null };
+    }
+  };
+
+  const signUpWithEmail = async (email: string, password: string) => {
+    if (useSupabase) {
+      dispatch({ type: 'LOGIN_START' });
+      const username = email.split('@')[0];
+      const { data, error } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+          data: {
+            display_name: username,
+          },
+        },
+      });
+      if (error) {
+        console.error('Email signup error:', error);
+        dispatch({ type: 'LOGIN_ERROR' });
+        return { error };
+      }
+      if (data.user) {
+        try {
+          // Note: User might need to confirm email depending on Supabase settings
+          const user = mapSupabaseUser(data.user);
+          dispatch({ type: 'LOGIN_SUCCESS', payload: user });
+        } catch (mappingError) {
+          console.error('User mapping error:', mappingError);
+          dispatch({ type: 'LOGIN_ERROR' });
+          return { error: new Error('Failed to process user data') };
+        }
+      }
+      return { error: null };
+    } else {
+      // Demo mode
+      console.warn('Supabase not configured. Using demo mode.');
+      const username = email.split('@')[0];
+      const mockUser: User = {
+        id: 'demo-user-' + Date.now(),
+        login: username,
+        displayName: username,
+        avatarUrl: 'https://github.com/identicons/user.png',
+        email,
+        createdAt: new Date().toISOString(),
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(mockUser));
+      dispatch({ type: 'LOGIN_SUCCESS', payload: mockUser });
+      return { error: null };
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    if (useSupabase) {
+      const redirectTo = new URL('/auth?reset=true', window.location.origin).href;
+      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+      if (error) {
+        console.error('Password reset error:', error);
+        return { error };
+      }
+      return { error: null };
+    } else {
+      console.warn('Supabase not configured. Using demo mode.');
+      return { error: null };
+    }
+  };
+
   const logout = async () => {
     if (useSupabase) {
       await supabase.auth.signOut();
@@ -160,7 +278,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   return (
-    <AuthContext.Provider value={{ ...state, login, logout }}>
+    <AuthContext.Provider value={{ ...state, login, loginWithEmail, signUpWithEmail, resetPassword, logout }}>
       {children}
     </AuthContext.Provider>
   );

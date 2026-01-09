@@ -126,20 +126,37 @@ create trigger on_games_updated
 
 -- Function to create profile on user signup
 create or replace function public.handle_new_user()
-returns trigger as $$
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
 begin
   insert into public.profiles (id, github_id, login, display_name, avatar_url)
   values (
     new.id,
     (new.raw_user_meta_data->>'provider_id')::bigint,
-    coalesce(new.raw_user_meta_data->>'user_name', new.raw_user_meta_data->>'preferred_username'),
-    coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name'),
-    new.raw_user_meta_data->>'avatar_url'
+    coalesce(
+      new.raw_user_meta_data->>'user_name', 
+      new.raw_user_meta_data->>'preferred_username',
+      new.raw_user_meta_data->>'display_name',
+      split_part(new.email, '@', 1)
+    ),
+    coalesce(
+      new.raw_user_meta_data->>'full_name', 
+      new.raw_user_meta_data->>'name',
+      new.raw_user_meta_data->>'display_name',
+      split_part(new.email, '@', 1)
+    ),
+    coalesce(
+      new.raw_user_meta_data->>'avatar_url',
+      -- Fallback avatar for email/password users
+      'https://ui-avatars.com/api/?name=' || split_part(new.email, '@', 1) || '&background=e60012&color=fff'
+    )
   );
   return new;
 end;
-set search_path = ''
-$$ language plpgsql security definer;
+$$;
 
 -- Trigger to create profile on signup
 create trigger on_auth_user_created

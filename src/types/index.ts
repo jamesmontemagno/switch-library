@@ -1,9 +1,10 @@
 export interface User {
   id: string;
-  githubId: number;
+  githubId?: number;
   login: string;
   displayName: string;
   avatarUrl: string;
+  email?: string;
   createdAt: string;
 }
 
