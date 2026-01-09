@@ -40,7 +40,9 @@ export function Header() {
             <span className="auth-loading">Loading...</span>
           ) : isAuthenticated && user ? (
             <div className="user-menu">
-              <img src={user.avatarUrl} alt={user.displayName} className="user-avatar" />
+              {user.avatarUrl && (
+                <img src={user.avatarUrl} alt={user.displayName} className="user-avatar" />
+              )}
               <span className="user-name">{user.displayName}</span>
               <button onClick={logout} className="btn btn-secondary">
                 Sign Out

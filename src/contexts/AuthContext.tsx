@@ -60,7 +60,7 @@ function mapSupabaseUser(supabaseUser: { id: string; email?: string; user_metada
       githubId: (metadata.provider_id as number) || 0,
       login: (metadata.user_name as string) || (metadata.preferred_username as string) || 'user',
       displayName: (metadata.full_name as string) || (metadata.name as string) || 'User',
-      avatarUrl: (metadata.avatar_url as string) || 'https://github.com/identicons/user.png',
+      avatarUrl: (metadata.avatar_url as string) || '',
       email,
       createdAt: supabaseUser.created_at || new Date().toISOString(),
     };
@@ -72,7 +72,7 @@ function mapSupabaseUser(supabaseUser: { id: string; email?: string; user_metada
     id: supabaseUser.id,
     login: username,
     displayName: (metadata.display_name as string) || username,
-    avatarUrl: 'https://github.com/identicons/user.png',
+    avatarUrl: '',
     email,
     createdAt: supabaseUser.created_at || new Date().toISOString(),
   };
@@ -160,7 +160,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         githubId: 12345678,
         login: 'demo-user',
         displayName: 'Demo User',
-        avatarUrl: 'https://github.com/identicons/demo-user.png',
+        avatarUrl: '',
         createdAt: new Date().toISOString(),
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(mockUser));
@@ -196,7 +196,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         id: 'demo-user-' + Date.now(),
         login: username,
         displayName: username,
-        avatarUrl: 'https://github.com/identicons/user.png',
+        avatarUrl: '',
         email,
         createdAt: new Date().toISOString(),
       };
@@ -244,7 +244,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         id: 'demo-user-' + Date.now(),
         login: username,
         displayName: username,
-        avatarUrl: 'https://github.com/identicons/user.png',
+        avatarUrl: '',
         email,
         createdAt: new Date().toISOString(),
       };
