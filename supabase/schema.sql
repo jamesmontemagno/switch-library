@@ -126,7 +126,11 @@ create trigger on_games_updated
 
 -- Function to create profile on user signup
 create or replace function public.handle_new_user()
-returns trigger as $$
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
 begin
   insert into public.profiles (id, github_id, login, display_name, avatar_url)
   values (
@@ -152,8 +156,7 @@ begin
   );
   return new;
 end;
-set search_path = ''
-$$ language plpgsql security definer;
+$$;
 
 -- Trigger to create profile on signup
 create trigger on_auth_user_created
