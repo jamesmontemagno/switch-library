@@ -7,6 +7,9 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'backend-api/**'
+      - '.github/workflows/main_myswitchlibrary.yml'
   workflow_dispatch:
 
 env:
@@ -41,3 +44,5 @@ jobs:
           slot-name: 'Production'
           package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_282554B645274EA496C9CE2850A82DDD }}
+          scm-do-build-during-deployment: false  # Disable Oryx
+          enable-oryx-build: false                # Disable Oryx
