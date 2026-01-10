@@ -16,6 +16,7 @@ export function Settings() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [showRegenerateConfirm, setShowRegenerateConfirm] = useState(false);
+  const [showDisableConfirm, setShowDisableConfirm] = useState(false);
   
   useSEO({
     title: 'Settings',
@@ -54,20 +55,31 @@ export function Settings() {
   const handleToggleSharing = async (enabled: boolean) => {
     if (!user) return;
     
+    // Show confirmation modal when disabling sharing
+    if (!enabled) {
+      setShowDisableConfirm(true);
+      return;
+    }
+    
     updateShareSettings({ enabled });
     
-    if (enabled) {
-      // Enable sharing in database
-      const profile = await enableSharing(user.id);
-      if (profile) {
-        const fullUrl = `${window.location.origin}${import.meta.env.BASE_URL}shared/${profile.shareId}`;
-        setShareLink(fullUrl);
-      }
-    } else {
-      // Disable sharing in database
-      await disableSharing(user.id);
-      setShareLink('');
+    // Enable sharing in database
+    const profile = await enableSharing(user.id);
+    if (profile) {
+      const fullUrl = `${window.location.origin}${import.meta.env.BASE_URL}shared/${profile.shareId}`;
+      setShareLink(fullUrl);
     }
+  };
+
+  const handleDisableSharing = async () => {
+    if (!user) return;
+    
+    updateShareSettings({ enabled: false });
+    
+    // Disable sharing in database
+    await disableSharing(user.id);
+    setShareLink('');
+    setShowDisableConfirm(false);
   };
 
   const handleGenerateShareLink = async () => {
@@ -373,6 +385,53 @@ export function Settings() {
                   style={{ flex: 1 }}
                 >
                   {loadingShareLink ? 'Regenerating...' : 'Regenerate Link'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Disable Sharing Confirmation Modal */}
+      {showDisableConfirm && (
+        <div className="modal-overlay" onClick={() => setShowDisableConfirm(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+            <header className="modal-header">
+              <h2>Disable Library Sharing</h2>
+              <button onClick={() => setShowDisableConfirm(false)} className="modal-close" aria-label="Close">
+                ×
+              </button>
+            </header>
+            <div className="modal-form" style={{ padding: '1.5rem' }}>
+              <p style={{ marginBottom: '1rem', color: '#dc3545', fontWeight: '600' }}>
+                ⚠️ Warning: This will affect your friends!
+              </p>
+              <p style={{ marginBottom: '1rem' }}>
+                Disabling library sharing will:
+              </p>
+              <ul style={{ marginBottom: '1.5rem', marginLeft: '1.5rem', lineHeight: '1.8' }}>
+                <li><strong>Prevent friends from viewing your library</strong></li>
+                <li>Invalidate your current share link</li>
+                <li>Hide your profile from public view</li>
+                <li>Require re-enabling to share your library again</li>
+              </ul>
+              <p style={{ marginBottom: '1.5rem', color: '#6c757d' }}>
+                Your friends will no longer be able to see your game collection until you re-enable sharing.
+              </p>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button 
+                  onClick={() => setShowDisableConfirm(false)} 
+                  className="btn btn-secondary"
+                  style={{ flex: 1 }}
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleDisableSharing}
+                  className="btn btn-danger"
+                  style={{ flex: 1 }}
+                >
+                  Disable Sharing
                 </button>
               </div>
             </div>
