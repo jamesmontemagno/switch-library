@@ -1,5 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faMagnifyingGlass, faBookOpen } from '@fortawesome/free-solid-svg-icons';
 import './Header.css';
 
 // Simple MD5-like hash for Gravatar (Note: For production, use a proper MD5 library)
@@ -51,12 +53,13 @@ export function Header() {
         </Link>
 
         <nav className="nav" aria-label="Main navigation">
-          <Link to="/search" className={`nav-link ${isActive('/search') ? 'active' : ''}`}>
-            Search
+          <Link to="/search" className={`nav-link nav-link-icon ${isActive('/search') ? 'active' : ''}`} aria-label="Search">
+            <FontAwesomeIcon icon={faMagnifyingGlass} />
           </Link>
           {isAuthenticated && (
             <Link to="/library" className={`nav-link ${isActive('/library') ? 'active' : ''}`}>
-              My Library
+              <FontAwesomeIcon icon={faBookOpen} />
+              <span>Library</span>
             </Link>
           )}
         </nav>

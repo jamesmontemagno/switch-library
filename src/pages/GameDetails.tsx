@@ -6,6 +6,8 @@ import { loadGames, saveGame } from '../services/database';
 import { getGameById, getGenres, getDevelopers, getPublishers, mapIdsToNames } from '../services/thegamesdb';
 import type { TheGamesDBGame } from '../services/thegamesdb';
 import { EditGameModal } from '../components/EditGameModal';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPenToSquare, faGamepad, faCircleCheck } from '@fortawesome/free-solid-svg-icons';
 import './GameDetails.css';
 
 export function GameDetails() {
@@ -125,7 +127,7 @@ export function GameDetails() {
           ← Back to Library
         </button>
         <button onClick={() => setEditingGame(game)} className="edit-button">
-          ✏️ Edit Game
+          <FontAwesomeIcon icon={faPenToSquare} /> Edit Game
         </button>
       </div>
 
@@ -136,7 +138,7 @@ export function GameDetails() {
               <img src={game.coverUrl} alt={game.title} />
             ) : (
               <div className="cover-placeholder-large">
-                <span>🎮</span>
+                <FontAwesomeIcon icon={faGamepad} />
               </div>
             )}
           </div>
@@ -161,7 +163,7 @@ export function GameDetails() {
               )}
               {game.completed && (
                 <span className="completed-tag">
-                  ✓ Completed
+                  <FontAwesomeIcon icon={faCircleCheck} /> Completed
                 </span>
               )}
             </div>

@@ -665,4 +665,75 @@ export async function getUserProfile(userId: string): Promise<{ displayName: str
   return null;
 }
 
+// Delete user account and all associated data
+export async function deleteUserAccount(userId: string): Promise<boolean> {
+  if (useSupabase) {
+    try {
+      // Delete user data in order (due to foreign key constraints)
+      // Note: The database should have ON DELETE CASCADE set up for most relations
+      
+      // Delete API usage records
+      await supabase.from('api_usage').delete().eq('user_id', userId);
+      
+      // Delete share profile
+      await supabase.from('share_profiles').delete().eq('user_id', userId);
+      
+      // Delete games
+      await supabase.from('games').delete().eq('user_id', userId);
+      
+      // Delete profile
+      await supabase.from('profiles').delete().eq('id', userId);
+      
+      // Note: Deleting the auth user requires admin privileges
+      // This should be done via a server-side endpoint or database function
+      // For now, the user data is deleted and they will be signed out
+      // The auth user record will remain but without any associated data
+      
+      return true;
+    } catch (error) {
+      console.error('Failed to delete user account:', error);
+      return false;
+    }
+  }
+
+  // localStorage fallback - clear all user data
+  try {
+    const gamesKey = 'switch-library-games';
+    const stored = localStorage.getItem(gamesKey);
+    if (stored) {
+      const allGames = JSON.parse(stored) as GameEntry[];
+      const filtered = allGames.filter(g => g.userId !== userId);
+      localStorage.setItem(gamesKey, JSON.stringify(filtered));
+    }
+    
+    // Clear share profile
+    const shareKey = 'switch-library-share-profile';
+    const shareStored = localStorage.getItem(shareKey);
+    if (shareStored) {
+      const profiles = JSON.parse(shareStored) as ShareProfile[];
+      const filtered = profiles.filter(p => p.userId !== userId);
+      localStorage.setItem(shareKey, JSON.stringify(filtered));
+    }
+    
+    // Clear API usage
+    const usageKey = 'switch-library-api-usage';
+    const usageStored = localStorage.getItem(usageKey);
+    if (usageStored) {
+      const allUsage = JSON.parse(usageStored) as Record<string, unknown>;
+      const filtered = Object.keys(allUsage)
+        .filter(key => !key.startsWith(`${userId}-`))
+        .reduce((acc, key) => {
+          acc[key] = allUsage[key];
+          return acc;
+        }, {} as Record<string, unknown>);
+      localStorage.setItem(usageKey, JSON.stringify(filtered));
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Failed to delete user account from localStorage:', error);
+    return false;
+  }
+}
+
 export { useSupabase };

@@ -11,10 +11,20 @@ export function Layout() {
         <Outlet />
       </main>
       <footer className="footer">
-        <p>
-          &copy; {new Date().getFullYear()} My Switch Library. 
-          Built with ❤️ for Nintendo fans.
-        </p>
+        <div className="footer-content">
+          <p>
+            &copy; {new Date().getFullYear()} My Switch Library. Built with ❤️ for Nintendo fans.
+          </p>
+          <p className="footer-links">
+            <a href="https://www.refractored.com/terms" target="_blank" rel="noopener noreferrer">Terms</a>
+            {' · '}
+            <a href="https://www.refractored.com/about#privacy-policy" target="_blank" rel="noopener noreferrer">Privacy</a>
+          </p>
+          <p className="footer-attribution">
+            Game data provided by{' '}
+            <a href="https://thegamesdb.net" target="_blank" rel="noopener noreferrer">TheGamesDB.net</a>
+          </p>
+        </div>
         <ApiAllowanceIndicator />
       </footer>
     </div>

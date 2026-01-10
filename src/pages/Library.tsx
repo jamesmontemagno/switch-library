@@ -7,6 +7,8 @@ import type { GameEntry, Platform, ShareProfile } from '../types';
 import { loadGames, saveGame, deleteGame as deleteGameFromDb, getShareProfile, enableSharing, disableSharing, regenerateShareId, updateSharePrivacy, updateDisplayName, getUserProfile } from '../services/database';
 import { ManualAddGameModal } from '../components/ManualAddGameModal';
 import { EditGameModal } from '../components/EditGameModal';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faMagnifyingGlass, faCheck, faPenToSquare, faGear, faClipboard, faEye, faGamepad, faTrash, faCartShopping, faTrophy, faLink, faUser, faLock, faRotate, faXmark } from '@fortawesome/free-solid-svg-icons';
 import './Library.css';
 
 type SortOption = 'title_asc' | 'title_desc' | 'added_newest' | 'added_oldest' | 'purchase_newest' | 'purchase_oldest' | 'platform' | 'format' | 'completed_first' | 'not_completed_first';
@@ -312,10 +314,10 @@ export function Library() {
             onClick={() => setShowSharePanel(!showSharePanel)} 
             className={`btn-share ${shareProfile?.enabled ? 'active' : ''}`}
           >
-            🔗 {showSharePanel ? 'Hide Sharing' : 'Share'}
+            <FontAwesomeIcon icon={faLink} /> {showSharePanel ? 'Hide Sharing' : 'Share'}
           </button>
           <button onClick={() => navigate('/search')} className="btn-search">
-            🔍 Search Games
+            <FontAwesomeIcon icon={faMagnifyingGlass} /> Search Games
           </button>
           <button onClick={() => setShowAddModal(true)} className="btn-add">
             + Add Manually
@@ -327,13 +329,13 @@ export function Library() {
       {showSharePanel && (
         <div className="share-panel">
           <div className="share-panel-header">
-            <h3>🔗 Share Your Library</h3>
+            <h3><FontAwesomeIcon icon={faLink} /> Share Your Library</h3>
             <p>Share your collection with friends or compare libraries</p>
           </div>
           
           {/* Profile Settings */}
           <div className="share-section">
-            <h4>👤 Display Name</h4>
+            <h4><FontAwesomeIcon icon={faUser} /> Display Name</h4>
             <div className="profile-edit-row">
               {editingDisplayName ? (
                 <>
@@ -349,13 +351,13 @@ export function Library() {
                     disabled={savingDisplayName || !displayName.trim()}
                     className="btn-save-profile"
                   >
-                    {savingDisplayName ? '...' : '✓ Save'}
+                    {savingDisplayName ? '...' : <><FontAwesomeIcon icon={faCheck} /> Save</>}
                   </button>
                   <button 
                     onClick={() => setEditingDisplayName(false)}
                     className="btn-cancel-profile"
                   >
-                    ✕
+                    <FontAwesomeIcon icon={faXmark} />
                   </button>
                 </>
               ) : (
@@ -365,7 +367,7 @@ export function Library() {
                     onClick={() => setEditingDisplayName(true)}
                     className="btn-edit-profile"
                   >
-                    ✏️ Edit
+                    <FontAwesomeIcon icon={faPenToSquare} /> Edit
                   </button>
                 </>
               )}
@@ -373,7 +375,7 @@ export function Library() {
           </div>
           
           <div className="share-section">
-            <h4>⚙️ Sharing Settings</h4>
+            <h4><FontAwesomeIcon icon={faGear} /> Sharing Settings</h4>
             <div className="share-panel-content">
               <div className="share-toggle-row">
                 <span>Sharing is {shareProfile?.enabled ? 'enabled' : 'disabled'}</span>
@@ -396,13 +398,13 @@ export function Library() {
                       className="share-url-input"
                     />
                     <button onClick={handleCopyLink} className="btn-copy">
-                      {copySuccess ? '✓ Copied!' : '📋 Copy'}
+                      {copySuccess ? <><FontAwesomeIcon icon={faCheck} /> Copied!</> : <><FontAwesomeIcon icon={faClipboard} /> Copy</>}
                     </button>
                   </div>
                   
                   {/* Privacy Settings */}
                   <div className="privacy-settings">
-                    <h5>🔒 Privacy</h5>
+                    <h5><FontAwesomeIcon icon={faLock} /> Privacy</h5>
                     <div className="privacy-toggle-row">
                       <span>Show my display name</span>
                       <button
@@ -431,13 +433,13 @@ export function Library() {
                       className="btn-regenerate"
                       disabled={isLoadingShare}
                     >
-                      🔄 Generate New Link
+                      <FontAwesomeIcon icon={faRotate} /> Generate New Link
                     </button>
                     <button 
                       onClick={() => navigate(`/shared/${shareProfile.shareId}`)}
                       className="btn-preview"
                     >
-                      👁️ Preview
+                      <FontAwesomeIcon icon={faEye} /> Preview
                     </button>
                   </div>
                 </>
@@ -532,7 +534,7 @@ export function Library() {
         <div className="empty-state">
           {games.length === 0 ? (
             <>
-              <div className="empty-icon">🎮</div>
+              <div className="empty-icon"><FontAwesomeIcon icon={faGamepad} /></div>
               <h2>No games yet</h2>
               <p>Start building your collection by adding your first game!</p>
               <button onClick={() => setShowAddModal(true)} className="btn-add">
@@ -541,7 +543,7 @@ export function Library() {
             </>
           ) : (
             <>
-              <div className="empty-icon">🔍</div>
+              <div className="empty-icon"><FontAwesomeIcon icon={faMagnifyingGlass} /></div>
               <h2>No matches found</h2>
               <p>Try adjusting your search or filters.</p>
             </>
@@ -638,7 +640,7 @@ function GameCard({ game, viewMode, onDelete, onEdit }: GameCardProps) {
           {game.coverUrl ? (
             <img src={game.coverUrl} alt={game.title} />
           ) : (
-            <div className="cover-placeholder-small">🎮</div>
+            <div className="cover-placeholder-small"><FontAwesomeIcon icon={faGamepad} /></div>
           )}
         </div>
         <div className="compact-info">
@@ -650,12 +652,12 @@ function GameCard({ game, viewMode, onDelete, onEdit }: GameCardProps) {
             <span className={`format-tag small ${game.format.toLowerCase()}`}>
               {game.format}
             </span>
-            {game.completed && <span className="completed-tag">✓ Completed</span>}
+            {game.completed && <span className="completed-tag"><FontAwesomeIcon icon={faCheck} /> Completed</span>}
           </div>
         </div>
         <div className="compact-actions">
-          <button onClick={onEdit} className="edit-btn" aria-label={`Edit ${game.title}`}>✏️</button>
-          <button onClick={onDelete} className="delete-btn" aria-label={`Delete ${game.title}`}>🗑️</button>
+          <button onClick={onEdit} className="edit-btn" aria-label={`Edit ${game.title}`}><FontAwesomeIcon icon={faPenToSquare} /></button>
+          <button onClick={onDelete} className="delete-btn" aria-label={`Delete ${game.title}`}><FontAwesomeIcon icon={faTrash} /></button>
         </div>
       </article>
     );
@@ -670,11 +672,11 @@ function GameCard({ game, viewMode, onDelete, onEdit }: GameCardProps) {
             <img src={game.coverUrl} alt={game.title} />
           ) : (
             <div className="cover-placeholder">
-              <span>🎮</span>
+              <FontAwesomeIcon icon={faGamepad} />
             </div>
           )}
           {game.completed && (
-            <div className="completed-badge" title="Completed">✓</div>
+            <div className="completed-badge" title="Completed"><FontAwesomeIcon icon={faCheck} /></div>
           )}
         </div>
         <div className="list-info">
@@ -689,10 +691,10 @@ function GameCard({ game, viewMode, onDelete, onEdit }: GameCardProps) {
           </div>
           <div className="list-details">
             {game.purchaseDate && (
-              <span className="date-info">🛒 Purchased: {formatDate(game.purchaseDate)}</span>
+              <span className="date-info"><FontAwesomeIcon icon={faCartShopping} /> Purchased: {formatDate(game.purchaseDate)}</span>
             )}
             {game.completedDate && (
-              <span className="date-info">🏆 Completed: {formatDate(game.completedDate)}</span>
+              <span className="date-info"><FontAwesomeIcon icon={faTrophy} /> Completed: {formatDate(game.completedDate)}</span>
             )}
             {game.notes && (
               <p className="list-notes">{game.notes}</p>
@@ -700,8 +702,8 @@ function GameCard({ game, viewMode, onDelete, onEdit }: GameCardProps) {
           </div>
         </div>
         <div className="list-actions">
-          <button onClick={onEdit} className="edit-btn" aria-label={`Edit ${game.title}`}>✏️</button>
-          <button onClick={onDelete} className="delete-btn" aria-label={`Delete ${game.title}`}>🗑️</button>
+          <button onClick={onEdit} className="edit-btn" aria-label={`Edit ${game.title}`}><FontAwesomeIcon icon={faPenToSquare} /></button>
+          <button onClick={onDelete} className="delete-btn" aria-label={`Delete ${game.title}`}><FontAwesomeIcon icon={faTrash} /></button>
         </div>
       </article>
     );
@@ -715,12 +717,12 @@ function GameCard({ game, viewMode, onDelete, onEdit }: GameCardProps) {
           <img src={game.coverUrl} alt={game.title} />
         ) : (
           <div className="cover-placeholder">
-            <span>🎮</span>
+            <FontAwesomeIcon icon={faGamepad} />
           </div>
         )}
         {game.completed && (
           <div className="completed-badge" title="Completed">
-            ✓
+            <FontAwesomeIcon icon={faCheck} />
           </div>
         )}
       </div>
@@ -738,12 +740,12 @@ function GameCard({ game, viewMode, onDelete, onEdit }: GameCardProps) {
           <div className="game-dates">
             {game.purchaseDate && (
               <span className="date-info" title="Purchase Date">
-                🛒 {formatDate(game.purchaseDate)}
+                <FontAwesomeIcon icon={faCartShopping} /> {formatDate(game.purchaseDate)}
               </span>
             )}
             {game.completedDate && (
               <span className="date-info" title="Completion Date">
-                🏆 {formatDate(game.completedDate)}
+                <FontAwesomeIcon icon={faTrophy} /> {formatDate(game.completedDate)}
               </span>
             )}
           </div>
@@ -754,14 +756,14 @@ function GameCard({ game, viewMode, onDelete, onEdit }: GameCardProps) {
             className="edit-btn"
             aria-label={`Edit ${game.title}`}
           >
-            ✏️
+            <FontAwesomeIcon icon={faPenToSquare} />
           </button>
           <button 
             onClick={onDelete} 
             className="delete-btn"
             aria-label={`Delete ${game.title}`}
           >
-            🗑️
+            <FontAwesomeIcon icon={faTrash} />
           </button>
         </div>
       </div>

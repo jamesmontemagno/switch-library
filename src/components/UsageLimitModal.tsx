@@ -1,3 +1,5 @@
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTriangleExclamation, faCircleXmark, faLightbulb } from '@fortawesome/free-solid-svg-icons';
 import './AddGameModal.css';
 
 interface UsageLimitModalProps {
@@ -21,13 +23,15 @@ export function UsageLimitModal({ onClose, usage }: UsageLimitModalProps) {
         <header className="modal-header">
           <h2 id="usage-modal-title">Monthly Search Limit Reached</h2>
           <button onClick={onClose} className="modal-close" aria-label="Close">
-            ✕
+            <FontAwesomeIcon icon={faCircleXmark} />
           </button>
         </header>
         
         <div className="modal-form" style={{ padding: '1.5rem' }}>
           <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>⚠️</div>
+            <div style={{ fontSize: '3rem', marginBottom: '0.5rem', color: '#ff9800' }}>
+              <FontAwesomeIcon icon={faTriangleExclamation} />
+            </div>
             <p style={{ fontSize: '1.1rem', fontWeight: '500', marginBottom: '0.5rem' }}>
               You've used {usage.count} out of {usage.limit} searches for {monthName}
             </p>
@@ -47,7 +51,7 @@ export function UsageLimitModal({ onClose, usage }: UsageLimitModalProps) {
 
           <div style={{ backgroundColor: '#e8f4ff', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
             <h3 style={{ fontSize: '1rem', marginBottom: '0.75rem', color: '#0066cc' }}>
-              💡 Pro tip: Use your cache!
+              <FontAwesomeIcon icon={faLightbulb} /> Pro tip: Use your cache!
             </h3>
             <p style={{ fontSize: '0.9rem', lineHeight: '1.6', color: '#333' }}>
               Search results are cached for 7 days, and game details for 30 days. 

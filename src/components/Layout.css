@@ -22,6 +22,36 @@
   margin-top: auto;
 }
 
+.footer-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
 .footer p {
   margin: 0;
+}
+
+.footer-links a,
+.footer-attribution a {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-links a:hover,
+.footer-attribution a:hover {
+  color: #e60012;
+  text-decoration: underline;
+}
+
+.footer-attribution {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.footer-attribution a {
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
 }

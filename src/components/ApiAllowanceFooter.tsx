@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { getStoredAllowance, isTheGamesDBConfigured } from '../services/thegamesdb';
 import { getMonthlySearchCount } from '../services/database';
 import { useAuth } from '../hooks/useAuth';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faKey, faMagnifyingGlass, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import './ApiAllowanceFooter.css';
 
 function getInitialAllowance() {
@@ -77,26 +79,36 @@ export function ApiAllowanceIndicator() {
     <div className="api-allowance-container">
       {allowance && (
         <div className={`api-allowance-indicator ${getStatusClass()}`}>
-          <span className="allowance-label">🔑 API:</span>
+          <span className="allowance-label">
+            <FontAwesomeIcon icon={faKey} /> API:
+          </span>
           <span className="allowance-value">
             {allowance.remaining.toLocaleString()}
           </span>
           {allowance.remaining === 0 && (
-            <span className="allowance-warning">⚠️</span>
+            <span className="allowance-warning">
+              <FontAwesomeIcon icon={faTriangleExclamation} />
+            </span>
           )}
           {allowance.remaining > 0 && allowance.remaining < 50 && (
-            <span className="allowance-warning">⚠️</span>
+            <span className="allowance-warning">
+              <FontAwesomeIcon icon={faTriangleExclamation} />
+            </span>
           )}
         </div>
       )}
       {usage && (
         <div className={`api-allowance-indicator ${getUsageStatusClass()}`}>
-          <span className="allowance-label">🔍 Searches:</span>
+          <span className="allowance-label">
+            <FontAwesomeIcon icon={faMagnifyingGlass} /> Searches:
+          </span>
           <span className="allowance-value">
             {usage.count}/{usage.limit}
           </span>
           {usage.count >= usage.limit && (
-            <span className="allowance-warning">⚠️</span>
+            <span className="allowance-warning">
+              <FontAwesomeIcon icon={faTriangleExclamation} />
+            </span>
           )}
         </div>
       )}
