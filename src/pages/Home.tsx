@@ -43,16 +43,25 @@ export function Home() {
             <h3>Easy Entry</h3>
             <p>
               Quickly add games manually or search TheGamesDB to find your titles
-              with rich metadata.
+              with rich metadata, cover art, and automatic details.
+            </p>
+          </div>
+
+          <div className="feature-card">
+            <div className="feature-icon">📋</div>
+            <h3>Track Everything</h3>
+            <p>
+              Monitor physical and digital formats, purchase dates, completion status, 
+              game condition, and personal notes for each title.
             </p>
           </div>
 
           <div className="feature-card">
             <div className="feature-icon">🎮</div>
-            <h3>Game Database</h3>
+            <h3>Wishlist & Status</h3>
             <p>
-              Powered by TheGamesDB for rich game metadata including cover art, 
-              release dates, and more.
+              Organize games by status: owned, wishlist, borrowed, lent, or sold.
+              Keep track of what you want and what you've traded.
             </p>
           </div>
 
@@ -65,11 +74,20 @@ export function Home() {
           </div>
 
           <div className="feature-card">
+            <div className="feature-icon">🔍</div>
+            <h3>Powerful Organization</h3>
+            <p>
+              Search, filter by platform and format, sort by various criteria, 
+              and switch between grid, list, or compact view modes.
+            </p>
+          </div>
+
+          <div className="feature-card">
             <div className="feature-icon">☁️</div>
             <h3>Cloud Sync</h3>
             <p>
               Your library is saved to your account and accessible 
-              from any device.
+              from any device. Works offline too with demo mode.
             </p>
           </div>
         </div>
