@@ -5,7 +5,7 @@
 // Development: Proxy configured in vite.config.ts to http://localhost:7071
 // Production: Can be either relative path (integrated) or full Azure Functions URL
 // Note: API key is now managed by the backend proxy, not the frontend
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/thegamesdb';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 export interface TheGamesDBGame {
   id: number;
@@ -276,7 +276,7 @@ export async function searchGames(
   }
 
   try {
-    const url = `${API_BASE_URL}/Games/ByGameName?${params}`;
+    const url = `${API_BASE_URL}/thegamesdb/Games/ByGameName?${params}`;
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`TheGamesDB API error: ${response.status}`);
@@ -317,8 +317,7 @@ export async function getGameById(gameId: number): Promise<TheGamesDBGame | null
 
   try {
     // Call the backend caching endpoint which handles blob storage and API calls
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL?.replace('/thegamesdb', '') || '/api';
-    const response = await fetch(`${apiBaseUrl}/games/${gameId}`);
+    const response = await fetch(`${API_BASE_URL}/games/${gameId}`);
     
     if (!response.ok) {
       if (response.status === 404) {
@@ -435,7 +434,7 @@ export async function getGenres(): Promise<Record<number, string>> {
 
   try {
     // API key is now added by the backend proxy
-    const response = await fetch(`${API_BASE_URL}/Genres`);
+    const response = await fetch(`${API_BASE_URL}/thegamesdb/Genres`);
     if (!response.ok) throw new Error(`API error: ${response.status}`);
     const data = await response.json();
     
@@ -463,7 +462,7 @@ export async function getDevelopers(): Promise<Record<number, string>> {
 
   try {
     // API key is now added by the backend proxy
-    const response = await fetch(`${API_BASE_URL}/Developers`);
+    const response = await fetch(`${API_BASE_URL}/thegamesdb/Developers`);
     if (!response.ok) throw new Error(`API error: ${response.status}`);
     const data = await response.json();
     
@@ -491,7 +490,7 @@ export async function getPublishers(): Promise<Record<number, string>> {
 
   try {
     // API key is now added by the backend proxy
-    const response = await fetch(`${API_BASE_URL}/Publishers`);
+    const response = await fetch(`${API_BASE_URL}/thegamesdb/Publishers`);
     if (!response.ok) throw new Error(`API error: ${response.status}`);
     const data = await response.json();
     

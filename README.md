@@ -144,7 +144,7 @@ See [backend-api/README.md](backend-api/README.md) for detailed deployment instr
    - Add the following secrets:
      - `VITE_SUPABASE_URL`: Your Supabase project URL
      - `VITE_SUPABASE_ANON_KEY`: Your Supabase anon key
-     - `VITE_API_BASE_URL`: Your Azure Functions URL (e.g., `https://switchlibrary-api.azurewebsites.net/api/thegamesdb`)
+     - `VITE_API_BASE_URL`: Your Azure Functions base URL (e.g., `https://switchlibrary-api.azurewebsites.net/api`)
      - `VITE_BASE_PATH`: `/switch-library/` (or your repo name)
 
 2. **The GitHub Actions workflow will automatically deploy on push to `main`**
@@ -187,8 +187,8 @@ func azure functionapp publish switchlibrary-api
 ```
 
 After deployment:
-1. Note the Azure Functions URL (e.g., `https://switchlibrary-api.azurewebsites.net`)
-2. Update the frontend to use the backend URL via `VITE_API_BASE_URL` environment variable
+1. Note the Azure Functions base URL (e.g., `https://switchlibrary-api.azurewebsites.net/api`)
+2. Update the frontend to use this base URL via `VITE_API_BASE_URL` environment variable
 3. Configure CORS in the Azure Function App to allow your frontend domain
 
 ### Local Development
