@@ -7,6 +7,7 @@ import {
   isTheGamesDBConfigured,
   getStoredAllowance,
   isAllowanceExhausted,
+  getRegionName,
 } from '../services/thegamesdb';
 import { saveGame, loadGames, getMonthlySearchCount, logSearchUsage, deleteGame as deleteGameFromDb } from '../services/database';
 import { UsageLimitModal } from '../components/UsageLimitModal';
@@ -567,6 +568,7 @@ export function Search() {
                     <div className="result-info">
                       <h3 className="result-title">{game.title}</h3>
                       <div className="result-meta">
+                        {game.region_id && <span className="region-badge">{getRegionName(game.region_id)}</span>}
                         <span className="release-date">📅 {formatDate(game.releaseDate)}</span>
                         {game.players && <span className="players">👥 {game.players} player{game.players > 1 ? 's' : ''}</span>}
                         {game.rating && <span className="rating">⭐ {game.rating}</span>}
