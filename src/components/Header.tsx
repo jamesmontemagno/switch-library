@@ -2,8 +2,29 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import './Header.css';
 
+// Simple MD5-like hash for Gravatar (Note: For production, use a proper MD5 library)
+async function getMD5Hash(text: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(text);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 32);
+}
+
+// Generate Gravatar URL from email
+async function getGravatarUrl(email: string | undefined): Promise<string> {
+  if (!email) return '';
+  
+  try {
+    const hash = await getMD5Hash(email.toLowerCase().trim());
+    return `https://www.gravatar.com/avatar/${hash}?d=404&s=36`;
+  } catch {
+    return '';
+  }
+}
+
 export function Header() {
-  const { user, isAuthenticated, logout, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -12,6 +33,14 @@ export function Header() {
   const handleAuthClick = () => {
     navigate('/auth');
   };
+
+  const handleSettingsClick = () => {
+    navigate('/settings');
+  };
+
+  // Use user avatar or fallback to logo
+  const avatarUrl = user?.avatarUrl || '';
+  const showLogo = !avatarUrl;
 
   return (
     <header className="header">
@@ -22,9 +51,6 @@ export function Header() {
         </Link>
 
         <nav className="nav" aria-label="Main navigation">
-          <Link to="/" className={`nav-link ${isActive('/') ? 'active' : ''}`}>
-            Home
-          </Link>
           <Link to="/search" className={`nav-link ${isActive('/search') ? 'active' : ''}`}>
             Search
           </Link>
@@ -39,15 +65,31 @@ export function Header() {
           {isLoading ? (
             <span className="auth-loading">Loading...</span>
           ) : isAuthenticated && user ? (
-            <div className="user-menu">
-              {user.avatarUrl && (
-                <img src={user.avatarUrl} alt={user.displayName} className="user-avatar" />
+            <button onClick={handleSettingsClick} className="user-avatar-button" aria-label="Settings">
+              {showLogo ? (
+                <img 
+                  src={`${import.meta.env.BASE_URL}switch.svg`} 
+                  alt="Settings" 
+                  className="user-avatar" 
+                />
+              ) : (
+                <img 
+                  src={avatarUrl} 
+                  alt="Settings" 
+                  className="user-avatar"
+                  onError={async (e) => {
+                    // Try Gravatar first
+                    const gravatarUrl = await getGravatarUrl(user.email);
+                    if (gravatarUrl && e.currentTarget.src !== gravatarUrl) {
+                      e.currentTarget.src = gravatarUrl;
+                    } else {
+                      // If Gravatar also fails, show the logo
+                      e.currentTarget.src = `${import.meta.env.BASE_URL}switch.svg`;
+                    }
+                  }}
+                />
               )}
-              <span className="user-name">{user.displayName}</span>
-              <button onClick={logout} className="btn btn-secondary">
-                Sign Out
-              </button>
-            </div>
+            </button>
           ) : (
             <button onClick={handleAuthClick} className="btn btn-primary">
               Sign In

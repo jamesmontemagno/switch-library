@@ -4,9 +4,18 @@ import type { Platform } from '../types';
 type SortOption = 'title_asc' | 'title_desc' | 'added_newest' | 'added_oldest' | 'purchase_newest' | 'purchase_oldest' | 'platform' | 'format' | 'completed_first' | 'not_completed_first';
 type ViewMode = 'grid' | 'list' | 'compact';
 type FormatFilter = 'all' | 'Physical' | 'Digital';
+type Theme = 'light' | 'dark' | 'system';
+
+export interface ShareSettings {
+  enabled: boolean;
+  showGameCount: boolean;
+  showProgress: boolean;
+}
 
 export interface UserPreferences {
   searchRegions: string[];
+  theme: Theme;
+  shareSettings: ShareSettings;
   library?: {
     filterPlatform: Platform | 'all';
     filterFormat: FormatFilter;
@@ -20,6 +29,12 @@ const STORAGE_KEY = 'switch-library-preferences';
 
 const DEFAULT_PREFERENCES: UserPreferences = {
   searchRegions: ['US'],
+  theme: 'system',
+  shareSettings: {
+    enabled: false,
+    showGameCount: true,
+    showProgress: true,
+  },
   library: {
     filterPlatform: 'all',
     filterFormat: 'all',
@@ -50,8 +65,32 @@ export function usePreferences() {
     }
   }, [preferences]);
 
+  // Apply theme to document root
+  useEffect(() => {
+    const root = document.documentElement;
+    const theme = preferences.theme;
+    
+    if (theme === 'system') {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      root.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+    } else {
+      root.setAttribute('data-theme', theme);
+    }
+  }, [preferences.theme]);
+
   const updatePreferences = (updates: Partial<UserPreferences>) => {
     setPreferences(prev => ({ ...prev, ...updates }));
+  };
+
+  const setTheme = (theme: Theme) => {
+    setPreferences(prev => ({ ...prev, theme }));
+  };
+
+  const updateShareSettings = (updates: Partial<ShareSettings>) => {
+    setPreferences(prev => ({
+      ...prev,
+      shareSettings: { ...prev.shareSettings, ...updates }
+    }));
   };
 
   const resetPreferences = () => {
@@ -60,7 +99,11 @@ export function usePreferences() {
 
   return {
     preferences,
+    theme: preferences.theme,
+    shareSettings: preferences.shareSettings,
     updatePreferences,
+    setTheme,
+    updateShareSettings,
     resetPreferences,
   };
 }

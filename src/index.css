@@ -9,20 +9,64 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: #213547;
-  background-color: #ffffff;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Light theme (default) */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #e9ecef;
+  --text-primary: #213547;
+  --text-secondary: #64748b;
+  --border-color: #dee2e6;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+}
+
+/* Dark theme */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg-primary: #121212;
+  --bg-secondary: #1e1e1e;
+  --bg-tertiary: #2d2d2d;
+  --text-primary: rgba(255, 255, 255, 0.87);
+  --text-secondary: rgba(255, 255, 255, 0.6);
+  --border-color: #3f3f3f;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+}
+
+/* System theme - matches OS preference */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    color-scheme: light;
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --bg-tertiary: #e9ecef;
+    --text-primary: #213547;
+    --text-secondary: #64748b;
+    --border-color: #dee2e6;
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
+  }
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
-    color: rgba(255, 255, 255, 0.87);
-    background-color: #121212;
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --bg-primary: #121212;
+    --bg-secondary: #1e1e1e;
+    --bg-tertiary: #2d2d2d;
+    --text-primary: rgba(255, 255, 255, 0.87);
+    --text-secondary: rgba(255, 255, 255, 0.6);
+    --border-color: #3f3f3f;
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
   }
 }
 

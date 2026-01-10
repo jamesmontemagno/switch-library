@@ -9,6 +9,7 @@ import { Search } from './pages/Search';
 import { GameDetails } from './pages/GameDetails';
 import { SharedLibrary } from './pages/SharedLibrary';
 import { Compare } from './pages/Compare';
+import { Settings } from './pages/Settings';
 import { NotFound } from './pages/NotFound';
 
 // Get base path from Vite config
@@ -30,6 +31,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Library />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="settings"
+              element={
+                <ProtectedRoute>
+                  <Settings />
                 </ProtectedRoute>
               }
             />

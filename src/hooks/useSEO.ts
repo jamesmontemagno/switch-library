@@ -68,5 +68,6 @@ export function useSEO(props: SEOProps = {}) {
       canonical.href = seo.url;
       document.head.appendChild(canonical);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.title, props.description, props.image, props.url, props.type, props.keywords]);
 }
