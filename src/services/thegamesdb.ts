@@ -151,8 +151,8 @@ export function isAllowanceExhausted(): boolean {
 // API Response Caching
 const SEARCH_CACHE_KEY = 'thegamesdb_search_cache';
 const GAME_CACHE_KEY = 'thegamesdb_game_cache';
-const SEARCH_CACHE_EXPIRY_MS = 60 * 60 * 1000; // 1 hour for search results
-const GAME_CACHE_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours for game details
+const SEARCH_CACHE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7 days (extended from 1 hour)
+const GAME_CACHE_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30 days (extended from 24 hours)
 
 interface CachedResponse<T> {
   data: T;
@@ -254,9 +254,11 @@ export async function searchGames(
   // Check cache first
   const cachedResult = getCachedSearch(cacheKey);
   if (cachedResult) {
+    // Cache hit - no API call, no tracking needed
     return cachedResult;
   }
 
+  // Cache miss - will make API call, tracking will be done by caller
   // API key is now added by the backend proxy
   // Request all available fields to get complete game information
   const params = new URLSearchParams({

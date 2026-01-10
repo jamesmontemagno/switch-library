@@ -8,7 +8,8 @@ import {
   getStoredAllowance,
   isAllowanceExhausted,
 } from '../services/thegamesdb';
-import { saveGame, loadGames } from '../services/database';
+import { saveGame, loadGames, getMonthlySearchCount, logSearchUsage } from '../services/database';
+import { UsageLimitModal } from '../components/UsageLimitModal';
 import './Search.css';
 
 type SortOption = 'relevance' | 'release_desc' | 'release_asc' | 'title_asc' | 'title_desc';
@@ -54,6 +55,10 @@ export function Search() {
   const [showAllowanceWarning, setShowAllowanceWarning] = useState(false);
   const [allowanceInfo, setAllowanceInfo] = useState<{ remaining: number; extra: number } | null>(null);
   
+  // Usage tracking
+  const [showUsageLimitModal, setShowUsageLimitModal] = useState(false);
+  const [usageInfo, setUsageInfo] = useState<{ count: number; limit: number; month: string } | null>(null);
+  
   // Adding state
   const [addingGameId, setAddingGameId] = useState<number | null>(null);
   const [addedGames, setAddedGames] = useState<Set<number>>(new Set());
@@ -69,6 +74,8 @@ export function Search() {
   useEffect(() => {
     if (user) {
       loadGames(user.id).then(games => setUserGames(games));
+      // Load usage info on mount
+      getMonthlySearchCount(user.id).then(usage => setUsageInfo(usage));
     }
     
     // Check API allowance on mount
@@ -83,6 +90,35 @@ export function Search() {
 
   const handleSearch = useCallback(async (page: number = 1) => {
     if (!query.trim() || !hasTheGamesDB) return;
+    
+    // Check usage limit before searching (only for non-cached searches)
+    if (user && usageInfo && usageInfo.count >= usageInfo.limit) {
+      // Check if this query is cached first
+      const cacheKey = `${query.toLowerCase().trim()}_${platform === 'Nintendo Switch' ? PLATFORM_IDS.NINTENDO_SWITCH : platform === 'Nintendo Switch 2' ? PLATFORM_IDS.NINTENDO_SWITCH_2 : PLATFORM_IDS.NINTENDO_SWITCH}_${page}`;
+      const cached = localStorage.getItem('thegamesdb_search_cache');
+      if (cached) {
+        try {
+          const cache = JSON.parse(cached);
+          const cachedResult = cache[cacheKey];
+          const SEARCH_CACHE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
+          if (cachedResult && Date.now() - cachedResult.timestamp < SEARCH_CACHE_EXPIRY_MS) {
+            // Cached result available, allow search to proceed
+          } else {
+            // No cached result and limit reached, show modal
+            setShowUsageLimitModal(true);
+            return;
+          }
+        } catch (e) {
+          // Error checking cache, show modal to be safe
+          setShowUsageLimitModal(true);
+          return;
+        }
+      } else {
+        // No cache and limit reached
+        setShowUsageLimitModal(true);
+        return;
+      }
+    }
     
     const requestId = ++searchRequestIdRef.current;
     setIsSearching(true);
@@ -110,6 +146,32 @@ export function Search() {
       });
       
       if (requestId !== searchRequestIdRef.current) return;
+      
+      // Track search usage if not from cache (searchGames returns immediately if cached)
+      // We need to check if this was a cache hit by checking localStorage timestamps
+      const cacheKey = `${query.toLowerCase().trim()}_${platformId}_${page}`;
+      const cached = localStorage.getItem('thegamesdb_search_cache');
+      let wasCached = false;
+      if (cached) {
+        try {
+          const cache = JSON.parse(cached);
+          const cachedResult = cache[cacheKey];
+          const SEARCH_CACHE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
+          if (cachedResult && Date.now() - cachedResult.timestamp < SEARCH_CACHE_EXPIRY_MS) {
+            wasCached = true;
+          }
+        } catch (e) {
+          // Ignore cache check errors
+        }
+      }
+      
+      // Log the search if it wasn't cached and we have a user
+      if (!wasCached && user) {
+        await logSearchUsage(user.id, query.trim());
+        // Refresh usage info
+        const updatedUsage = await getMonthlySearchCount(user.id);
+        setUsageInfo(updatedUsage);
+      }
       
       // Update allowance info
       if (result.remaining_monthly_allowance !== undefined) {
@@ -204,7 +266,7 @@ export function Search() {
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, platform, yearFrom, yearTo, sortBy, onlyWithBoxart, hasTheGamesDB, currentPage]);
+  }, [query, platform, yearFrom, yearTo, sortBy, onlyWithBoxart, hasTheGamesDB, currentPage, user, usageInfo]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -611,6 +673,14 @@ export function Search() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Usage Limit Modal */}
+      {showUsageLimitModal && usageInfo && (
+        <UsageLimitModal
+          onClose={() => setShowUsageLimitModal(false)}
+          usage={usageInfo}
+        />
       )}
     </div>
   );

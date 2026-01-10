@@ -1,9 +1,16 @@
+/* API Allowance Container - holds multiple indicators */
+.api-allowance-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
 /* API Allowance Indicator - inline in footer */
 .api-allowance-indicator {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  margin-top: 0.5rem;
   font-size: 0.75rem;
   padding: 0.25rem 0.625rem;
   border-radius: 12px;

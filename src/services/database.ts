@@ -165,4 +165,136 @@ export async function deleteGame(gameId: string): Promise<boolean> {
   return true;
 }
 
+// API Usage tracking functions
+const USAGE_STORAGE_KEY = 'switch-library-api-usage';
+const USAGE_LIMIT = 50;
+
+interface UsageRecord {
+  searchQuery: string;
+  timestamp: number;
+}
+
+export interface MonthlyUsage {
+  count: number;
+  limit: number;
+  month: string; // Format: "YYYY-MM"
+}
+
+function getMonthKey(date: Date = new Date()): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+}
+
+async function getMonthlyUsageFromSupabase(userId: string): Promise<number> {
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  
+  try {
+    const { count, error } = await supabase
+      .from('api_usage')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .gte('timestamp', monthStart.toISOString()) as any;
+
+    if (error) {
+      console.error('Failed to get monthly usage from Supabase:', error);
+      return 0;
+    }
+    
+    return count || 0;
+  } catch (error) {
+    console.error('Error querying monthly usage:', error);
+    return 0;
+  }
+}
+
+function getMonthlyUsageFromLocalStorage(userId: string): number {
+  try {
+    const stored = localStorage.getItem(USAGE_STORAGE_KEY);
+    if (stored) {
+      const allUsage = JSON.parse(stored) as Record<string, UsageRecord[]>;
+      const currentMonth = getMonthKey();
+      const userKey = `${userId}-${currentMonth}`;
+      const userUsage = allUsage[userKey] || [];
+      return userUsage.length;
+    }
+  } catch (error) {
+    console.error('Failed to get monthly usage from localStorage:', error);
+  }
+  return 0;
+}
+
+export async function getMonthlySearchCount(userId: string): Promise<MonthlyUsage> {
+  let count = 0;
+  
+  if (useSupabase) {
+    count = await getMonthlyUsageFromSupabase(userId);
+  } else {
+    count = getMonthlyUsageFromLocalStorage(userId);
+  }
+  
+  return {
+    count,
+    limit: USAGE_LIMIT,
+    month: getMonthKey()
+  };
+}
+
+async function logSearchToSupabase(userId: string, searchQuery: string): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('api_usage')
+      .insert({
+        user_id: userId,
+        search_query: searchQuery,
+        timestamp: new Date().toISOString()
+      }) as any;
+
+    if (error) {
+      console.error('Failed to log search to Supabase:', error);
+    }
+  } catch (error) {
+    console.error('Error logging search to Supabase:', error);
+  }
+}
+
+function logSearchToLocalStorage(userId: string, searchQuery: string): void {
+  try {
+    const stored = localStorage.getItem(USAGE_STORAGE_KEY);
+    const allUsage = stored ? JSON.parse(stored) as Record<string, UsageRecord[]> : {};
+    const currentMonth = getMonthKey();
+    const userKey = `${userId}-${currentMonth}`;
+    
+    if (!allUsage[userKey]) {
+      allUsage[userKey] = [];
+    }
+    
+    allUsage[userKey].push({
+      searchQuery,
+      timestamp: Date.now()
+    });
+    
+    // Clean up old months (keep only current and previous month)
+    const previousMonth = getMonthKey(new Date(new Date().setMonth(new Date().getMonth() - 1)));
+    const keysToKeep = Object.keys(allUsage).filter(key => 
+      key.endsWith(currentMonth) || key.endsWith(previousMonth)
+    );
+    const cleanedUsage: Record<string, UsageRecord[]> = {};
+    keysToKeep.forEach(key => {
+      cleanedUsage[key] = allUsage[key];
+    });
+    
+    localStorage.setItem(USAGE_STORAGE_KEY, JSON.stringify(cleanedUsage));
+  } catch (error) {
+    console.error('Failed to log search to localStorage:', error);
+  }
+}
+
+export async function logSearchUsage(userId: string, searchQuery: string): Promise<void> {
+  if (useSupabase) {
+    await logSearchToSupabase(userId, searchQuery);
+  } else {
+    logSearchToLocalStorage(userId, searchQuery);
+  }
+}
+
 export { useSupabase };

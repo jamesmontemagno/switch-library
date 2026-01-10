@@ -41,10 +41,19 @@ create table if not exists public.share_profiles (
   revoked_at timestamp with time zone
 );
 
+-- API usage tracking table
+create table if not exists public.api_usage (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users on delete cascade not null,
+  search_query text not null,
+  timestamp timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
 -- Enable Row Level Security
 alter table public.profiles enable row level security;
 alter table public.games enable row level security;
 alter table public.share_profiles enable row level security;
+alter table public.api_usage enable row level security;
 
 -- Profiles policies
 create policy "Users can view their own profile"
@@ -104,6 +113,15 @@ create policy "Anyone can view games of shared profiles"
       and share_profiles.enabled = true
     )
   );
+
+-- API usage policies
+create policy "Users can view their own API usage"
+  on public.api_usage for select
+  using (auth.uid() = user_id);
+
+create policy "Users can insert their own API usage"
+  on public.api_usage for insert
+  with check (auth.uid() = user_id);
 
 -- Function to automatically update updated_at
 create or replace function public.handle_updated_at()
@@ -169,3 +187,5 @@ create index if not exists games_title_idx on public.games(title);
 create index if not exists games_platform_idx on public.games(platform);
 create index if not exists share_profiles_user_id_idx on public.share_profiles(user_id);
 create index if not exists share_profiles_enabled_idx on public.share_profiles(enabled) where enabled = true;
+create index if not exists api_usage_user_id_idx on public.api_usage(user_id);
+create index if not exists api_usage_timestamp_idx on public.api_usage(timestamp);

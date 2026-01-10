@@ -74,8 +74,10 @@ export const supabase = {
         select: () => ({
           eq: () => ({
             order: () => Promise.resolve({ data: [], error: null }),
+            gte: () => Promise.resolve({ count: 0, error: null }),
           }),
         }),
+        insert: () => Promise.resolve({ error: null }),
         upsert: () => ({
           select: () => ({
             single: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') }),
