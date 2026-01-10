@@ -178,65 +178,71 @@ export function Settings() {
         {/* Share Settings Section */}
         <section className="settings-section">
           <h2>Library Sharing</h2>
-          <div className="setting-item">
+          <p className="setting-description" style={{ marginBottom: '1rem' }}>
+            Allow others to view your game library via a public link
+          </p>
+          
+          {/* Enable/Disable Toggle */}
+          <div className="share-toggle-row">
             <label htmlFor="shareEnabled">Enable Library Sharing</label>
-            <input
+            <button 
               id="shareEnabled"
-              type="checkbox"
-              checked={shareSettings.enabled}
-              onChange={(e) => handleToggleSharing(e.target.checked)}
-              className="checkbox"
-            />
-            <p className="setting-description">
-              Allow others to view your game library via a public link
-            </p>
+              className={`btn-toggle ${shareSettings.enabled ? 'on' : 'off'}`}
+              onClick={() => handleToggleSharing(!shareSettings.enabled)}
+            >
+              {shareSettings.enabled ? 'ON' : 'OFF'}
+            </button>
           </div>
           
           {shareSettings.enabled && (
             <>
-              <div className="setting-item">
-                <label htmlFor="showGameCount">Show Game Count</label>
-                <input
-                  id="showGameCount"
-                  type="checkbox"
-                  checked={shareSettings.showGameCount}
-                  onChange={(e) => updateShareSettings({ showGameCount: e.target.checked })}
-                  className="checkbox"
-                />
-              </div>
+              {/* Share Link Row */}
+              {shareLink && (
+                <div className="share-link-row">
+                  <input
+                    type="text"
+                    value={shareLink}
+                    readOnly
+                    className="share-url-input"
+                  />
+                  <button onClick={handleCopyShareLink} className="btn-copy">
+                    Copy
+                  </button>
+                </div>
+              )}
               
-              <div className="setting-item">
-                <label htmlFor="showProgress">Show Completion Progress</label>
-                <input
-                  id="showProgress"
-                  type="checkbox"
-                  checked={shareSettings.showProgress}
-                  onChange={(e) => updateShareSettings({ showProgress: e.target.checked })}
-                  className="checkbox"
-                />
+              {/* Privacy Settings */}
+              <div className="privacy-settings">
+                <h5>Privacy Settings</h5>
+                <div className="privacy-toggle-row">
+                  <span>Show Game Count</span>
+                  <button 
+                    className={`btn-toggle small ${shareSettings.showGameCount ? 'on' : 'off'}`}
+                    onClick={() => updateShareSettings({ showGameCount: !shareSettings.showGameCount })}
+                  >
+                    {shareSettings.showGameCount ? 'ON' : 'OFF'}
+                  </button>
+                </div>
+                <div className="privacy-toggle-row">
+                  <span>Show Completion Progress</span>
+                  <button 
+                    className={`btn-toggle small ${shareSettings.showProgress ? 'on' : 'off'}`}
+                    onClick={() => updateShareSettings({ showProgress: !shareSettings.showProgress })}
+                  >
+                    {shareSettings.showProgress ? 'ON' : 'OFF'}
+                  </button>
+                </div>
               </div>
 
-              <div className="setting-item">
+              {/* Share Actions */}
+              <div className="share-actions-row">
                 <button 
                   onClick={handleGenerateShareLink} 
-                  className="btn btn-secondary"
+                  className="btn-regenerate"
                   disabled={loadingShareLink}
                 >
-                  {loadingShareLink ? 'Generating...' : 'Generate Share Link'}
+                  {loadingShareLink ? 'Generating...' : 'Regenerate Link'}
                 </button>
-                {shareLink && (
-                  <div className="share-link-container">
-                    <input
-                      type="text"
-                      value={shareLink}
-                      readOnly
-                      className="input share-link-input"
-                    />
-                    <button onClick={handleCopyShareLink} className="btn btn-primary">
-                      Copy
-                    </button>
-                  </div>
-                )}
               </div>
             </>
           )}

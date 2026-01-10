@@ -8,6 +8,7 @@ import './SharedLibrary.css';
 
 type SortOption = 'title_asc' | 'title_desc' | 'added_newest' | 'platform' | 'format';
 type ViewMode = 'grid' | 'list';
+type PlatformFilter = 'all' | 'switch' | 'switch2';
 
 interface SharedUserInfo {
   displayName: string;
@@ -26,6 +27,7 @@ export function SharedLibrary() {
   const [sortBy, setSortBy] = useState<SortOption>('title_asc');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [searchQuery, setSearchQuery] = useState('');
+  const [platformFilter, setPlatformFilter] = useState<PlatformFilter>('all');
   
   // For compare functionality
   const [myShareId, setMyShareId] = useState<string | null>(null);
@@ -82,7 +84,13 @@ export function SharedLibrary() {
   }, [shareId, user]);
 
   const filteredGames = games
-    .filter(game => game.title.toLowerCase().includes(searchQuery.toLowerCase()))
+    .filter(game => {
+      const matchesSearch = game.title.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesPlatform = platformFilter === 'all' ||
+        (platformFilter === 'switch' && game.platform === 'Nintendo Switch') ||
+        (platformFilter === 'switch2' && game.platform === 'Nintendo Switch 2');
+      return matchesSearch && matchesPlatform;
+    })
     .sort((a, b) => {
       switch (sortBy) {
         case 'title_asc':
@@ -166,6 +174,15 @@ export function SharedLibrary() {
           onChange={(e) => setSearchQuery(e.target.value)}
           className="search-input"
         />
+        <select
+          value={platformFilter}
+          onChange={(e) => setPlatformFilter(e.target.value as PlatformFilter)}
+          className="filter-select"
+        >
+          <option value="all">All Platforms</option>
+          <option value="switch">Nintendo Switch</option>
+          <option value="switch2">Nintendo Switch 2</option>
+        </select>
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as SortOption)}
