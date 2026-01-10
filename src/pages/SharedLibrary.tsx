@@ -5,6 +5,7 @@ import { useSEO } from '../hooks/useSEO';
 import type { GameEntry } from '../types';
 import { loadSharedGames, getSharedUserProfile, getShareProfile, isFriend } from '../services/database';
 import { AddFriendModal } from '../components/AddFriendModal';
+import { UpsellBanner } from '../components/UpsellBanner';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowsLeftRight } from '@fortawesome/free-solid-svg-icons';
 import './SharedLibrary.css';
@@ -156,6 +157,9 @@ export function SharedLibrary() {
 
   return (
     <div className="shared-library">
+      {/* Show upsell banner if user is not logged in */}
+      {!user && <UpsellBanner />}
+      
       <header className="shared-header">
         <div className="shared-user-info">
           {userInfo?.avatarUrl && (
