@@ -81,9 +81,7 @@ export interface TheGamesDBGameImages {
 // Nintendo Switch platform IDs in TheGamesDB
 export const PLATFORM_IDS = {
   NINTENDO_SWITCH: 4971,
-  // TODO: Update Switch 2 platform ID when TheGamesDB adds support for it
-  // Currently using Switch platform ID as fallback
-  NINTENDO_SWITCH_2: 4971,
+  NINTENDO_SWITCH_2: 5021,
 };
 
 // All Nintendo Switch platform IDs for filtering

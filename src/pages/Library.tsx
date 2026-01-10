@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { usePreferences } from '../hooks/usePreferences';
 import type { GameEntry, Platform, ShareProfile } from '../types';
 import { loadGames, saveGame, deleteGame as deleteGameFromDb, getShareProfile, enableSharing, disableSharing, regenerateShareId, updateSharePrivacy, updateDisplayName, getUserProfile } from '../services/database';
 import { ManualAddGameModal } from '../components/ManualAddGameModal';
@@ -14,17 +15,18 @@ type FormatFilter = 'all' | 'Physical' | 'Digital';
 export function Library() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { preferences, updatePreferences } = usePreferences();
   const [games, setGames] = useState<GameEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingGame, setEditingGame] = useState<GameEntry | null>(null);
   const [gameToDelete, setGameToDelete] = useState<GameEntry | null>(null);
-  const [filterPlatform, setFilterPlatform] = useState<Platform | 'all'>('all');
-  const [filterFormat, setFilterFormat] = useState<FormatFilter>('all');
-  const [filterCompleted, setFilterCompleted] = useState<'all' | 'completed' | 'not_completed'>('all');
+  const [filterPlatform, setFilterPlatform] = useState<Platform | 'all'>(preferences.library?.filterPlatform || 'all');
+  const [filterFormat, setFilterFormat] = useState<FormatFilter>(preferences.library?.filterFormat || 'all');
+  const [filterCompleted, setFilterCompleted] = useState<'all' | 'completed' | 'not_completed'>(preferences.library?.filterCompleted || 'all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<SortOption>('added_newest');
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [sortBy, setSortBy] = useState<SortOption>(preferences.library?.sortBy || 'added_newest');
+  const [viewMode, setViewMode] = useState<ViewMode>(preferences.library?.viewMode || 'grid');
   
   // Share state
   const [shareProfile, setShareProfile] = useState<ShareProfile | null>(null);
@@ -36,6 +38,19 @@ export function Library() {
   const [displayName, setDisplayName] = useState('');
   const [editingDisplayName, setEditingDisplayName] = useState(false);
   const [savingDisplayName, setSavingDisplayName] = useState(false);
+
+  // Save preferences when filters/sort/view change
+  useEffect(() => {
+    updatePreferences({
+      library: {
+        filterPlatform,
+        filterFormat,
+        filterCompleted,
+        sortBy,
+        viewMode,
+      },
+    });
+  }, [filterPlatform, filterFormat, filterCompleted, sortBy, viewMode, updatePreferences]);
 
   // Load games on mount
   const fetchGames = useCallback(async () => {

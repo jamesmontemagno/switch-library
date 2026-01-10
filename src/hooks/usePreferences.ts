@@ -1,13 +1,32 @@
 import { useState, useEffect } from 'react';
+import type { Platform } from '../types';
+
+type SortOption = 'title_asc' | 'title_desc' | 'added_newest' | 'added_oldest' | 'purchase_newest' | 'purchase_oldest' | 'platform' | 'format' | 'completed_first' | 'not_completed_first';
+type ViewMode = 'grid' | 'list' | 'compact';
+type FormatFilter = 'all' | 'Physical' | 'Digital';
 
 export interface UserPreferences {
   searchRegions: string[];
+  library?: {
+    filterPlatform: Platform | 'all';
+    filterFormat: FormatFilter;
+    filterCompleted: 'all' | 'completed' | 'not_completed';
+    sortBy: SortOption;
+    viewMode: ViewMode;
+  };
 }
 
 const STORAGE_KEY = 'switch-library-preferences';
 
 const DEFAULT_PREFERENCES: UserPreferences = {
   searchRegions: ['US'],
+  library: {
+    filterPlatform: 'all',
+    filterFormat: 'all',
+    filterCompleted: 'all',
+    sortBy: 'added_newest',
+    viewMode: 'grid',
+  },
 };
 
 export function usePreferences() {

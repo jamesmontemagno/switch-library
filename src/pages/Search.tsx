@@ -21,6 +21,7 @@ interface SearchResult {
   title: string;
   releaseDate?: string;
   platform: string;
+  platformId: number;
   overview?: string;
   boxartUrl?: string;
   players?: number;
@@ -72,6 +73,7 @@ export function Search() {
   // Quick add modal
   const [quickAddGame, setQuickAddGame] = useState<SearchResult | null>(null);
   const [quickAddFormat, setQuickAddFormat] = useState<Format>('Physical');
+  const [quickAddPlatform, setQuickAddPlatform] = useState<Platform>('Nintendo Switch');
   
   const searchRequestIdRef = useRef(0);
   const hasTheGamesDB = isTheGamesDBConfigured();
@@ -252,11 +254,17 @@ export function Search() {
         // Boxart is now included in the search results
         const boxartUrl = game.boxart ? (game.boxart.thumb || game.boxart.small || game.boxart.medium || game.boxart.original) : undefined;
         
+        // Determine platform name from platform ID
+        const platformName = game.platform === PLATFORM_IDS.NINTENDO_SWITCH_2 
+          ? 'Nintendo Switch 2' 
+          : 'Nintendo Switch';
+        
         return {
           id: game.id,
           title: game.game_title,
           releaseDate: game.release_date,
-          platform: 'Nintendo Switch',
+          platform: platformName,
+          platformId: game.platform,
           overview: game.overview,
           boxartUrl,
           players: game.players,
@@ -295,6 +303,16 @@ export function Search() {
     return userGames.find(g => g.thegamesdbId === thegamesdbId);
   };
 
+  // Open quick add modal with smart platform detection
+  const openQuickAdd = (game: SearchResult) => {
+    // Auto-detect platform based on the game's platform ID from TheGamesDB
+    const detectedPlatform = game.platformId === PLATFORM_IDS.NINTENDO_SWITCH_2 
+      ? 'Nintendo Switch 2' 
+      : 'Nintendo Switch';
+    setQuickAddPlatform(detectedPlatform);
+    setQuickAddGame(game);
+  };
+
   const handleQuickAdd = async () => {
     if (!quickAddGame || !user) return;
     
@@ -305,7 +323,7 @@ export function Search() {
         id: crypto.randomUUID(),
         userId: user.id,
         title: quickAddGame.title,
-        platform: platform === 'all' ? 'Nintendo Switch' : platform,
+        platform: quickAddPlatform,
         format: quickAddFormat,
         status: 'Owned',
         thegamesdbId: quickAddGame.id,
@@ -596,7 +614,7 @@ export function Search() {
                           ) : (
                             <button
                               className="btn-add-to-collection"
-                              onClick={() => setQuickAddGame(game)}
+                              onClick={() => openQuickAdd(game)}
                               disabled={addingGameId === game.id}
                             >
                               {addingGameId === game.id ? '⏳ Adding...' : '+ Add to Collection'}
@@ -724,6 +742,25 @@ export function Search() {
                 </div>
               </div>
               <div className="quick-add-options">
+                <div className="form-group">
+                  <label>Platform</label>
+                  <div className="format-segmented-control">
+                    <button
+                      type="button"
+                      className={`segment ${quickAddPlatform === 'Nintendo Switch' ? 'active' : ''}`}
+                      onClick={() => setQuickAddPlatform('Nintendo Switch')}
+                    >
+                      🎮 Switch
+                    </button>
+                    <button
+                      type="button"
+                      className={`segment ${quickAddPlatform === 'Nintendo Switch 2' ? 'active' : ''}`}
+                      onClick={() => setQuickAddPlatform('Nintendo Switch 2')}
+                    >
+                      🎮 Switch 2
+                    </button>
+                  </div>
+                </div>
                 <div className="form-group">
                   <label>Format</label>
                   <div className="format-segmented-control">
