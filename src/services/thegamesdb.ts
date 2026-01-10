@@ -1,8 +1,10 @@
 // TheGamesDB API Service
 // API Documentation: https://api.thegamesdb.net/
 
-// Use proxy in development to avoid CORS issues, direct API in production
-const API_BASE_URL = import.meta.env.DEV ? '/api/thegamesdb' : 'https://api.thegamesdb.net/v1';
+// Always use proxy to avoid CORS issues in both development and production
+// Development: Proxy configured in vite.config.ts to http://localhost:7071
+// Production: Can be either relative path (integrated) or full Azure Functions URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/thegamesdb';
 const API_KEY = import.meta.env.VITE_THEGAMESDB_API_KEY || '';
 
 export interface TheGamesDBGame {

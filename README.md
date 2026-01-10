@@ -99,29 +99,95 @@ Without an API key, the app works but won't have game search functionality.
 
 ## Deployment
 
-### Server Deployment
+### Hybrid Deployment: GitHub Pages + Azure Functions (Recommended for this setup)
 
-Build the app and deploy the `dist` folder to any static hosting:
+This approach keeps the static frontend on GitHub Pages (free hosting) while deploying the backend to Azure Functions. This is ideal for personal projects and provides the best of both worlds.
 
+#### Step 1: Deploy Backend to Azure Functions
+
+1. **Deploy the Azure Functions backend:**
+   ```bash
+   cd backend-api
+   func azure functionapp publish switchlibrary-api
+   ```
+   
+2. **Note your Azure Functions URL** (e.g., `https://switchlibrary-api.azurewebsites.net`)
+
+3. **Configure CORS in Azure Portal:**
+   - Go to your Function App → CORS
+   - Add your GitHub Pages URL (e.g., `https://jamesmontemagno.github.io`)
+   - Save the settings
+
+See [backend-api/README.md](backend-api/README.md) for detailed deployment instructions.
+
+#### Step 2: Deploy Frontend to GitHub Pages
+
+1. **Configure environment variables in GitHub Secrets:**
+   - Go to your repository → Settings → Secrets and variables → Actions
+   - Add the following secrets:
+     - `VITE_SUPABASE_URL`: Your Supabase project URL
+     - `VITE_SUPABASE_ANON_KEY`: Your Supabase anon key
+     - `VITE_THEGAMESDB_API_KEY`: Your TheGamesDB API key
+     - `VITE_API_BASE_URL`: Your Azure Functions URL (e.g., `https://switchlibrary-api.azurewebsites.net/api/thegamesdb`)
+     - `VITE_BASE_PATH`: `/switch-library/` (or your repo name)
+
+2. **The GitHub Actions workflow will automatically deploy on push to `main`**
+
+3. **Access your app at:** `https://YOUR_USERNAME.github.io/switch-library/`
+
+### Alternative: Integrated Azure Deployment
+
+For production deployments where you want everything on Azure, you can use Azure Static Web Apps with integrated Azure Functions.
+
+#### Frontend Deployment (Azure Static Web Apps)
+
+1. **Create an Azure Static Web App:**
+   ```bash
+   az login
+   az staticwebapp create --name myswitchlibrary --resource-group SwitchLibraryRG \
+     --location eastus2 --source https://github.com/YOUR_USERNAME/switch-library \
+     --branch main --app-location "/" --output-location "dist"
+   ```
+
+2. **Configure environment variables in Azure Portal:**
+   - `VITE_SUPABASE_URL`: Your Supabase project URL
+   - `VITE_SUPABASE_ANON_KEY`: Your Supabase anon key
+   - `VITE_THEGAMESDB_API_KEY`: Your TheGamesDB API key
+
+3. **Build settings:**
+   - Build command: `npm run build`
+   - App location: `/`
+   - Output location: `dist`
+
+#### Backend Deployment (Azure Functions)
+
+Quick deployment:
 ```bash
-npm run build
+cd backend-api
+func azure functionapp publish switchlibrary-api
 ```
 
-Deploy to:
-- Vercel
-- Netlify
-- Railway
-- Any static host
+After deployment:
+1. Note the Azure Functions URL (e.g., `https://switchlibrary-api.azurewebsites.net`)
+2. Update the frontend to use the backend URL via `VITE_API_BASE_URL` environment variable
+3. Configure CORS in the Azure Function App to allow your frontend domain
 
-### GitHub Pages (Optional)
+### Local Development
 
-To deploy to GitHub Pages, set the base path:
+#### Running the Full Stack Locally
 
-```env
-VITE_BASE_PATH=/switch-library/
-```
+1. **Start the backend** (in one terminal):
+   ```bash
+   cd backend-api
+   dotnet run
+   ```
+   The backend will run on `http://localhost:7071`
 
-The GitHub Actions workflow will automatically deploy on push to `main`.
+2. **Start the frontend** (in another terminal):
+   ```bash
+   npm run dev
+   ```
+   The frontend will run on `http://localhost:5173` and proxy API requests to the backend
 
 ## Demo Mode
 
