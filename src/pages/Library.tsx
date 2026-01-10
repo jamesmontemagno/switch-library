@@ -452,11 +452,11 @@ export function Library() {
       <div className="library-toolbar">
         <input
           type="search"
-          placeholder="Search games..."
+          placeholder="Search library..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="search-input"
-          aria-label="Search games"
+          aria-label="Search library"
         />
         <select
           value={filterPlatform}
