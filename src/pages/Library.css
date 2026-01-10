@@ -282,6 +282,179 @@
   }
 }
 
+/* Share Section */
+.share-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.share-section:first-of-type {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.share-section h4 {
+  margin: 0 0 0.75rem;
+  font-size: 0.9375rem;
+  color: #333;
+}
+
+.share-section h5 {
+  margin: 1rem 0 0.5rem;
+  font-size: 0.8125rem;
+  color: #666;
+  font-weight: 600;
+}
+
+@media (prefers-color-scheme: dark) {
+  .share-section {
+    border-color: #444;
+  }
+  .share-section h4 {
+    color: #e0e0e0;
+  }
+  .share-section h5 {
+    color: #aaa;
+  }
+}
+
+/* Profile Edit Row */
+.profile-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.profile-input {
+  flex: 1;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.9375rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.profile-input:focus {
+  border-color: #e60012;
+}
+
+@media (prefers-color-scheme: dark) {
+  .profile-input {
+    background: #2a2a2a;
+    border-color: #444;
+    color: white;
+  }
+}
+
+.current-name {
+  flex: 1;
+  font-size: 0.9375rem;
+  color: #333;
+}
+
+@media (prefers-color-scheme: dark) {
+  .current-name {
+    color: #e0e0e0;
+  }
+}
+
+.btn-edit-profile,
+.btn-save-profile,
+.btn-cancel-profile {
+  padding: 0.5rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-edit-profile {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.btn-edit-profile:hover {
+  background: #e0e0e0;
+}
+
+.btn-save-profile {
+  background: #22c55e;
+  color: white;
+}
+
+.btn-save-profile:hover:not(:disabled) {
+  background: #16a34a;
+}
+
+.btn-save-profile:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-cancel-profile {
+  background: #f0f0f0;
+  color: #666;
+}
+
+.btn-cancel-profile:hover {
+  background: #e0e0e0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .btn-edit-profile,
+  .btn-cancel-profile {
+    background: #444;
+    color: #e0e0e0;
+  }
+  .btn-edit-profile:hover,
+  .btn-cancel-profile:hover {
+    background: #555;
+  }
+}
+
+/* Privacy Settings */
+.privacy-settings {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .privacy-settings {
+    background: #1a1a1a;
+  }
+}
+
+.privacy-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+}
+
+.privacy-toggle-row span {
+  font-size: 0.875rem;
+  color: #555;
+}
+
+@media (prefers-color-scheme: dark) {
+  .privacy-toggle-row span {
+    color: #bbb;
+  }
+}
+
+.btn-toggle.small {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  min-width: 50px;
+}
+
 .library-toolbar {
   display: flex;
   gap: 0.75rem;

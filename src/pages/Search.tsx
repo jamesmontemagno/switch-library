@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import type { GameEntry, Platform, Format } from '../types';
 import { 
@@ -31,7 +31,7 @@ interface SearchResult {
 export function Search() {
   const { user, isAuthenticated } = useAuth();
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<SearchResult[]>([]);
+  const [rawResults, setRawResults] = useState<SearchResult[]>([]); // Store unfiltered results
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -94,6 +94,54 @@ export function Search() {
     }
   }, [user]);
 
+  // Apply filters and sorting reactively whenever rawResults or filter states change
+  const results = useMemo(() => {
+    let filtered = [...rawResults];
+    
+    if (region !== 'all') {
+      filtered = filtered.filter(r => r.region_id === region);
+    }
+    
+    if (onlyWithBoxart) {
+      filtered = filtered.filter(r => !!r.boxartUrl);
+    }
+    
+    if (yearFrom) {
+      filtered = filtered.filter(r => {
+        if (!r.releaseDate) return false;
+        const year = parseInt(r.releaseDate.split('-')[0]);
+        return year >= parseInt(yearFrom);
+      });
+    }
+    
+    if (yearTo) {
+      filtered = filtered.filter(r => {
+        if (!r.releaseDate) return false;
+        const year = parseInt(r.releaseDate.split('-')[0]);
+        return year <= parseInt(yearTo);
+      });
+    }
+    
+    // Apply sorting
+    const parseDate = (d?: string) => (d ? new Date(d).getTime() : 0);
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'title_asc':
+          return a.title.localeCompare(b.title);
+        case 'title_desc':
+          return b.title.localeCompare(a.title);
+        case 'release_asc':
+          return parseDate(a.releaseDate) - parseDate(b.releaseDate);
+        case 'release_desc':
+          return parseDate(b.releaseDate) - parseDate(a.releaseDate);
+        default:
+          return 0; // Keep original order for relevance
+      }
+    });
+    
+    return filtered;
+  }, [rawResults, region, yearFrom, yearTo, sortBy, onlyWithBoxart]);
+
   const handleSearch = useCallback(async (page: number = 1) => {
     if (!query.trim() || !hasTheGamesDB) return;
     
@@ -146,6 +194,24 @@ export function Search() {
       }
       // 'all' still searches Switch platform (our app is Switch-only)
       
+      // Check if this query is already cached BEFORE calling searchGames
+      // (searchGames will cache the result after the API call, so checking after would be wrong)
+      const cacheKey = `${query.toLowerCase().trim()}_${platformId}_${page}`;
+      const cached = localStorage.getItem('thegamesdb_search_cache');
+      let wasCachedBeforeSearch = false;
+      if (cached) {
+        try {
+          const cache = JSON.parse(cached);
+          const cachedResult = cache[cacheKey];
+          const SEARCH_CACHE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
+          if (cachedResult && Date.now() - cachedResult.timestamp < SEARCH_CACHE_EXPIRY_MS) {
+            wasCachedBeforeSearch = true;
+          }
+        } catch {
+          // Ignore cache check errors
+        }
+      }
+      
       const result = await searchGames(query.trim(), {
         platformId,
         page,
@@ -153,26 +219,8 @@ export function Search() {
       
       if (requestId !== searchRequestIdRef.current) return;
       
-      // Track search usage if not from cache (searchGames returns immediately if cached)
-      // We need to check if this was a cache hit by checking localStorage timestamps
-      const cacheKey = `${query.toLowerCase().trim()}_${platformId}_${page}`;
-      const cached = localStorage.getItem('thegamesdb_search_cache');
-      let wasCached = false;
-      if (cached) {
-        try {
-          const cache = JSON.parse(cached);
-          const cachedResult = cache[cacheKey];
-          const SEARCH_CACHE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
-          if (cachedResult && Date.now() - cachedResult.timestamp < SEARCH_CACHE_EXPIRY_MS) {
-            wasCached = true;
-          }
-        } catch {
-          // Ignore cache check errors
-        }
-      }
-      
       // Log the search if it wasn't cached and we have a user
-      if (!wasCached && user) {
+      if (!wasCachedBeforeSearch && user) {
         await logSearchUsage(user.id, query.trim());
         // Refresh usage info
         const updatedUsage = await getMonthlySearchCount(user.id);
@@ -195,7 +243,7 @@ export function Search() {
       }
       
       if (result.count === 0) {
-        setResults([]);
+        setRawResults([]);
         return;
       }
       
@@ -217,55 +265,12 @@ export function Search() {
         };
       });
       
-      // Apply filters
-      let filtered = resultsWithImages;
-      
-      if (region !== 'all') {
-        filtered = filtered.filter(r => r.region_id === region);
-      }
-      
-      if (onlyWithBoxart) {
-        filtered = filtered.filter(r => !!r.boxartUrl);
-      }
-      
-      if (yearFrom) {
-        filtered = filtered.filter(r => {
-          if (!r.releaseDate) return false;
-          const year = parseInt(r.releaseDate.split('-')[0]);
-          return year >= parseInt(yearFrom);
-        });
-      }
-      
-      if (yearTo) {
-        filtered = filtered.filter(r => {
-          if (!r.releaseDate) return false;
-          const year = parseInt(r.releaseDate.split('-')[0]);
-          return year <= parseInt(yearTo);
-        });
-      }
-      
-      // Apply sorting
-      const parseDate = (d?: string) => (d ? new Date(d).getTime() : 0);
-      filtered = [...filtered].sort((a, b) => {
-        switch (sortBy) {
-          case 'title_asc':
-            return a.title.localeCompare(b.title);
-          case 'title_desc':
-            return b.title.localeCompare(a.title);
-          case 'release_asc':
-            return parseDate(a.releaseDate) - parseDate(b.releaseDate);
-          case 'release_desc':
-            return parseDate(b.releaseDate) - parseDate(a.releaseDate);
-          default:
-            return 0; // Keep original order for relevance
-        }
-      });
-      
-      setResults(filtered);
+      // Store raw results - filtering/sorting is done reactively in useMemo
+      setRawResults(resultsWithImages);
       
       // Assume there are more results if we got a full page
       // TheGamesDB typically returns 20 results per page
-      setHasMoreResults(filtered.length >= 20);
+      setHasMoreResults(resultsWithImages.length >= 20);
     } catch (err) {
       if (requestId === searchRequestIdRef.current) {
         setError('Search failed. Please try again.');
@@ -277,7 +282,7 @@ export function Search() {
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, platform, region, yearFrom, yearTo, sortBy, onlyWithBoxart, hasTheGamesDB, currentPage, user, usageInfo]);
+  }, [query, platform, hasTheGamesDB, user, usageInfo]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -720,15 +725,23 @@ export function Search() {
               </div>
               <div className="quick-add-options">
                 <div className="form-group">
-                  <label htmlFor="format">Format</label>
-                  <select
-                    id="format"
-                    value={quickAddFormat}
-                    onChange={(e) => setQuickAddFormat(e.target.value as Format)}
-                  >
-                    <option value="Physical">Physical</option>
-                    <option value="Digital">Digital</option>
-                  </select>
+                  <label>Format</label>
+                  <div className="format-segmented-control">
+                    <button
+                      type="button"
+                      className={`segment ${quickAddFormat === 'Physical' ? 'active' : ''}`}
+                      onClick={() => setQuickAddFormat('Physical')}
+                    >
+                      📦 Physical
+                    </button>
+                    <button
+                      type="button"
+                      className={`segment ${quickAddFormat === 'Digital' ? 'active' : ''}`}
+                      onClick={() => setQuickAddFormat('Digital')}
+                    >
+                      ☁️ Digital
+                    </button>
+                  </div>
                 </div>
               </div>
               <div className="quick-add-actions">

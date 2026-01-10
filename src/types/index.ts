@@ -37,6 +37,8 @@ export interface ShareProfile {
   shareId: string;
   userId: string;
   enabled: boolean;
+  showDisplayName: boolean;
+  showAvatar: boolean;
   createdAt: string;
   revokedAt?: string;
 }

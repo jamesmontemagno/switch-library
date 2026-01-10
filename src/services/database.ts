@@ -305,6 +305,8 @@ function mapSupabaseShareToProfile(row: Record<string, unknown>): ShareProfile {
     shareId: row.share_id as string,
     userId: row.user_id as string,
     enabled: row.enabled as boolean,
+    showDisplayName: row.show_display_name as boolean ?? true,
+    showAvatar: row.show_avatar as boolean ?? true,
     createdAt: row.created_at as string,
     revokedAt: row.revoked_at as string | undefined,
   };
@@ -389,6 +391,8 @@ export async function enableSharing(userId: string): Promise<ShareProfile | null
       shareId: crypto.randomUUID(),
       userId,
       enabled: true,
+      showDisplayName: true,
+      showAvatar: true,
       createdAt: new Date().toISOString(),
     };
     profiles.push(newProfile);
@@ -464,6 +468,8 @@ export async function regenerateShareId(userId: string): Promise<ShareProfile | 
       shareId: crypto.randomUUID(),
       userId,
       enabled: true,
+      showDisplayName: true,
+      showAvatar: true,
       createdAt: new Date().toISOString(),
     };
     filtered.push(newProfile);
@@ -548,14 +554,115 @@ export async function getSharedUserProfile(shareId: string): Promise<{ displayNa
     }
 
     const profileData = data as Record<string, unknown>;
+    // Respect privacy settings
+    return {
+      displayName: shareProfile.showDisplayName 
+        ? (profileData.display_name as string) 
+        : 'Anonymous',
+      avatarUrl: shareProfile.showAvatar 
+        ? (profileData.avatar_url as string) 
+        : '',
+    };
+  }
+
+  // localStorage fallback - no profile info available
+  return { 
+    displayName: shareProfile.showDisplayName ? 'User' : 'Anonymous', 
+    avatarUrl: '' 
+  };
+}
+
+// Update share profile privacy settings
+export async function updateSharePrivacy(
+  userId: string, 
+  settings: { showDisplayName?: boolean; showAvatar?: boolean }
+): Promise<ShareProfile | null> {
+  if (useSupabase) {
+    const updateData: Record<string, boolean> = {};
+    if (settings.showDisplayName !== undefined) {
+      updateData.show_display_name = settings.showDisplayName;
+    }
+    if (settings.showAvatar !== undefined) {
+      updateData.show_avatar = settings.showAvatar;
+    }
+
+    const { data, error } = await supabase
+      .from('share_profiles')
+      .update(updateData)
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    if (error || !data) {
+      console.error('Failed to update share privacy:', error);
+      return null;
+    }
+    return mapSupabaseShareToProfile(data);
+  }
+
+  // localStorage fallback
+  try {
+    const stored = localStorage.getItem(SHARE_STORAGE_KEY);
+    if (stored) {
+      const profiles = JSON.parse(stored) as ShareProfile[];
+      const profile = profiles.find(p => p.userId === userId);
+      if (profile) {
+        if (settings.showDisplayName !== undefined) {
+          profile.showDisplayName = settings.showDisplayName;
+        }
+        if (settings.showAvatar !== undefined) {
+          profile.showAvatar = settings.showAvatar;
+        }
+        localStorage.setItem(SHARE_STORAGE_KEY, JSON.stringify(profiles));
+        return profile;
+      }
+    }
+  } catch (error) {
+    console.error('Failed to update share privacy in localStorage:', error);
+  }
+  return null;
+}
+
+// Update user display name
+export async function updateDisplayName(userId: string, displayName: string): Promise<boolean> {
+  if (useSupabase) {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ display_name: displayName })
+      .eq('id', userId);
+
+    if (error) {
+      console.error('Failed to update display name:', error);
+      return false;
+    }
+    return true;
+  }
+
+  // localStorage doesn't store user profiles
+  return false;
+}
+
+// Get user profile info
+export async function getUserProfile(userId: string): Promise<{ displayName: string; avatarUrl: string } | null> {
+  if (useSupabase) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('display_name, avatar_url')
+      .eq('id', userId)
+      .single();
+
+    if (error || !data) {
+      return null;
+    }
+
+    const profileData = data as Record<string, unknown>;
     return {
       displayName: profileData.display_name as string,
       avatarUrl: profileData.avatar_url as string,
     };
   }
 
-  // localStorage fallback - no profile info available
-  return { displayName: 'User', avatarUrl: '' };
+  return null;
 }
 
 export { useSupabase };

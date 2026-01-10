@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import type { GameEntry, Platform, ShareProfile } from '../types';
-import { loadGames, saveGame, deleteGame as deleteGameFromDb, getShareProfile, enableSharing, disableSharing, regenerateShareId } from '../services/database';
+import { loadGames, saveGame, deleteGame as deleteGameFromDb, getShareProfile, enableSharing, disableSharing, regenerateShareId, updateSharePrivacy, updateDisplayName, getUserProfile } from '../services/database';
 import { ManualAddGameModal } from '../components/ManualAddGameModal';
 import { EditGameModal } from '../components/EditGameModal';
 import './Library.css';
@@ -31,18 +31,27 @@ export function Library() {
   const [isLoadingShare, setIsLoadingShare] = useState(false);
   const [showSharePanel, setShowSharePanel] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  
+  // Profile editing state
+  const [displayName, setDisplayName] = useState('');
+  const [editingDisplayName, setEditingDisplayName] = useState(false);
+  const [savingDisplayName, setSavingDisplayName] = useState(false);
 
   // Load games on mount
   const fetchGames = useCallback(async () => {
     if (!user) return;
     setIsLoading(true);
     try {
-      const [userGames, userShareProfile] = await Promise.all([
+      const [userGames, userShareProfile, userProfile] = await Promise.all([
         loadGames(user.id),
-        getShareProfile(user.id)
+        getShareProfile(user.id),
+        getUserProfile(user.id)
       ]);
       setGames(userGames);
       setShareProfile(userShareProfile);
+      if (userProfile) {
+        setDisplayName(userProfile.displayName);
+      }
     } catch (error) {
       console.error('Failed to load games:', error);
     } finally {
@@ -195,6 +204,57 @@ export function Library() {
     }
   };
 
+  // Display name handler
+  const handleSaveDisplayName = async () => {
+    if (!user || !displayName.trim()) return;
+    setSavingDisplayName(true);
+    try {
+      const success = await updateDisplayName(user.id, displayName.trim());
+      if (success) {
+        setEditingDisplayName(false);
+      }
+    } catch (error) {
+      console.error('Failed to update display name:', error);
+    } finally {
+      setSavingDisplayName(false);
+    }
+  };
+
+  // Privacy toggle handlers
+  const handleToggleShowName = async () => {
+    if (!user || !shareProfile) return;
+    setIsLoadingShare(true);
+    try {
+      const updated = await updateSharePrivacy(user.id, { 
+        showDisplayName: !shareProfile.showDisplayName 
+      });
+      if (updated) {
+        setShareProfile(updated);
+      }
+    } catch (error) {
+      console.error('Failed to toggle show name:', error);
+    } finally {
+      setIsLoadingShare(false);
+    }
+  };
+
+  const handleToggleShowAvatar = async () => {
+    if (!user || !shareProfile) return;
+    setIsLoadingShare(true);
+    try {
+      const updated = await updateSharePrivacy(user.id, { 
+        showAvatar: !shareProfile.showAvatar 
+      });
+      if (updated) {
+        setShareProfile(updated);
+      }
+    } catch (error) {
+      console.error('Failed to toggle show avatar:', error);
+    } finally {
+      setIsLoadingShare(false);
+    }
+  };
+
   const stats = {
     total: games.length,
     switch: games.filter(g => g.platform === 'Nintendo Switch').length,
@@ -247,47 +307,119 @@ export function Library() {
             <h3>🔗 Share Your Library</h3>
             <p>Share your collection with friends or compare libraries</p>
           </div>
-          <div className="share-panel-content">
-            <div className="share-toggle-row">
-              <span>Sharing is {shareProfile?.enabled ? 'enabled' : 'disabled'}</span>
-              <button
-                onClick={handleToggleSharing}
-                disabled={isLoadingShare}
-                className={`btn-toggle ${shareProfile?.enabled ? 'on' : 'off'}`}
-              >
-                {isLoadingShare ? '...' : shareProfile?.enabled ? 'ON' : 'OFF'}
-              </button>
-            </div>
-            {shareProfile?.enabled && (
-              <>
-                <div className="share-link-row">
+          
+          {/* Profile Settings */}
+          <div className="share-section">
+            <h4>👤 Display Name</h4>
+            <div className="profile-edit-row">
+              {editingDisplayName ? (
+                <>
                   <input
                     type="text"
-                    value={getShareUrl()}
-                    readOnly
-                    className="share-url-input"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    className="profile-input"
+                    placeholder="Your display name"
                   />
-                  <button onClick={handleCopyLink} className="btn-copy">
-                    {copySuccess ? '✓ Copied!' : '📋 Copy'}
-                  </button>
-                </div>
-                <div className="share-actions-row">
                   <button 
-                    onClick={handleRegenerateLink} 
-                    className="btn-regenerate"
-                    disabled={isLoadingShare}
+                    onClick={handleSaveDisplayName} 
+                    disabled={savingDisplayName || !displayName.trim()}
+                    className="btn-save-profile"
                   >
-                    🔄 Generate New Link
+                    {savingDisplayName ? '...' : '✓ Save'}
                   </button>
                   <button 
-                    onClick={() => navigate(`/shared/${shareProfile.shareId}`)}
-                    className="btn-preview"
+                    onClick={() => setEditingDisplayName(false)}
+                    className="btn-cancel-profile"
                   >
-                    👁️ Preview
+                    ✕
                   </button>
-                </div>
-              </>
-            )}
+                </>
+              ) : (
+                <>
+                  <span className="current-name">{displayName || 'Not set'}</span>
+                  <button 
+                    onClick={() => setEditingDisplayName(true)}
+                    className="btn-edit-profile"
+                  >
+                    ✏️ Edit
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+          
+          <div className="share-section">
+            <h4>⚙️ Sharing Settings</h4>
+            <div className="share-panel-content">
+              <div className="share-toggle-row">
+                <span>Sharing is {shareProfile?.enabled ? 'enabled' : 'disabled'}</span>
+                <button
+                  onClick={handleToggleSharing}
+                  disabled={isLoadingShare}
+                  className={`btn-toggle ${shareProfile?.enabled ? 'on' : 'off'}`}
+                >
+                  {isLoadingShare ? '...' : shareProfile?.enabled ? 'ON' : 'OFF'}
+                </button>
+              </div>
+              
+              {shareProfile?.enabled && (
+                <>
+                  <div className="share-link-row">
+                    <input
+                      type="text"
+                      value={getShareUrl()}
+                      readOnly
+                      className="share-url-input"
+                    />
+                    <button onClick={handleCopyLink} className="btn-copy">
+                      {copySuccess ? '✓ Copied!' : '📋 Copy'}
+                    </button>
+                  </div>
+                  
+                  {/* Privacy Settings */}
+                  <div className="privacy-settings">
+                    <h5>🔒 Privacy</h5>
+                    <div className="privacy-toggle-row">
+                      <span>Show my display name</span>
+                      <button
+                        onClick={handleToggleShowName}
+                        disabled={isLoadingShare}
+                        className={`btn-toggle small ${shareProfile?.showDisplayName ? 'on' : 'off'}`}
+                      >
+                        {shareProfile?.showDisplayName ? 'ON' : 'OFF'}
+                      </button>
+                    </div>
+                    <div className="privacy-toggle-row">
+                      <span>Show my avatar</span>
+                      <button
+                        onClick={handleToggleShowAvatar}
+                        disabled={isLoadingShare}
+                        className={`btn-toggle small ${shareProfile?.showAvatar ? 'on' : 'off'}`}
+                      >
+                        {shareProfile?.showAvatar ? 'ON' : 'OFF'}
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="share-actions-row">
+                    <button 
+                      onClick={handleRegenerateLink} 
+                      className="btn-regenerate"
+                      disabled={isLoadingShare}
+                    >
+                      🔄 Generate New Link
+                    </button>
+                    <button 
+                      onClick={() => navigate(`/shared/${shareProfile.shareId}`)}
+                      className="btn-preview"
+                    >
+                      👁️ Preview
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}

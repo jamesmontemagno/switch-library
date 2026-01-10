@@ -37,6 +37,8 @@ create table if not exists public.share_profiles (
   share_id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users on delete cascade not null unique,
   enabled boolean default false,
+  show_display_name boolean default true,
+  show_avatar boolean default true,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   revoked_at timestamp with time zone
 );
