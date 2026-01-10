@@ -24,6 +24,7 @@ interface SearchResult {
   boxartUrl?: string;
   players?: number;
   rating?: string;
+  region_id?: number;
 }
 
 export function Search() {
@@ -39,6 +40,7 @@ export function Search() {
   
   // Filters
   const [platform, setPlatform] = useState<'all' | Platform>('all');
+  const [region, setRegion] = useState<'all' | number>('all');
   const [yearFrom, setYearFrom] = useState('');
   const [yearTo, setYearTo] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('relevance');
@@ -207,11 +209,16 @@ export function Search() {
           boxartUrl,
           players: game.players,
           rating: game.rating,
+          region_id: game.region_id,
         };
       });
       
       // Apply filters
       let filtered = resultsWithImages;
+      
+      if (region !== 'all') {
+        filtered = filtered.filter(r => r.region_id === region);
+      }
       
       if (onlyWithBoxart) {
         filtered = filtered.filter(r => !!r.boxartUrl);
@@ -266,7 +273,7 @@ export function Search() {
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, platform, yearFrom, yearTo, sortBy, onlyWithBoxart, hasTheGamesDB, currentPage, user, usageInfo]);
+  }, [query, platform, region, yearFrom, yearTo, sortBy, onlyWithBoxart, hasTheGamesDB, currentPage, user, usageInfo]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -366,6 +373,21 @@ export function Search() {
             <option value="all">All Switch</option>
             <option value="Nintendo Switch">Nintendo Switch</option>
             <option value="Nintendo Switch 2">Nintendo Switch 2</option>
+          </select>
+        </div>
+        
+        <div className="filter-item">
+          <label>Region</label>
+          <select value={region} onChange={(e) => setRegion(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}>
+            <option value="all">All Regions</option>
+            <option value="1">North America</option>
+            <option value="3">Japan</option>
+            <option value="4">Australia</option>
+            <option value="5">Asia</option>
+            <option value="6">Europe</option>
+            <option value="7">South America</option>
+            <option value="8">Africa</option>
+            <option value="9">Middle East</option>
           </select>
         </div>
         

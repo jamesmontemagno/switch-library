@@ -19,6 +19,7 @@ export interface TheGamesDBGame {
   genres?: number[];
   rating?: string;
   region_id?: number;
+  country_id?: number;
   last_updated?: string;
   coop?: string;
   youtube?: string;
@@ -566,4 +567,22 @@ export async function getPublishers(): Promise<Record<number, string>> {
 export function mapIdsToNames(ids: number[] | undefined, lookup: Record<number, string>): string[] {
   if (!ids) return [];
   return ids.map(id => lookup[id] || `Unknown (${id})`);
+}
+
+// Region mappings (based on TheGamesDB region IDs)
+export const REGIONS: Record<number, string> = {
+  1: 'North America',
+  2: 'North America',
+  3: 'Japan',
+  4: 'Australia',
+  5: 'Asia',
+  6: 'Europe',
+  7: 'South America',
+  8: 'Africa',
+  9: 'Middle East',
+};
+
+export function getRegionName(regionId: number | undefined): string {
+  if (!regionId) return 'Unknown';
+  return REGIONS[regionId] || `Region ${regionId}`;
 }
