@@ -7,6 +7,8 @@ import { Auth } from './pages/Auth';
 import { Library } from './pages/Library';
 import { Search } from './pages/Search';
 import { GameDetails } from './pages/GameDetails';
+import { SharedLibrary } from './pages/SharedLibrary';
+import { Compare } from './pages/Compare';
 import { NotFound } from './pages/NotFound';
 
 // Get base path from Vite config
@@ -21,6 +23,8 @@ function App() {
             <Route index element={<Home />} />
             <Route path="auth" element={<Auth />} />
             <Route path="search" element={<Search />} />
+            <Route path="shared/:shareId" element={<SharedLibrary />} />
+            <Route path="compare/:shareId1/:shareId2" element={<Compare />} />
             <Route
               path="library"
               element={

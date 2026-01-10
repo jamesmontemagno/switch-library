@@ -79,6 +79,209 @@
   box-shadow: 0 6px 20px rgba(0, 150, 214, 0.35);
 }
 
+.btn-share {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #6b46c1 0%, #553c9a 100%);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.btn-share:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(107, 70, 193, 0.35);
+}
+
+.btn-share.active {
+  background: linear-gradient(135deg, #553c9a 0%, #44337a 100%);
+}
+
+/* Share Panel */
+.share-panel {
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+@media (prefers-color-scheme: dark) {
+  .share-panel {
+    background: linear-gradient(135deg, #1a1a1a 0%, #242424 100%);
+    border-color: #333;
+  }
+}
+
+.share-panel-header {
+  margin-bottom: 1rem;
+}
+
+.share-panel-header h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1.125rem;
+}
+
+.share-panel-header p {
+  margin: 0;
+  color: #666;
+  font-size: 0.9375rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .share-panel-header p {
+    color: #aaa;
+  }
+}
+
+.share-panel-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.share-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.btn-toggle {
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 60px;
+}
+
+.btn-toggle.off {
+  background: #e0e0e0;
+  color: #666;
+}
+
+.btn-toggle.on {
+  background: #4caf50;
+  color: white;
+}
+
+.btn-toggle:hover:not(:disabled) {
+  transform: scale(1.05);
+}
+
+.btn-toggle:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (prefers-color-scheme: dark) {
+  .btn-toggle.off {
+    background: #444;
+    color: #aaa;
+  }
+}
+
+.share-link-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.share-url-input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  background: white;
+  color: #333;
+}
+
+@media (prefers-color-scheme: dark) {
+  .share-url-input {
+    background: #2a2a2a;
+    border-color: #444;
+    color: white;
+  }
+}
+
+.btn-copy {
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  background: #e60012;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-copy:hover {
+  background: #c4000f;
+}
+
+.share-actions-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btn-regenerate,
+.btn-preview {
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-regenerate {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.btn-regenerate:hover:not(:disabled) {
+  background: #e0e0e0;
+}
+
+.btn-regenerate:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-preview {
+  background: #6b46c1;
+  color: white;
+}
+
+.btn-preview:hover {
+  background: #553c9a;
+}
+
+@media (prefers-color-scheme: dark) {
+  .btn-regenerate {
+    background: #444;
+    color: #e0e0e0;
+  }
+  .btn-regenerate:hover:not(:disabled) {
+    background: #555;
+  }
+}
+
 .library-toolbar {
   display: flex;
   gap: 0.75rem;

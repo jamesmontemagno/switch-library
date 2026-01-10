@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import type { GameEntry, Platform} from '../types';
-import { loadGames, saveGame, deleteGame as deleteGameFromDb } from '../services/database';
+import type { GameEntry, Platform, ShareProfile } from '../types';
+import { loadGames, saveGame, deleteGame as deleteGameFromDb, getShareProfile, enableSharing, disableSharing, regenerateShareId } from '../services/database';
 import { ManualAddGameModal } from '../components/ManualAddGameModal';
 import { EditGameModal } from '../components/EditGameModal';
 import './Library.css';
@@ -25,14 +25,24 @@ export function Library() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('added_newest');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  
+  // Share state
+  const [shareProfile, setShareProfile] = useState<ShareProfile | null>(null);
+  const [isLoadingShare, setIsLoadingShare] = useState(false);
+  const [showSharePanel, setShowSharePanel] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
 
   // Load games on mount
   const fetchGames = useCallback(async () => {
     if (!user) return;
     setIsLoading(true);
     try {
-      const userGames = await loadGames(user.id);
+      const [userGames, userShareProfile] = await Promise.all([
+        loadGames(user.id),
+        getShareProfile(user.id)
+      ]);
       setGames(userGames);
+      setShareProfile(userShareProfile);
     } catch (error) {
       console.error('Failed to load games:', error);
     } finally {
@@ -130,6 +140,61 @@ export function Library() {
     setEditingGame(null);
   };
 
+  // Share handlers
+  const handleToggleSharing = async () => {
+    if (!user) return;
+    setIsLoadingShare(true);
+    try {
+      if (shareProfile?.enabled) {
+        const success = await disableSharing(user.id);
+        if (success) {
+          setShareProfile(prev => prev ? { ...prev, enabled: false } : null);
+        }
+      } else {
+        const newProfile = await enableSharing(user.id);
+        if (newProfile) {
+          setShareProfile(newProfile);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to toggle sharing:', error);
+    } finally {
+      setIsLoadingShare(false);
+    }
+  };
+
+  const handleRegenerateLink = async () => {
+    if (!user) return;
+    setIsLoadingShare(true);
+    try {
+      const newProfile = await regenerateShareId(user.id);
+      if (newProfile) {
+        setShareProfile(newProfile);
+      }
+    } catch (error) {
+      console.error('Failed to regenerate link:', error);
+    } finally {
+      setIsLoadingShare(false);
+    }
+  };
+
+  const getShareUrl = () => {
+    if (!shareProfile) return '';
+    const baseUrl = window.location.origin + import.meta.env.BASE_URL;
+    return `${baseUrl}shared/${shareProfile.shareId}`;
+  };
+
+  const handleCopyLink = async () => {
+    const url = getShareUrl();
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy link:', error);
+    }
+  };
+
   const stats = {
     total: games.length,
     switch: games.filter(g => g.platform === 'Nintendo Switch').length,
@@ -160,6 +225,12 @@ export function Library() {
           </p>
         </div>
         <div className="header-actions">
+          <button 
+            onClick={() => setShowSharePanel(!showSharePanel)} 
+            className={`btn-share ${shareProfile?.enabled ? 'active' : ''}`}
+          >
+            🔗 {showSharePanel ? 'Hide Sharing' : 'Share'}
+          </button>
           <button onClick={() => navigate('/search')} className="btn-search">
             🔍 Search Games
           </button>
@@ -168,6 +239,58 @@ export function Library() {
           </button>
         </div>
       </header>
+
+      {/* Share Panel */}
+      {showSharePanel && (
+        <div className="share-panel">
+          <div className="share-panel-header">
+            <h3>🔗 Share Your Library</h3>
+            <p>Share your collection with friends or compare libraries</p>
+          </div>
+          <div className="share-panel-content">
+            <div className="share-toggle-row">
+              <span>Sharing is {shareProfile?.enabled ? 'enabled' : 'disabled'}</span>
+              <button
+                onClick={handleToggleSharing}
+                disabled={isLoadingShare}
+                className={`btn-toggle ${shareProfile?.enabled ? 'on' : 'off'}`}
+              >
+                {isLoadingShare ? '...' : shareProfile?.enabled ? 'ON' : 'OFF'}
+              </button>
+            </div>
+            {shareProfile?.enabled && (
+              <>
+                <div className="share-link-row">
+                  <input
+                    type="text"
+                    value={getShareUrl()}
+                    readOnly
+                    className="share-url-input"
+                  />
+                  <button onClick={handleCopyLink} className="btn-copy">
+                    {copySuccess ? '✓ Copied!' : '📋 Copy'}
+                  </button>
+                </div>
+                <div className="share-actions-row">
+                  <button 
+                    onClick={handleRegenerateLink} 
+                    className="btn-regenerate"
+                    disabled={isLoadingShare}
+                  >
+                    🔄 Generate New Link
+                  </button>
+                  <button 
+                    onClick={() => navigate(`/shared/${shareProfile.shareId}`)}
+                    className="btn-preview"
+                  >
+                    👁️ Preview
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="library-toolbar">
         <input

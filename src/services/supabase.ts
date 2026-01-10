@@ -16,6 +16,65 @@ if (isSupabaseConfigured()) {
   supabaseClient = createClient(supabaseUrl, supabaseKey);
 }
 
+// Type for mock query builder that chains
+type MockQueryResult = { data: unknown; error: Error | null; count?: number };
+type MockPromise = Promise<MockQueryResult> & MockQueryBuilder;
+
+interface MockQueryBuilder {
+  select: (columns?: string, options?: { count?: string; head?: boolean }) => MockPromise;
+  eq: (column: string, value: unknown) => MockPromise;
+  neq: (column: string, value: unknown) => MockPromise;
+  gt: (column: string, value: unknown) => MockPromise;
+  gte: (column: string, value: unknown) => MockPromise;
+  lt: (column: string, value: unknown) => MockPromise;
+  lte: (column: string, value: unknown) => MockPromise;
+  like: (column: string, value: string) => MockPromise;
+  ilike: (column: string, value: string) => MockPromise;
+  is: (column: string, value: unknown) => MockPromise;
+  in: (column: string, values: unknown[]) => MockPromise;
+  order: (column: string, options?: { ascending?: boolean }) => MockPromise;
+  limit: (count: number) => MockPromise;
+  range: (from: number, to: number) => MockPromise;
+  single: () => MockPromise;
+  maybeSingle: () => MockPromise;
+}
+
+// Helper to create a chainable mock that handles all cases
+const createMockChain = (resolveValue: unknown = null, isError = true): MockPromise => {
+  const mockError = isError ? new Error('Supabase not configured') : null;
+  const mockResult: MockQueryResult = { 
+    data: resolveValue, 
+    error: mockError,
+    count: Array.isArray(resolveValue) ? resolveValue.length : 0 
+  };
+  
+  // Create the promise base
+  const basePromise = Promise.resolve(mockResult);
+  
+  // Create methods that return new chainable mocks
+  const createChainMethods = (): MockQueryBuilder => ({
+    select: () => createMockChain(resolveValue, isError),
+    eq: () => createMockChain(resolveValue, isError),
+    neq: () => createMockChain(resolveValue, isError),
+    gt: () => createMockChain(resolveValue, isError),
+    gte: () => createMockChain(resolveValue, isError),
+    lt: () => createMockChain(resolveValue, isError),
+    lte: () => createMockChain(resolveValue, isError),
+    like: () => createMockChain(resolveValue, isError),
+    ilike: () => createMockChain(resolveValue, isError),
+    is: () => createMockChain(resolveValue, isError),
+    in: () => createMockChain(resolveValue, isError),
+    order: () => createMockChain(resolveValue, isError),
+    limit: () => createMockChain(resolveValue, isError),
+    range: () => createMockChain(resolveValue, isError),
+    single: () => createMockChain(resolveValue, isError),
+    maybeSingle: () => createMockChain(resolveValue, isError),
+  });
+  
+  // Combine promise with chain methods
+  return Object.assign(basePromise, createChainMethods()) as MockPromise;
+};
+
 // Export a proxy that handles the unconfigured case
 export const supabase = {
   auth: {
@@ -70,23 +129,13 @@ export const supabase = {
   },
   from: (table: string) => {
     if (!supabaseClient) {
-      // Return a mock that returns empty results
+      // Return a comprehensive mock that supports all chaining patterns
       return {
-        select: () => ({
-          eq: () => ({
-            order: () => Promise.resolve({ data: [], error: null }),
-            gte: () => Promise.resolve({ count: 0, error: null }),
-          }),
-        }),
-        insert: () => Promise.resolve({ error: null }),
-        upsert: () => ({
-          select: () => ({
-            single: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') }),
-          }),
-        }),
-        delete: () => ({
-          eq: () => Promise.resolve({ error: new Error('Supabase not configured') }),
-        }),
+        select: (_columns?: string, options?: { count?: string; head?: boolean }) => createMockChain([], !options?.head),
+        insert: () => createMockChain(null, true),
+        upsert: () => createMockChain(null, true),
+        update: () => createMockChain(null, true),
+        delete: () => createMockChain(null, true),
       };
     }
     return supabaseClient.from(table);

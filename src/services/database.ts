@@ -1,5 +1,5 @@
 import { supabase, isSupabaseConfigured } from './supabase';
-import type { GameEntry } from '../types';
+import type { GameEntry, ShareProfile } from '../types';
 
 const LOCAL_STORAGE_KEY = 'switch-library-games';
 
@@ -57,7 +57,7 @@ async function loadGamesFromSupabase(userId: string): Promise<GameEntry[]> {
     return [];
   }
 
-  return (data || []).map(mapSupabaseGameToEntry);
+  return ((data as Record<string, unknown>[] | null) || []).map(mapSupabaseGameToEntry);
 }
 
 async function saveGameToSupabase(game: GameEntry): Promise<GameEntry | null> {
@@ -295,6 +295,267 @@ export async function logSearchUsage(userId: string, searchQuery: string): Promi
   } else {
     logSearchToLocalStorage(userId, searchQuery);
   }
+}
+
+// Share Profile Functions
+const SHARE_STORAGE_KEY = 'switch-library-share-profile';
+
+function mapSupabaseShareToProfile(row: Record<string, unknown>): ShareProfile {
+  return {
+    shareId: row.share_id as string,
+    userId: row.user_id as string,
+    enabled: row.enabled as boolean,
+    createdAt: row.created_at as string,
+    revokedAt: row.revoked_at as string | undefined,
+  };
+}
+
+export async function getShareProfile(userId: string): Promise<ShareProfile | null> {
+  if (useSupabase) {
+    const { data, error } = await supabase
+      .from('share_profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (error || !data) {
+      return null;
+    }
+
+    return mapSupabaseShareToProfile(data);
+  }
+
+  // localStorage fallback
+  try {
+    const stored = localStorage.getItem(SHARE_STORAGE_KEY);
+    if (stored) {
+      const profiles = JSON.parse(stored) as ShareProfile[];
+      return profiles.find(p => p.userId === userId) || null;
+    }
+  } catch (error) {
+    console.error('Failed to get share profile from localStorage:', error);
+  }
+  return null;
+}
+
+export async function enableSharing(userId: string): Promise<ShareProfile | null> {
+  if (useSupabase) {
+    // Try to update existing profile first
+    const existing = await getShareProfile(userId);
+    
+    if (existing) {
+      const { data, error } = await supabase
+        .from('share_profiles')
+        .update({ enabled: true, revoked_at: null })
+        .eq('user_id', userId)
+        .select()
+        .single();
+
+      if (error || !data) {
+        console.error('Failed to enable sharing:', error);
+        return null;
+      }
+      return mapSupabaseShareToProfile(data);
+    }
+
+    // Create new share profile
+    const { data, error } = await supabase
+      .from('share_profiles')
+      .insert({ user_id: userId, enabled: true })
+      .select()
+      .single();
+
+    if (error || !data) {
+      console.error('Failed to create share profile:', error);
+      return null;
+    }
+    return mapSupabaseShareToProfile(data);
+  }
+
+  // localStorage fallback
+  try {
+    const stored = localStorage.getItem(SHARE_STORAGE_KEY);
+    const profiles = stored ? JSON.parse(stored) as ShareProfile[] : [];
+    const existing = profiles.find(p => p.userId === userId);
+    
+    if (existing) {
+      existing.enabled = true;
+      existing.revokedAt = undefined;
+      localStorage.setItem(SHARE_STORAGE_KEY, JSON.stringify(profiles));
+      return existing;
+    }
+
+    const newProfile: ShareProfile = {
+      shareId: crypto.randomUUID(),
+      userId,
+      enabled: true,
+      createdAt: new Date().toISOString(),
+    };
+    profiles.push(newProfile);
+    localStorage.setItem(SHARE_STORAGE_KEY, JSON.stringify(profiles));
+    return newProfile;
+  } catch (error) {
+    console.error('Failed to enable sharing in localStorage:', error);
+  }
+  return null;
+}
+
+export async function disableSharing(userId: string): Promise<boolean> {
+  if (useSupabase) {
+    const { error } = await supabase
+      .from('share_profiles')
+      .update({ enabled: false, revoked_at: new Date().toISOString() })
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('Failed to disable sharing:', error);
+      return false;
+    }
+    return true;
+  }
+
+  // localStorage fallback
+  try {
+    const stored = localStorage.getItem(SHARE_STORAGE_KEY);
+    if (stored) {
+      const profiles = JSON.parse(stored) as ShareProfile[];
+      const profile = profiles.find(p => p.userId === userId);
+      if (profile) {
+        profile.enabled = false;
+        profile.revokedAt = new Date().toISOString();
+        localStorage.setItem(SHARE_STORAGE_KEY, JSON.stringify(profiles));
+      }
+    }
+    return true;
+  } catch (error) {
+    console.error('Failed to disable sharing in localStorage:', error);
+  }
+  return false;
+}
+
+export async function regenerateShareId(userId: string): Promise<ShareProfile | null> {
+  if (useSupabase) {
+    // Delete existing and create new
+    await supabase
+      .from('share_profiles')
+      .delete()
+      .eq('user_id', userId);
+
+    const { data, error } = await supabase
+      .from('share_profiles')
+      .insert({ user_id: userId, enabled: true })
+      .select()
+      .single();
+
+    if (error || !data) {
+      console.error('Failed to regenerate share ID:', error);
+      return null;
+    }
+    return mapSupabaseShareToProfile(data);
+  }
+
+  // localStorage fallback
+  try {
+    const stored = localStorage.getItem(SHARE_STORAGE_KEY);
+    const profiles = stored ? JSON.parse(stored) as ShareProfile[] : [];
+    const filtered = profiles.filter(p => p.userId !== userId);
+    
+    const newProfile: ShareProfile = {
+      shareId: crypto.randomUUID(),
+      userId,
+      enabled: true,
+      createdAt: new Date().toISOString(),
+    };
+    filtered.push(newProfile);
+    localStorage.setItem(SHARE_STORAGE_KEY, JSON.stringify(filtered));
+    return newProfile;
+  } catch (error) {
+    console.error('Failed to regenerate share ID in localStorage:', error);
+  }
+  return null;
+}
+
+// Public functions for viewing shared libraries
+export async function getSharedProfileByShareId(shareId: string): Promise<ShareProfile | null> {
+  if (useSupabase) {
+    const { data, error } = await supabase
+      .from('share_profiles')
+      .select('*')
+      .eq('share_id', shareId)
+      .eq('enabled', true)
+      .single();
+
+    if (error || !data) {
+      return null;
+    }
+    return mapSupabaseShareToProfile(data);
+  }
+
+  // localStorage fallback
+  try {
+    const stored = localStorage.getItem(SHARE_STORAGE_KEY);
+    if (stored) {
+      const profiles = JSON.parse(stored) as ShareProfile[];
+      return profiles.find(p => p.shareId === shareId && p.enabled) || null;
+    }
+  } catch (error) {
+    console.error('Failed to get shared profile from localStorage:', error);
+  }
+  return null;
+}
+
+export async function loadSharedGames(shareId: string): Promise<GameEntry[]> {
+  // First get the share profile to find the user ID
+  const shareProfile = await getSharedProfileByShareId(shareId);
+  if (!shareProfile) {
+    return [];
+  }
+
+  if (useSupabase) {
+    const { data, error } = await supabase
+      .from('games')
+      .select('*')
+      .eq('user_id', shareProfile.userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Failed to load shared games:', error);
+      return [];
+    }
+
+    return ((data as Record<string, unknown>[] | null) || []).map(mapSupabaseGameToEntry);
+  }
+
+  // localStorage fallback
+  return loadGamesFromLocalStorage(shareProfile.userId);
+}
+
+export async function getSharedUserProfile(shareId: string): Promise<{ displayName: string; avatarUrl: string } | null> {
+  const shareProfile = await getSharedProfileByShareId(shareId);
+  if (!shareProfile) {
+    return null;
+  }
+
+  if (useSupabase) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('display_name, avatar_url')
+      .eq('id', shareProfile.userId)
+      .single();
+
+    if (error || !data) {
+      return null;
+    }
+
+    const profileData = data as Record<string, unknown>;
+    return {
+      displayName: profileData.display_name as string,
+      avatarUrl: profileData.avatar_url as string,
+    };
+  }
+
+  // localStorage fallback - no profile info available
+  return { displayName: 'User', avatarUrl: '' };
 }
 
 export { useSupabase };
