@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { usePreferences } from '../hooks/usePreferences';
+import { useSEO } from '../hooks/useSEO';
 import type { GameEntry, Platform, ShareProfile } from '../types';
 import { loadGames, saveGame, deleteGame as deleteGameFromDb, getShareProfile, enableSharing, disableSharing, regenerateShareId, updateSharePrivacy, updateDisplayName, getUserProfile } from '../services/database';
 import { ManualAddGameModal } from '../components/ManualAddGameModal';
@@ -16,6 +17,13 @@ export function Library() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { preferences, updatePreferences } = usePreferences();
+  
+  useSEO({
+    title: 'My Library - My Switch Library',
+    description: 'Manage your Nintendo Switch game collection. Sort, filter, and organize your physical and digital games across Nintendo Switch and Switch 2.',
+    url: 'https://myswitchlibrary.com/library',
+  });
+  
   const [games, setGames] = useState<GameEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);

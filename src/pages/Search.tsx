@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { useSEO } from '../hooks/useSEO';
 import type { GameEntry, Platform, Format } from '../types';
 import { 
   searchGames, 
@@ -31,6 +32,13 @@ interface SearchResult {
 
 export function Search() {
   const { user, isAuthenticated } = useAuth();
+  
+  useSEO({
+    title: 'Search Nintendo Switch Games - My Switch Library',
+    description: 'Search and add Nintendo Switch and Switch 2 games to your collection. Browse games from TheGamesDB with cover art, release dates, and detailed information.',
+    url: 'https://myswitchlibrary.com/search',
+  });
+  
   const [query, setQuery] = useState('');
   const [rawResults, setRawResults] = useState<SearchResult[]>([]); // Store unfiltered results
   const [isSearching, setIsSearching] = useState(false);
@@ -589,7 +597,10 @@ export function Search() {
                     <div className="result-info">
                       <h3 className="result-title">{game.title}</h3>
                       <div className="result-meta">
-                        {game.region_id && <span className="region-badge">{getRegionName(game.region_id)}</span>}
+                        <span className={`platform-badge ${game.platformId === 5021 ? 'switch2' : 'switch'}`}>
+                          {game.platformId === 5021 ? 'Switch 2' : 'Switch'}
+                        </span>
+                        {game.region_id !== undefined && <span className="region-badge">{getRegionName(game.region_id)}</span>}
                         <span className="release-date">📅 {formatDate(game.releaseDate)}</span>
                         {game.players && <span className="players">👥 {game.players} player{game.players > 1 ? 's' : ''}</span>}
                         {game.rating && <span className="rating">⭐ {game.rating}</span>}

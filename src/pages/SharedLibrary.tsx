@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useSEO } from '../hooks/useSEO';
 import type { GameEntry } from '../types';
 import { loadSharedGames, getSharedUserProfile, getShareProfile } from '../services/database';
 import './SharedLibrary.css';
@@ -28,6 +29,16 @@ export function SharedLibrary() {
   
   // For compare functionality
   const [myShareId, setMyShareId] = useState<string | null>(null);
+
+  // Dynamic SEO for shared library
+  useSEO({
+    title: userInfo ? `${userInfo.displayName}'s Switch Library - ${games.length} Games` : 'Shared Switch Library',
+    description: userInfo 
+      ? `Check out ${userInfo.displayName}'s Nintendo Switch game collection with ${games.length} games (${games.filter(g => g.completed).length} completed). View their library and compare collections!`
+      : 'View a shared Nintendo Switch game collection',
+    url: `https://myswitchlibrary.com/shared/${shareId}`,
+    type: 'profile',
+  });
 
   useEffect(() => {
     async function loadData() {

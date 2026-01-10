@@ -1,10 +1,17 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useSEO } from '../hooks/useSEO';
 import './Home.css';
 
 export function Home() {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  useSEO({
+    title: 'My Switch Library - Track Your Nintendo Switch Game Collection',
+    description: 'Track, organize, and share your Nintendo Switch and Switch 2 game collection. Search games, add physical and digital titles, and manage your library with ease.',
+    url: 'https://myswitchlibrary.com/',
+  });
 
   const handleGetStarted = () => {
     if (isAuthenticated) {

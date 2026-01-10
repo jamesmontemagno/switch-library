@@ -571,18 +571,40 @@
   }
 }
 
+/* Platform Badge */
+.platform-badge {
+  display: inline-block;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.platform-badge.switch {
+  background: linear-gradient(135deg, #e60012 0%, #c4000f 100%);
+  box-shadow: 0 1px 3px rgba(230, 0, 18, 0.2);
+}
+
+.platform-badge.switch2 {
+  background: linear-gradient(135deg, #00b3e6 0%, #0099cc 100%);
+  box-shadow: 0 1px 3px rgba(0, 179, 230, 0.2);
+}
+
 /* Region Badge */
 .region-badge {
   display: inline-block;
   padding: 0.25rem 0.625rem;
   font-size: 0.75rem;
   font-weight: 600;
-  background: linear-gradient(135deg, #e60012 0%, #c4000f 100%);
+  background: linear-gradient(135deg, #7e57c2 0%, #5e35b1 100%);
   color: white;
   border-radius: 6px;
   text-transform: uppercase;
   letter-spacing: 0.025em;
-  box-shadow: 0 1px 3px rgba(230, 0, 18, 0.2);
+  box-shadow: 0 1px 3px rgba(126, 87, 194, 0.2);
 }
 
 /* List View */

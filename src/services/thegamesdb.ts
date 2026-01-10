@@ -581,6 +581,7 @@ export const REGIONS: Record<number, string> = {
 };
 
 export function getRegionName(regionId: number | undefined): string {
-  if (!regionId) return 'Unknown';
+  if (regionId === undefined || regionId === null) return 'Unknown';
+  if (regionId === 0) return 'Global';
   return REGIONS[regionId] || `Region ${regionId}`;
 }
