@@ -83,8 +83,10 @@ Create a `.env` file with:
 
 ```env
 VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
+VITE_SUPABASE_KEY=your-publishable-key-or-anon-key
 ```
+
+> **Note:** Use a publishable key (format: `sb_publishable_...`) for better security, or an anon key for backward compatibility.
 
 ### 5. Configure Backend API Key
 
@@ -143,7 +145,7 @@ See [backend-api/README.md](backend-api/README.md) for detailed deployment instr
    - Go to your repository → Settings → Secrets and variables → Actions
    - Add the following secrets:
      - `VITE_SUPABASE_URL`: Your Supabase project URL
-     - `VITE_SUPABASE_ANON_KEY`: Your Supabase anon key
+     - `VITE_SUPABASE_KEY`: Your Supabase publishable key or anon key
      - `VITE_API_BASE_URL`: Your Azure Functions base URL (e.g., `https://switchlibrary-api.azurewebsites.net/api`)
      - `VITE_BASE_PATH`: `/switch-library/` (or your repo name)
 
@@ -167,7 +169,7 @@ For production deployments where you want everything on Azure, you can use Azure
 
 2. **Configure frontend environment variables in Azure Portal:**
    - `VITE_SUPABASE_URL`: Your Supabase project URL
-   - `VITE_SUPABASE_ANON_KEY`: Your Supabase anon key
+   - `VITE_SUPABASE_KEY`: Your Supabase publishable key or anon key
 
 3. **Configure backend API key in the integrated Functions:**
    - Go to Configuration → Application settings

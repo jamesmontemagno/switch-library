@@ -1,18 +1,19 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+// Support both modern publishable keys and legacy anon keys
+const supabaseKey = import.meta.env.VITE_SUPABASE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
 // Check if Supabase is configured
 export const isSupabaseConfigured = () => {
-  return Boolean(supabaseUrl && supabaseAnonKey);
+  return Boolean(supabaseUrl && supabaseKey);
 };
 
 // Only create client if configured
 let supabaseClient: SupabaseClient | null = null;
 
 if (isSupabaseConfigured()) {
-  supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+  supabaseClient = createClient(supabaseUrl, supabaseKey);
 }
 
 // Export a proxy that handles the unconfigured case
