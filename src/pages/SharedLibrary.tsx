@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useSEO } from '../hooks/useSEO';
-import type { GameEntry } from '../types';
-import { loadSharedGames, getSharedUserProfile, getShareProfile, isFriend } from '../services/database';
+import type { GameEntry, Format, Platform } from '../types';
+import { loadSharedGames, getSharedUserProfile, getShareProfile, isFriend, loadGames, saveGame } from '../services/database';
 import { AddFriendModal } from '../components/AddFriendModal';
 import { UpsellBanner } from '../components/UpsellBanner';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowsLeftRight } from '@fortawesome/free-solid-svg-icons';
+import { faArrowsLeftRight, faPlus, faCheck } from '@fortawesome/free-solid-svg-icons';
 import './SharedLibrary.css';
 
 type SortOption = 'title_asc' | 'title_desc' | 'added_newest' | 'platform' | 'format';
@@ -39,6 +39,14 @@ export function SharedLibrary() {
   // For friend functionality
   const [isAlreadyFriend, setIsAlreadyFriend] = useState(false);
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
+
+  // For "Add to Collection" functionality
+  const [myGames, setMyGames] = useState<GameEntry[]>([]);
+  const [addingGameId, setAddingGameId] = useState<string | null>(null);
+  const [showQuickAddModal, setShowQuickAddModal] = useState(false);
+  const [quickAddGame, setQuickAddGame] = useState<GameEntry | null>(null);
+  const [quickAddFormat, setQuickAddFormat] = useState<Format>('Physical');
+  const [quickAddPlatform, setQuickAddPlatform] = useState<Platform>('Nintendo Switch');
 
   // Dynamic SEO for shared library
   useSEO({
@@ -73,16 +81,18 @@ export function SharedLibrary() {
         setGames(sharedGames);
         setUserInfo(sharedUserInfo);
         
-        // Get current user's share ID for compare feature and check if already friends
+        // Get current user's share ID for compare feature, check if already friends, and load user's games
         if (user) {
-          const [myProfile, alreadyFriend] = await Promise.all([
+          const [myProfile, alreadyFriend, userGames] = await Promise.all([
             getShareProfile(user.id),
-            isFriend(user.id, shareId)
+            isFriend(user.id, shareId),
+            loadGames(user.id)
           ]);
           if (myProfile?.enabled) {
             setMyShareId(myProfile.shareId);
           }
           setIsAlreadyFriend(alreadyFriend);
+          setMyGames(userGames);
         }
       } catch (err) {
         console.error('Failed to load shared library:', err);
@@ -94,6 +104,65 @@ export function SharedLibrary() {
 
     loadData();
   }, [shareId, user]);
+
+  // Helper to check if a game is already in user's collection
+  const isGameInMyCollection = (game: GameEntry): boolean => {
+    if (!user) return false;
+    
+    // Match by thegamesdbId if available (most reliable)
+    if (game.thegamesdbId) {
+      return myGames.some(g => g.thegamesdbId === game.thegamesdbId);
+    }
+    
+    // Fallback: match by title (case-insensitive)
+    return myGames.some(g => g.title.toLowerCase() === game.title.toLowerCase());
+  };
+
+  // Open quick add modal with pre-selected platform
+  const openQuickAddModal = (game: GameEntry) => {
+    setQuickAddPlatform(game.platform);
+    setQuickAddFormat('Physical'); // Default to Physical
+    setQuickAddGame(game);
+    setShowQuickAddModal(true);
+  };
+
+  // Handle adding a game to user's collection
+  const handleAddToCollection = async () => {
+    if (!quickAddGame || !user) return;
+    
+    setAddingGameId(quickAddGame.id);
+    
+    try {
+      const newGame: GameEntry = {
+        id: crypto.randomUUID(),
+        userId: user.id,
+        title: quickAddGame.title,
+        platform: quickAddPlatform,
+        format: quickAddFormat,
+        status: 'Owned',
+        thegamesdbId: quickAddGame.thegamesdbId,
+        coverUrl: quickAddGame.coverUrl,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      
+      // Update UI immediately for instant feedback
+      setMyGames(prev => [...prev, newGame]);
+      setShowQuickAddModal(false);
+      setQuickAddGame(null);
+      setAddingGameId(null);
+      
+      // Save to database in background
+      await saveGame(newGame, myGames);
+    } catch (err) {
+      console.error('Failed to add game:', err);
+      setAddingGameId(null);
+      // Revert optimistic update on error
+      if (quickAddGame) {
+        setMyGames(prev => prev.filter(g => g.id !== quickAddGame.id));
+      }
+    }
+  };
 
   const filteredGames = games
     .filter(game => {
@@ -250,33 +319,62 @@ export function SharedLibrary() {
             Showing {filteredGames.length} of {games.length} games
           </div>
           <div className={`games-${viewMode}`}>
-            {filteredGames.map(game => (
-              <article key={game.id} className={`game-card ${viewMode}`}>
-                <div className="game-cover">
-                  {game.coverUrl ? (
-                    <img src={game.coverUrl} alt={game.title} />
-                  ) : (
-                    <div className="cover-placeholder">
-                      <span>🎮</span>
-                    </div>
-                  )}
-                  {game.completed && (
-                    <div className="completed-badge" title="Completed">✓</div>
-                  )}
-                </div>
-                <div className="game-info">
-                  <h3 className="game-title">{game.title}</h3>
-                  <div className="game-meta">
-                    <span className={`platform-tag ${game.platform === 'Nintendo Switch' ? 'switch' : 'switch2'}`}>
-                      {game.platform === 'Nintendo Switch' ? 'Switch' : 'Switch 2'}
-                    </span>
-                    <span className={`format-tag ${game.format.toLowerCase()}`}>
-                      {game.format}
-                    </span>
+            {filteredGames.map(game => {
+              const inMyCollection = isGameInMyCollection(game);
+              const isAdding = addingGameId === game.id;
+              
+              return (
+                <article key={game.id} className={`game-card ${viewMode}`}>
+                  <div className="game-cover">
+                    {game.coverUrl ? (
+                      <img src={game.coverUrl} alt={game.title} />
+                    ) : (
+                      <div className="cover-placeholder">
+                        <span>🎮</span>
+                      </div>
+                    )}
+                    {game.completed && (
+                      <div className="completed-badge" title="Completed">✓</div>
+                    )}
+                    {user && inMyCollection && (
+                      <div className="in-collection-badge" title="In Your Collection">
+                        <FontAwesomeIcon icon={faCheck} />
+                      </div>
+                    )}
                   </div>
-                </div>
-              </article>
-            ))}
+                  <div className="game-info">
+                    <h3 className="game-title">{game.title}</h3>
+                    <div className="game-meta">
+                      <span className={`platform-tag ${game.platform === 'Nintendo Switch' ? 'switch' : 'switch2'}`}>
+                        {game.platform === 'Nintendo Switch' ? 'Switch' : 'Switch 2'}
+                      </span>
+                      <span className={`format-tag ${game.format.toLowerCase()}`}>
+                        {game.format}
+                      </span>
+                    </div>
+                    {user && (
+                      <div className="game-actions">
+                        {inMyCollection ? (
+                          <div className="in-collection-text">
+                            <FontAwesomeIcon icon={faCheck} /> In Your Collection
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => openQuickAddModal(game)}
+                            disabled={isAdding}
+                            className="btn-add-to-collection"
+                            title="Add to my collection"
+                          >
+                            <FontAwesomeIcon icon={faPlus} />
+                            {isAdding ? ' Adding...' : ' Add to Collection'}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
           </div>
         </>
       )}
@@ -293,6 +391,67 @@ export function SharedLibrary() {
           prefilledShareId={shareId}
           prefilledNickname={userInfo.displayName}
         />
+      )}
+
+      {/* Quick Add Modal */}
+      {showQuickAddModal && quickAddGame && (
+        <div className="modal-overlay" onClick={() => setShowQuickAddModal(false)} role="dialog" aria-modal="true">
+          <div className="modal add-game-modal" onClick={e => e.stopPropagation()}>
+            <header className="modal-header">
+              <h2>Add to My Collection</h2>
+              <button onClick={() => setShowQuickAddModal(false)} className="modal-close" aria-label="Close">
+                ✕
+              </button>
+            </header>
+            <div className="modal-content">
+              <div className="game-preview">
+                {quickAddGame.coverUrl && (
+                  <img src={quickAddGame.coverUrl} alt={quickAddGame.title} className="game-preview-cover" />
+                )}
+                <h3>{quickAddGame.title}</h3>
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="add-platform">Platform</label>
+                <select
+                  id="add-platform"
+                  value={quickAddPlatform}
+                  onChange={(e) => setQuickAddPlatform(e.target.value as Platform)}
+                  className="form-select"
+                >
+                  <option value="Nintendo Switch">Nintendo Switch</option>
+                  <option value="Nintendo Switch 2">Nintendo Switch 2</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="add-format">Format</label>
+                <select
+                  id="add-format"
+                  value={quickAddFormat}
+                  onChange={(e) => setQuickAddFormat(e.target.value as Format)}
+                  className="form-select"
+                >
+                  <option value="Physical">Physical</option>
+                  <option value="Digital">Digital</option>
+                </select>
+              </div>
+
+              <div className="modal-actions">
+                <button onClick={() => setShowQuickAddModal(false)} className="btn-secondary">
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleAddToCollection} 
+                  className="btn-primary"
+                  disabled={addingGameId === quickAddGame.id}
+                >
+                  {addingGameId === quickAddGame.id ? 'Adding...' : 'Add to Collection'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
