@@ -1,0 +1,12 @@
+{
+    "IsEncrypted": false,
+    "Values": {
+        "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+        "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+        "TheGamesDB__ApiKey": "your-api-key-here"
+    },
+    "Host": {
+        "CORS": "*",
+        "CORSCredentials": false
+    }
+}

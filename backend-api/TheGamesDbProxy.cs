@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Text.Json;
@@ -15,12 +16,14 @@ public class TheGamesDbProxy
 {
     private readonly ILogger<TheGamesDbProxy> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly string? _apiKey;
     private const string ApiBaseUrl = "https://api.thegamesdb.net/v1";
 
-    public TheGamesDbProxy(ILogger<TheGamesDbProxy> logger, IHttpClientFactory httpClientFactory)
+    public TheGamesDbProxy(ILogger<TheGamesDbProxy> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
     {
         _logger = logger;
         _httpClientFactory = httpClientFactory;
+        _apiKey = configuration["TheGamesDB:ApiKey"];
     }
 
     /// <summary>
@@ -36,11 +39,27 @@ public class TheGamesDbProxy
 
         try
         {
-            // Build the target URL
+            // Check if API key is configured
+            if (string.IsNullOrWhiteSpace(_apiKey))
+            {
+                _logger.LogError("TheGamesDB API key is not configured");
+                return new ObjectResult(new
+                {
+                    error = "TheGamesDB API key is not configured in the server"
+                })
+                {
+                    StatusCode = (int)HttpStatusCode.InternalServerError
+                };
+            }
+
+            // Build the target URL with API key
             var queryString = req.QueryString.HasValue ? req.QueryString.Value : string.Empty;
-            var targetUrl = $"{ApiBaseUrl}/{path}{queryString}";
             
-            _logger.LogInformation("Target URL: {TargetUrl}", targetUrl);
+            // Add API key to query string
+            var separator = queryString.Contains('?') ? "&" : "?";
+            var targetUrl = $"{ApiBaseUrl}/{path}{queryString}{separator}apikey={_apiKey}";
+            
+            _logger.LogInformation("Target URL: {TargetUrl}", targetUrl.Replace(_apiKey, "***"));
 
             // Create HTTP client and make the request
             var httpClient = _httpClientFactory.CreateClient();

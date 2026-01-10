@@ -28,9 +28,9 @@ backend-api/
 
 ### TheGamesDB Proxy
 - **Route**: `GET /api/thegamesdb/{*path}`
-- **Description**: Proxies requests to `https://api.thegamesdb.net/v1/{path}`
-- **Example**: `GET /api/thegamesdb/Games/ByGameName?apikey=xxx&name=zelda`
-  - Forwards to: `https://api.thegamesdb.net/v1/Games/ByGameName?apikey=xxx&name=zelda`
+- **Description**: Proxies requests to `https://api.thegamesdb.net/v1/{path}` and automatically adds the API key
+- **Example**: `GET /api/thegamesdb/Games/ByGameName?name=zelda`
+  - Backend adds the API key and forwards to: `https://api.thegamesdb.net/v1/Games/ByGameName?name=zelda&apikey=xxx`
 
 ## Local Development
 
@@ -45,12 +45,21 @@ backend-api/
    cd backend-api
    ```
 
-2. Build the project:
+2. Configure your API key in `local.settings.json`:
+   ```json
+   {
+       "Values": {
+           "TheGamesDB__ApiKey": "your-api-key-here"
+       }
+   }
+   ```
+
+3. Build the project:
    ```bash
    dotnet build
    ```
 
-3. Run the Functions app:
+4. Run the Functions app:
    ```bash
    dotnet run
    ```
@@ -65,8 +74,10 @@ The API will be available at `http://localhost:7071` by default.
 
 Once running, you can test the proxy endpoint:
 ```bash
-curl "http://localhost:7071/api/thegamesdb/Games/ByGameName?apikey=YOUR_API_KEY&name=zelda"
+curl "http://localhost:7071/api/thegamesdb/Games/ByGameName?name=zelda"
 ```
+
+Note: The API key is automatically added by the backend.
 
 ## Deployment to Azure
 
@@ -110,10 +121,13 @@ In Azure Portal, configure CORS for your Function App:
 3. Click "Save"
 
 **Important:** Do NOT use wildcards (`*`) in production as this defeats the purpose of CORS security.
+Configure the following application setting in the Azure Portal (Function App → Configuration → Application settings):
+- `TheGamesDB__ApiKey`: Your TheGamesDB API key
 
+This setting stores the API key securely on the server 
 ### Application Settings
 No additional application settings are required for the proxy function, as it doesn't store any API keys server-side.
-
+API keys are securely stored in Azure Application Settings (backend) instead of being exposed in
 ## Security Considerations
 
 - The proxy function uses `AuthorizationLevel.Anonymous` to allow public access

@@ -84,7 +84,18 @@ Create a `.env` file with:
 ```env
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
-VITE_THEGAMESDB_API_KEY=your-api-key  # Optional
+```
+
+### 5. Configure Backend API Key
+
+Add your TheGamesDB API key to `backend-api/local.settings.json`:
+
+```json
+{
+    "Values": {
+        "TheGamesDB__ApiKey": "your-api-key-here"
+    }
+}
 ```
 
 ## TheGamesDB API
@@ -93,7 +104,7 @@ To enable game search and metadata:
 
 1. Register at [TheGamesDB](https://thegamesdb.net/)
 2. Request an API key
-3. Add it to your `.env` file
+3. Add it to `backend-api/local.settings.json` (see step 5 above)
 
 Without an API key, the app works but won't have game search functionality.
 
@@ -113,7 +124,13 @@ This approach keeps the static frontend on GitHub Pages (free hosting) while dep
    
 2. **Note your Azure Functions URL** (e.g., `https://switchlibrary-api.azurewebsites.net`)
 
-3. **Configure CORS in Azure Portal:**
+3. **Configure Azure Functions Application Settings:**
+   - Go to your Function App → Configuration → Application settings
+   - Add the following setting:
+     - `TheGamesDB__ApiKey`: Your TheGamesDB API key
+   - Save the settings
+
+4. **Configure CORS in Azure Portal:**
    - Go to your Function App → CORS
    - Add your GitHub Pages URL (e.g., `https://jamesmontemagno.github.io`)
    - Save the settings
@@ -127,7 +144,6 @@ See [backend-api/README.md](backend-api/README.md) for detailed deployment instr
    - Add the following secrets:
      - `VITE_SUPABASE_URL`: Your Supabase project URL
      - `VITE_SUPABASE_ANON_KEY`: Your Supabase anon key
-     - `VITE_THEGAMESDB_API_KEY`: Your TheGamesDB API key
      - `VITE_API_BASE_URL`: Your Azure Functions URL (e.g., `https://switchlibrary-api.azurewebsites.net/api/thegamesdb`)
      - `VITE_BASE_PATH`: `/switch-library/` (or your repo name)
 
@@ -149,12 +165,15 @@ For production deployments where you want everything on Azure, you can use Azure
      --branch main --app-location "/" --output-location "dist"
    ```
 
-2. **Configure environment variables in Azure Portal:**
+2. **Configure frontend environment variables in Azure Portal:**
    - `VITE_SUPABASE_URL`: Your Supabase project URL
    - `VITE_SUPABASE_ANON_KEY`: Your Supabase anon key
-   - `VITE_THEGAMESDB_API_KEY`: Your TheGamesDB API key
 
-3. **Build settings:**
+3. **Configure backend API key in the integrated Functions:**
+   - Go to Configuration → Application settings
+   - Add `TheGamesDB__ApiKey`: Your TheGamesDB API key
+
+4. **Build settings:**
    - Build command: `npm run build`
    - App location: `/`
    - Output location: `dist`

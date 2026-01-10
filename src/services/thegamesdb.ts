@@ -4,8 +4,8 @@
 // Always use proxy to avoid CORS issues in both development and production
 // Development: Proxy configured in vite.config.ts to http://localhost:7071
 // Production: Can be either relative path (integrated) or full Azure Functions URL
+// Note: API key is now managed by the backend proxy, not the frontend
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/thegamesdb';
-const API_KEY = import.meta.env.VITE_THEGAMESDB_API_KEY || '';
 
 export interface TheGamesDBGame {
   id: number;
@@ -80,7 +80,8 @@ export interface SearchOptions {
 }
 
 export const isTheGamesDBConfigured = () => {
-  return Boolean(API_KEY);
+  // API key is now managed by the backend, so this is always true
+  return true;
 };
 
 // API Allowance tracking
@@ -223,11 +224,6 @@ export async function searchGames(
   query: string, 
   options: SearchOptions = {}
 ): Promise<TheGamesDBSearchResult> {
-  if (!API_KEY) {
-    console.warn('TheGamesDB API key not configured');
-    return { count: 0, games: [] };
-  }
-
   const {
     platformId = PLATFORM_IDS.NINTENDO_SWITCH,
     includeFields = ['boxart'],
@@ -243,8 +239,8 @@ export async function searchGames(
     return cachedResult;
   }
 
+  // API key is now added by the backend proxy
   const params = new URLSearchParams({
-    apikey: API_KEY,
     name: query,
     include: includeFields.join(','),
   });
@@ -293,19 +289,14 @@ export async function searchGames(
 }
 
 export async function getGameById(gameId: number): Promise<TheGamesDBGame | null> {
-  if (!API_KEY) {
-    console.warn('TheGamesDB API key not configured');
-    return null;
-  }
-
   // Check cache first
   const cachedGame = getCachedGame(gameId);
   if (cachedGame) {
     return cachedGame;
   }
 
+  // API key is now added by the backend proxy
   const params = new URLSearchParams({
-    apikey: API_KEY,
     id: gameId.toString(),
     fields: 'players,publishers,genres,overview,last_updated,rating,platform,coop,youtube,os,processor,ram,hdd,video,sound,alternates',
     include: 'boxart,platform',
@@ -348,13 +339,8 @@ export async function getGameById(gameId: number): Promise<TheGamesDBGame | null
 }
 
 export async function getGameImages(gameId: number): Promise<TheGamesDBGameImages | null> {
-  if (!API_KEY) {
-    console.warn('TheGamesDB API key not configured');
-    return null;
-  }
-
+  // API key is now added by the backend proxy
   const params = new URLSearchParams({
-    apikey: API_KEY,
     games_id: gameId.toString(),
   });
 
@@ -426,10 +412,9 @@ export async function getGenres(): Promise<Record<number, string>> {
   const cached = getCachedLookup(GENRES_CACHE_KEY);
   if (cached) return cached;
 
-  if (!API_KEY) return {};
-
   try {
-    const response = await fetch(`${API_BASE_URL}/Genres?apikey=${API_KEY}`);
+    // API key is now added by the backend proxy
+    const response = await fetch(`${API_BASE_URL}/Genres`);
     if (!response.ok) throw new Error(`API error: ${response.status}`);
     const data = await response.json();
     
@@ -455,10 +440,9 @@ export async function getDevelopers(): Promise<Record<number, string>> {
   const cached = getCachedLookup(DEVELOPERS_CACHE_KEY);
   if (cached) return cached;
 
-  if (!API_KEY) return {};
-
   try {
-    const response = await fetch(`${API_BASE_URL}/Developers?apikey=${API_KEY}`);
+    // API key is now added by the backend proxy
+    const response = await fetch(`${API_BASE_URL}/Developers`);
     if (!response.ok) throw new Error(`API error: ${response.status}`);
     const data = await response.json();
     
@@ -484,10 +468,9 @@ export async function getPublishers(): Promise<Record<number, string>> {
   const cached = getCachedLookup(PUBLISHERS_CACHE_KEY);
   if (cached) return cached;
 
-  if (!API_KEY) return {};
-
   try {
-    const response = await fetch(`${API_BASE_URL}/Publishers?apikey=${API_KEY}`);
+    // API key is now added by the backend proxy
+    const response = await fetch(`${API_BASE_URL}/Publishers`);
     if (!response.ok) throw new Error(`API error: ${response.status}`);
     const data = await response.json();
     
