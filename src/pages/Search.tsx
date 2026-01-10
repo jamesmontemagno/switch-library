@@ -64,7 +64,6 @@ export function Search() {
   
   // Adding state
   const [addingGameId, setAddingGameId] = useState<number | null>(null);
-  const [addedGames, setAddedGames] = useState<Set<number>>(new Set());
   
   // Removing state
   const [removingGameId, setRemovingGameId] = useState<number | null>(null);
@@ -312,7 +311,6 @@ export function Search() {
       
       // Update UI immediately for instant feedback
       setUserGames(prev => [...prev, newGame]);
-      setAddedGames(prev => new Set(prev).add(quickAddGame.id));
       setQuickAddGame(null);
       setAddingGameId(null);
       
