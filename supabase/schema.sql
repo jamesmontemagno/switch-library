@@ -68,6 +68,17 @@ create policy "Users can insert their own profile"
   on public.profiles for insert
   with check (auth.uid() = id);
 
+-- Public can view profiles of users with enabled share profiles (for sharing feature)
+create policy "Anyone can view profiles of shared users"
+  on public.profiles for select
+  using (
+    exists (
+      select 1 from public.share_profiles
+      where share_profiles.user_id = profiles.id
+      and share_profiles.enabled = true
+    )
+  );
+
 -- Games policies
 create policy "Users can view their own games"
   on public.games for select
