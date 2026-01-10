@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { usePreferences } from '../hooks/usePreferences';
 import { useSEO } from '../hooks/useSEO';
-import { getShareProfile, enableSharing, disableSharing, regenerateShareId, deleteUserAccount } from '../services/database';
+import { getShareProfile, enableSharing, disableSharing, deleteUserAccount } from '../services/database';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSun, faMoon, faDesktop } from '@fortawesome/free-solid-svg-icons';
 import './Settings.css';
@@ -15,7 +15,6 @@ export function Settings() {
   const [displayName, setDisplayName] = useState(user?.displayName || '');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
-  const [showRegenerateConfirm, setShowRegenerateConfirm] = useState(false);
   const [showDisableConfirm, setShowDisableConfirm] = useState(false);
   
   useSEO({
@@ -80,25 +79,6 @@ export function Settings() {
     await disableSharing(user.id);
     setShareLink('');
     setShowDisableConfirm(false);
-  };
-
-  const handleGenerateShareLink = async () => {
-    if (!user) return;
-    
-    setLoadingShareLink(true);
-    try {
-      const profile = await regenerateShareId(user.id);
-      if (profile) {
-        const fullUrl = `${window.location.origin}${import.meta.env.BASE_URL}shared/${profile.shareId}`;
-        setShareLink(fullUrl);
-        updateShareSettings({ enabled: true });
-      }
-    } catch (error) {
-      console.error('Failed to generate share link:', error);
-    } finally {
-      setLoadingShareLink(false);
-      setShowRegenerateConfirm(false);
-    }
   };
 
   const handleCopyShareLink = () => {
@@ -253,17 +233,6 @@ export function Settings() {
                   </button>
                 </div>
               </div>
-
-              {/* Share Actions */}
-              <div className="share-actions-row">
-                <button 
-                  onClick={() => setShowRegenerateConfirm(true)} 
-                  className="btn-regenerate"
-                  disabled={loadingShareLink}
-                >
-                  {loadingShareLink ? 'Generating...' : 'Regenerate Link'}
-                </button>
-              </div>
             </>
           )}
         </section>
@@ -344,55 +313,7 @@ export function Settings() {
         </div>
       )}
 
-      {/* Regenerate Link Confirmation Modal */}
-      {showRegenerateConfirm && (
-        <div className="modal-overlay" onClick={() => setShowRegenerateConfirm(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
-            <header className="modal-header">
-              <h2>Regenerate Share Link</h2>
-              <button onClick={() => setShowRegenerateConfirm(false)} className="modal-close" aria-label="Close">
-                ×
-              </button>
-            </header>
-            <div className="modal-form" style={{ padding: '1.5rem' }}>
-              <p style={{ marginBottom: '1rem', color: '#dc3545', fontWeight: '600' }}>
-                ⚠️ Warning: Use with extreme caution!
-              </p>
-              <p style={{ marginBottom: '1rem' }}>
-                Regenerating your share link will:
-              </p>
-              <ul style={{ marginBottom: '1.5rem', marginLeft: '1.5rem', lineHeight: '1.8' }}>
-                <li><strong>Remove all existing friend connections</strong></li>
-                <li>Invalidate your current share link</li>
-                <li>Create a new share link</li>
-                <li>Require friends to re-add you with the new link</li>
-              </ul>
-              <p style={{ marginBottom: '1.5rem', color: '#6c757d' }}>
-                This action will break the connection for anyone who has added you as a friend using your current share link.
-              </p>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button 
-                  onClick={() => setShowRegenerateConfirm(false)} 
-                  className="btn btn-secondary"
-                  style={{ flex: 1 }}
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={handleGenerateShareLink}
-                  className="btn btn-danger"
-                  disabled={loadingShareLink}
-                  style={{ flex: 1 }}
-                >
-                  {loadingShareLink ? 'Regenerating...' : 'Regenerate Link'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Disable Sharing Confirmation Modal */}
+      {/* Disable Sharing Confirmation Modal */
       {showDisableConfirm && (
         <div className="modal-overlay" onClick={() => setShowDisableConfirm(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>

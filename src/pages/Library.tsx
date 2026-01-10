@@ -4,10 +4,10 @@ import { useAuth } from '../hooks/useAuth';
 import { usePreferences } from '../hooks/usePreferences';
 import { useSEO } from '../hooks/useSEO';
 import type { GameEntry, Platform, ShareProfile } from '../types';
-import { loadGames, saveGame, deleteGame as deleteGameFromDb, getShareProfile, enableSharing, disableSharing, regenerateShareId, updateSharePrivacy, updateDisplayName, getUserProfile } from '../services/database';
+import { loadGames, saveGame, deleteGame as deleteGameFromDb, getShareProfile, enableSharing, disableSharing, updateSharePrivacy, updateDisplayName, getUserProfile } from '../services/database';
 import { EditGameModal } from '../components/EditGameModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faPenToSquare, faGear, faClipboard, faEye, faGamepad, faTrash, faCartShopping, faTrophy, faLink, faUser, faLock, faRotate, faXmark, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faPenToSquare, faGear, faClipboard, faEye, faGamepad, faTrash, faCartShopping, faTrophy, faLink, faUser, faLock, faXmark, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import './Library.css';
 
 type SortOption = 'title_asc' | 'title_desc' | 'added_newest' | 'added_oldest' | 'purchase_newest' | 'purchase_oldest' | 'platform' | 'format' | 'completed_first' | 'not_completed_first';
@@ -175,21 +175,6 @@ export function Library() {
       }
     } catch (error) {
       console.error('Failed to toggle sharing:', error);
-    } finally {
-      setIsLoadingShare(false);
-    }
-  };
-
-  const handleRegenerateLink = async () => {
-    if (!user) return;
-    setIsLoadingShare(true);
-    try {
-      const newProfile = await regenerateShareId(user.id);
-      if (newProfile) {
-        setShareProfile(newProfile);
-      }
-    } catch (error) {
-      console.error('Failed to regenerate link:', error);
     } finally {
       setIsLoadingShare(false);
     }
@@ -408,13 +393,6 @@ export function Library() {
                   </div>
                   
                   <div className="share-actions-row">
-                    <button 
-                      onClick={handleRegenerateLink} 
-                      className="btn-regenerate"
-                      disabled={isLoadingShare}
-                    >
-                      <FontAwesomeIcon icon={faRotate} /> Generate New Link
-                    </button>
                     <button 
                       onClick={() => navigate(`/shared/${shareProfile.shareId}`)}
                       className="btn-preview"
