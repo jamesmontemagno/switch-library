@@ -490,6 +490,14 @@
   right: 4px;
 }
 
+.game-card.list .in-collection-badge {
+  width: 20px;
+  height: 20px;
+  font-size: 0.65rem;
+  top: 4px;
+  left: 4px;
+}
+
 .game-card.list .game-info {
   flex: 1;
   min-width: 0;
@@ -497,6 +505,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .game-card.list .game-title {
@@ -506,6 +515,19 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex: 1;
+  min-width: 150px;
+}
+
+.game-card.list .game-actions {
+  margin-top: 0;
+  min-width: 200px;
+}
+
+.game-card.list .btn-add-to-collection,
+.game-card.list .in-collection-text {
+  font-size: 0.75rem;
+  padding: 0.4rem 0.6rem;
 }
 
 /* Mobile Responsiveness */
