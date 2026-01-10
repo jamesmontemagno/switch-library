@@ -12,6 +12,12 @@
 			},
 			"gallery": "https://api.mcp.github.com",
 			"version": "0.27.0"
+		},
+		"microsoftdocs/mcp": {
+			"type": "http",
+			"url": "https://learn.microsoft.com/api/mcp",
+			"gallery": "https://api.mcp.github.com",
+			"version": "1.0.0"
 		}
 	},
 	"inputs": [

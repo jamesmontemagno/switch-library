@@ -97,10 +97,11 @@ public class TheGamesDbProxy
             // Transform the response to strip API keys from pagination URLs
             var transformedResponse = TransformPaginationUrls(jsonDocument.RootElement, req);
             
-            // If this is a search result with games, cache them in blob storage
+            // If this is a search result with games, cache them in blob storage (fire-and-forget)
+            // This runs in the background and doesn't block the response
             if (path.StartsWith("Games/ByGameName", StringComparison.OrdinalIgnoreCase))
             {
-                _ = Task.Run(() => CacheSearchResultsAsync(jsonDocument.RootElement));
+                _ = CacheSearchResultsInBackgroundAsync(jsonDocument.RootElement);
             }
             
             return new OkObjectResult(transformedResponse)
@@ -250,59 +251,60 @@ public class TheGamesDbProxy
         }
     }
 
-    private async Task CacheSearchResultsAsync(JsonElement responseData)
+    /// <summary>
+    /// Wrapper to ensure caching runs in the background without blocking the response
+    /// </summary>
+    private async Task CacheSearchResultsInBackgroundAsync(JsonElement responseData)
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(_blobConnectionString))
-            {
-                return;
-            }
-
-            // Extract games from the response
-            if (!responseData.TryGetProperty("data", out var data) ||
-                !data.TryGetProperty("games", out var gamesArray))
-            {
-                return;
-            }
-
-            var blobServiceClient = new BlobServiceClient(_blobConnectionString);
-            var containerClient = blobServiceClient.GetBlobContainerClient(_containerName);
-            
-            // Ensure container exists
-            await containerClient.CreateIfNotExistsAsync();
-
-            // Cache each game individually
-            var cacheTasks = new List<Task>();
-            
-            foreach (var game in gamesArray.EnumerateArray())
-            {
-                if (game.TryGetProperty("id", out var idProperty))
-                {
-                    var gameId = idProperty.GetInt32();
-                    cacheTasks.Add(SaveGameToBlobAsync(containerClient, gameId, responseData));
-                }
-                
-                // Limit concurrent operations
-                if (cacheTasks.Count >= 5)
-                {
-                    await Task.WhenAll(cacheTasks);
-                    cacheTasks.Clear();
-                }
-            }
-            
-            // Wait for remaining tasks
-            if (cacheTasks.Count > 0)
-            {
-                await Task.WhenAll(cacheTasks);
-            }
-            
-            _logger.LogInformation("Cached {Count} games from search results", gamesArray.GetArrayLength());
+            // Run on thread pool to avoid blocking
+            await Task.Yield();
+            await CacheSearchResultsAsync(responseData);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error caching search results to blob storage");
+            // Log errors but don't propagate since this is fire-and-forget
+            _logger.LogError(ex, "Background caching failed");
         }
+    }
+
+    private async Task CacheSearchResultsAsync(JsonElement responseData)
+    {
+        if (string.IsNullOrWhiteSpace(_blobConnectionString))
+        {
+            return;
+        }
+
+        // Extract games from the response
+        if (!responseData.TryGetProperty("data", out var data) ||
+            !data.TryGetProperty("games", out var gamesArray))
+        {
+            return;
+        }
+
+        var blobServiceClient = new BlobServiceClient(_blobConnectionString);
+        var containerClient = blobServiceClient.GetBlobContainerClient(_containerName);
+        
+        // Ensure container exists
+        await containerClient.CreateIfNotExistsAsync();
+
+        // Cache all games concurrently (no artificial throttling)
+        var cacheTasks = new List<Task>();
+        
+        foreach (var game in gamesArray.EnumerateArray())
+        {
+            if (game.TryGetProperty("id", out var idProperty))
+            {
+                var gameId = idProperty.GetInt32();
+                cacheTasks.Add(SaveGameToBlobAsync(containerClient, gameId, responseData));
+            }
+        }
+        
+        // Wait for all caching operations to complete
+        await Task.WhenAll(cacheTasks);
+        
+        _logger.LogInformation("Cached {Count} games from search results", gamesArray.GetArrayLength());
     }
 
     private async Task SaveGameToBlobAsync(BlobContainerClient containerClient, int gameId, JsonElement fullResponse)

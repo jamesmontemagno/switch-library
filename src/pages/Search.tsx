@@ -293,16 +293,20 @@ export function Search() {
         updatedAt: new Date().toISOString(),
       };
       
-      // Pass userGames for demo mode (localStorage) support
-      const savedGame = await saveGame(newGame, userGames);
-      if (savedGame) {
-        setUserGames(prev => [...prev, savedGame]);
-        setAddedGames(prev => new Set(prev).add(quickAddGame.id));
-      }
+      // Update UI immediately for instant feedback
+      setUserGames(prev => [...prev, newGame]);
+      setAddedGames(prev => new Set(prev).add(quickAddGame.id));
       setQuickAddGame(null);
+      setAddingGameId(null);
+      
+      // Save to database in background (fire and forget)
+      saveGame(newGame, userGames).catch(err => {
+        console.error('Failed to save game in background:', err);
+        // Optionally: show a toast notification to user about the failure
+        // and revert the optimistic update
+      });
     } catch (err) {
       console.error('Failed to add game:', err);
-    } finally {
       setAddingGameId(null);
     }
   };
