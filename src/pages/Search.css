@@ -731,6 +731,30 @@
   cursor: default;
 }
 
+.btn-remove-from-collection {
+  width: 100%;
+  padding: 0.625rem 1rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: white;
+  background: #e60012;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-remove-from-collection:hover:not(:disabled) {
+  background: #c4000f;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(230, 0, 18, 0.3);
+}
+
+.btn-remove-from-collection:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .login-hint {
   font-size: 0.875rem;
   color: #666;
@@ -1081,6 +1105,95 @@
   background: #c4000f;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(230, 0, 18, 0.3);
+}
+
+/* Delete Confirmation Modal */
+.delete-confirmation-modal {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+@media (prefers-color-scheme: dark) {
+  .delete-confirmation-modal {
+    background: #2a2a2a;
+  }
+}
+
+.delete-confirmation-modal .modal-content {
+  padding: 1.5rem;
+}
+
+.delete-confirmation-modal .modal-content p {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.delete-confirmation-modal .warning-text {
+  color: #e60012;
+  font-weight: 500;
+  font-size: 0.9375rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .delete-confirmation-modal .warning-text {
+    color: #ff4444;
+  }
+}
+
+.delete-confirmation-modal .modal-actions {
+  padding: 1.5rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .delete-confirmation-modal .modal-actions {
+    border-top-color: #444;
+  }
+}
+
+.btn-delete {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  background: #e60012;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-delete:hover {
+  background: #c4000f;
+}
+
+.btn-cancel {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  background: #f0f0f0;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-cancel:hover {
+  background: #e0e0e0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .btn-cancel {
+    background: #444;
+    color: white;
+  }
+  .btn-cancel:hover {
+    background: #555;
+  }
 }
 
 /* Responsive */

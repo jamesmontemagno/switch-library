@@ -18,6 +18,7 @@ export function Library() {
   const [isLoading, setIsLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingGame, setEditingGame] = useState<GameEntry | null>(null);
+  const [gameToDelete, setGameToDelete] = useState<GameEntry | null>(null);
   const [filterPlatform, setFilterPlatform] = useState<Platform | 'all'>('all');
   const [filterFormat, setFilterFormat] = useState<FormatFilter>('all');
   const [filterCompleted, setFilterCompleted] = useState<'all' | 'completed' | 'not_completed'>('all');
@@ -105,10 +106,20 @@ export function Library() {
   };
 
   const handleDeleteGame = async (id: string) => {
-    const success = await deleteGameFromDb(id);
-    if (success) {
-      setGames(prev => prev.filter(g => g.id !== id));
+    const gameToDelete = games.find(g => g.id === id);
+    if (gameToDelete) {
+      setGameToDelete(gameToDelete);
     }
+  };
+
+  const confirmDelete = async () => {
+    if (!gameToDelete) return;
+    
+    const success = await deleteGameFromDb(gameToDelete.id);
+    if (success) {
+      setGames(prev => prev.filter(g => g.id !== gameToDelete.id));
+    }
+    setGameToDelete(null);
   };
 
   const handleEditGame = async (updatedGame: GameEntry) => {
@@ -290,6 +301,29 @@ export function Library() {
           onClose={() => setEditingGame(null)}
           onSave={handleEditGame}
         />
+      )}
+      
+      {gameToDelete && (
+        <div className="modal-overlay" onClick={() => setGameToDelete(null)}>
+          <div className="delete-confirmation-modal" onClick={(e) => e.stopPropagation()}>
+            <header className="modal-header">
+              <h2>⚠️ Delete Game</h2>
+              <button onClick={() => setGameToDelete(null)} className="modal-close">✕</button>
+            </header>
+            <div className="modal-content">
+              <p>Are you sure you want to delete <strong>{gameToDelete.title}</strong> from your library?</p>
+              <p className="warning-text">This action cannot be undone.</p>
+            </div>
+            <div className="modal-actions">
+              <button className="btn-cancel" onClick={() => setGameToDelete(null)}>
+                Cancel
+              </button>
+              <button className="btn-delete" onClick={confirmDelete}>
+                Delete Game
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

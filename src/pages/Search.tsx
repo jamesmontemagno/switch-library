@@ -8,7 +8,7 @@ import {
   getStoredAllowance,
   isAllowanceExhausted,
 } from '../services/thegamesdb';
-import { saveGame, loadGames, getMonthlySearchCount, logSearchUsage } from '../services/database';
+import { saveGame, loadGames, getMonthlySearchCount, logSearchUsage, deleteGame as deleteGameFromDb } from '../services/database';
 import { UsageLimitModal } from '../components/UsageLimitModal';
 import './Search.css';
 
@@ -64,6 +64,10 @@ export function Search() {
   // Adding state
   const [addingGameId, setAddingGameId] = useState<number | null>(null);
   const [addedGames, setAddedGames] = useState<Set<number>>(new Set());
+  
+  // Removing state
+  const [removingGameId, setRemovingGameId] = useState<number | null>(null);
+  const [gameToDelete, setGameToDelete] = useState<{ gameEntry: GameEntry; searchResult: SearchResult } | null>(null);
   
   // Quick add modal
   const [quickAddGame, setQuickAddGame] = useState<SearchResult | null>(null);
@@ -281,6 +285,11 @@ export function Search() {
     }
   };
 
+  // Helper to check if a game is in the user's library
+  const getGameInLibrary = (thegamesdbId: number): GameEntry | undefined => {
+    return userGames.find(g => g.thegamesdbId === thegamesdbId);
+  };
+
   const handleQuickAdd = async () => {
     if (!quickAddGame || !user) return;
     
@@ -315,6 +324,31 @@ export function Search() {
     } catch (err) {
       console.error('Failed to add game:', err);
       setAddingGameId(null);
+    }
+  };
+
+  const handleRemoveGame = async (searchResult: SearchResult) => {
+    const gameInLibrary = getGameInLibrary(searchResult.id);
+    if (gameInLibrary) {
+      setGameToDelete({ gameEntry: gameInLibrary, searchResult });
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!gameToDelete) return;
+    
+    setRemovingGameId(gameToDelete.searchResult.id);
+    
+    try {
+      const success = await deleteGameFromDb(gameToDelete.gameEntry.id);
+      if (success) {
+        setUserGames(prev => prev.filter(g => g.id !== gameToDelete.gameEntry.id));
+      }
+    } catch (err) {
+      console.error('Failed to remove game:', err);
+    } finally {
+      setRemovingGameId(null);
+      setGameToDelete(null);
     }
   };
 
@@ -512,56 +546,65 @@ export function Search() {
             )}
             
             <div className={`results-${viewMode}`}>
-              {results.map((game) => (
-                <article key={game.id} className={`result-card ${viewMode}`}>
-                  <div className="result-cover">
-                    {game.boxartUrl ? (
-                      <img src={game.boxartUrl} alt={game.title} loading="lazy" />
-                    ) : (
-                      <div className="cover-placeholder">
-                        <span>🎮</span>
-                      </div>
-                    )}
-                    {addedGames.has(game.id) && (
-                      <div className="added-badge">✓ Added</div>
-                    )}
-                  </div>
-                  <div className="result-info">
-                    <h3 className="result-title">{game.title}</h3>
-                    <div className="result-meta">
-                      <span className="release-date">📅 {formatDate(game.releaseDate)}</span>
-                      {game.players && <span className="players">👥 {game.players} player{game.players > 1 ? 's' : ''}</span>}
-                      {game.rating && <span className="rating">⭐ {game.rating}</span>}
-                    </div>
-                    {viewMode === 'list' && game.overview && (
-                      <p className="result-overview">
-                        {game.overview.length > 200 
-                          ? `${game.overview.substring(0, 200)}...` 
-                          : game.overview}
-                      </p>
-                    )}
-                    <div className="result-actions">
-                      {isAuthenticated ? (
-                        addedGames.has(game.id) ? (
-                          <button className="btn-added" disabled>
-                            ✓ In Collection
-                          </button>
-                        ) : (
-                          <button
-                            className="btn-add-to-collection"
-                            onClick={() => setQuickAddGame(game)}
-                            disabled={addingGameId === game.id}
-                          >
-                            {addingGameId === game.id ? '⏳ Adding...' : '+ Add to Collection'}
-                          </button>
-                        )
+              {results.map((game) => {
+                const gameInLibrary = getGameInLibrary(game.id);
+                const isRemoving = removingGameId === game.id;
+                
+                return (
+                  <article key={game.id} className={`result-card ${viewMode}`}>
+                    <div className="result-cover">
+                      {game.boxartUrl ? (
+                        <img src={game.boxartUrl} alt={game.title} loading="lazy" />
                       ) : (
-                        <span className="login-hint">Sign in to add games</span>
+                        <div className="cover-placeholder">
+                          <span>🎮</span>
+                        </div>
+                      )}
+                      {gameInLibrary && (
+                        <div className="added-badge">✓ In Library</div>
                       )}
                     </div>
-                  </div>
-                </article>
-              ))}
+                    <div className="result-info">
+                      <h3 className="result-title">{game.title}</h3>
+                      <div className="result-meta">
+                        <span className="release-date">📅 {formatDate(game.releaseDate)}</span>
+                        {game.players && <span className="players">👥 {game.players} player{game.players > 1 ? 's' : ''}</span>}
+                        {game.rating && <span className="rating">⭐ {game.rating}</span>}
+                      </div>
+                      {viewMode === 'list' && game.overview && (
+                        <p className="result-overview">
+                          {game.overview.length > 200 
+                            ? `${game.overview.substring(0, 200)}...` 
+                            : game.overview}
+                        </p>
+                      )}
+                      <div className="result-actions">
+                        {isAuthenticated ? (
+                          gameInLibrary ? (
+                            <button
+                              className="btn-remove-from-collection"
+                              onClick={() => handleRemoveGame(game)}
+                              disabled={isRemoving}
+                            >
+                              {isRemoving ? '⏳ Removing...' : '− Remove from Library'}
+                            </button>
+                          ) : (
+                            <button
+                              className="btn-add-to-collection"
+                              onClick={() => setQuickAddGame(game)}
+                              disabled={addingGameId === game.id}
+                            >
+                              {addingGameId === game.id ? '⏳ Adding...' : '+ Add to Collection'}
+                            </button>
+                          )
+                        ) : (
+                          <span className="login-hint">Sign in to add games</span>
+                        )}
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
             
             {/* Pagination Controls - Bottom */}
@@ -707,6 +750,30 @@ export function Search() {
           onClose={() => setShowUsageLimitModal(false)}
           usage={usageInfo}
         />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {gameToDelete && (
+        <div className="modal-overlay" onClick={() => setGameToDelete(null)}>
+          <div className="delete-confirmation-modal" onClick={(e) => e.stopPropagation()}>
+            <header className="modal-header">
+              <h2>⚠️ Remove from Library</h2>
+              <button onClick={() => setGameToDelete(null)} className="modal-close">✕</button>
+            </header>
+            <div className="modal-content">
+              <p>Are you sure you want to remove <strong>{gameToDelete.searchResult.title}</strong> from your library?</p>
+              <p className="warning-text">This action cannot be undone.</p>
+            </div>
+            <div className="modal-actions">
+              <button className="btn-cancel" onClick={() => setGameToDelete(null)}>
+                Cancel
+              </button>
+              <button className="btn-delete" onClick={confirmDelete}>
+                Remove from Library
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
