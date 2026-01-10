@@ -29,7 +29,7 @@ public class TheGamesDbProxy
         _logger = logger;
         _httpClientFactory = httpClientFactory;
         _apiKey = configuration["TheGamesDB:ApiKey"];
-        _blobConnectionString = configuration["BlobStorage:ConnectionString"];
+        _blobConnectionString = configuration["ProductionStorage"];
         _containerName = configuration["BlobStorage:ContainerName"] ?? "games-cache";
     }
 
@@ -46,6 +46,23 @@ public class TheGamesDbProxy
 
         try
         {
+            // For lookup data (Genres, Developers, Publishers), check cache first
+            // These are reference data that rarely changes, cache for 30 days
+            if (path.Equals("Genres", StringComparison.OrdinalIgnoreCase) ||
+                path.Equals("Developers", StringComparison.OrdinalIgnoreCase) ||
+                path.Equals("Publishers", StringComparison.OrdinalIgnoreCase))
+            {
+                var cachedData = await GetCachedLookupDataAsync(path);
+                if (cachedData != null)
+                {
+                    _logger.LogInformation("Returning cached {LookupType} data", path);
+                    return new OkObjectResult(cachedData)
+                    {
+                        StatusCode = 200
+                    };
+                }
+            }
+
             // Check if API key is configured
             if (string.IsNullOrWhiteSpace(_apiKey))
             {
@@ -102,6 +119,15 @@ public class TheGamesDbProxy
             if (path.StartsWith("Games/ByGameName", StringComparison.OrdinalIgnoreCase))
             {
                 _ = CacheSearchResultsInBackgroundAsync(jsonDocument.RootElement);
+            }
+            
+            // If this is a lookup request (Genres, Developers, Publishers), cache it
+            // These are reference data that rarely changes, so we cache them for longer
+            if (path.Equals("Genres", StringComparison.OrdinalIgnoreCase) ||
+                path.Equals("Developers", StringComparison.OrdinalIgnoreCase) ||
+                path.Equals("Publishers", StringComparison.OrdinalIgnoreCase))
+            {
+                _ = CacheLookupDataInBackgroundAsync(path, jsonDocument.RootElement);
             }
             
             return new OkObjectResult(transformedResponse)
@@ -326,6 +352,92 @@ public class TheGamesDbProxy
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error saving game {GameId} to blob storage", gameId);
+        }
+    }
+
+    /// <summary>
+    /// Check if cached lookup data exists and is still valid (within 30 days)
+    /// </summary>
+    private async Task<JsonElement?> GetCachedLookupDataAsync(string lookupType)
+    {
+        if (string.IsNullOrWhiteSpace(_blobConnectionString))
+        {
+            return null;
+        }
+
+        try
+        {
+            var blobServiceClient = new BlobServiceClient(_blobConnectionString);
+            var containerClient = blobServiceClient.GetBlobContainerClient(_containerName);
+            
+            // Ensure container exists before trying to read from it
+            await containerClient.CreateIfNotExistsAsync();
+            
+            var blobClient = containerClient.GetBlobClient($"lookup-{lookupType.ToLowerInvariant()}.json");
+
+            if (!await blobClient.ExistsAsync())
+            {
+                return null;
+            }
+
+            // Check if blob is older than 30 days
+            var properties = await blobClient.GetPropertiesAsync();
+            var age = DateTimeOffset.UtcNow - properties.Value.LastModified;
+            if (age.TotalDays > 30)
+            {
+                _logger.LogInformation("Cached {LookupType} data is stale (age: {Age} days)", lookupType, age.TotalDays);
+                return null;
+            }
+
+            // Read and parse cached data
+            var response = await blobClient.DownloadContentAsync();
+            var content = response.Value.Content.ToString();
+            var jsonDocument = JsonDocument.Parse(content);
+            
+            return jsonDocument.RootElement.Clone();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error reading cached {LookupType} data", lookupType);
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Cache lookup data (Genres, Developers, Publishers) in blob storage
+    /// </summary>
+    private async Task CacheLookupDataInBackgroundAsync(string lookupType, JsonElement responseData)
+    {
+        try
+        {
+            await Task.Yield();
+            
+            if (string.IsNullOrWhiteSpace(_blobConnectionString))
+            {
+                return;
+            }
+
+            var blobServiceClient = new BlobServiceClient(_blobConnectionString);
+            var containerClient = blobServiceClient.GetBlobContainerClient(_containerName);
+            await containerClient.CreateIfNotExistsAsync();
+
+            var blobClient = containerClient.GetBlobClient($"lookup-{lookupType.ToLowerInvariant()}.json");
+            
+            var json = JsonSerializer.Serialize(responseData, new JsonSerializerOptions 
+            { 
+                WriteIndented = true 
+            });
+            
+            var bytes = Encoding.UTF8.GetBytes(json);
+            
+            using var stream = new MemoryStream(bytes);
+            await blobClient.UploadAsync(stream, overwrite: true);
+            
+            _logger.LogInformation("Cached {LookupType} data in blob storage", lookupType);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error caching {LookupType} data", lookupType);
         }
     }
 }

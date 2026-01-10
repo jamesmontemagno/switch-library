@@ -32,7 +32,7 @@ public class GetGameById
         _logger = logger;
         _httpClientFactory = httpClientFactory;
         _apiKey = configuration["TheGamesDB:ApiKey"];
-        _blobConnectionString = configuration["BlobStorage:ConnectionString"];
+        _blobConnectionString = configuration["ProductionStorage"];
         _containerName = configuration["BlobStorage:ContainerName"] ?? "games-cache";
     }
 

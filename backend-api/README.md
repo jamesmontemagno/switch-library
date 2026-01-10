@@ -60,8 +60,9 @@ backend-api/
 2. Configure your API key in `local.settings.json`:
    ```json
    {
-       "Values": {,
-           "BlobStorage__ConnectionString": "UseDevelopmentStorage=true",
+       "Values": {
+           "TheGamesDB__ApiKey": "YOUR_API_KEY_HERE",
+           "ProductionStorage": "UseDevelopmentStorage=true",
            "BlobStorage__ContainerName": "games-cache"
        }
    }
@@ -152,7 +153,7 @@ In Azure Portal, configure CORS for your Function App:
 ### Application Settings
 Configure the following application settings in the Azure Portal (Function App → Configuration → Application settings):
 - `TheGamesDB__ApiKey`: Your TheGamesDB API key
-- `BlobStorage__ConnectionString`: Azure Blob Storage connection string (use your storage account connection string in production)
+- `ProductionStorage`: Azure Blob Storage connection string (use your storage account connection string in production)
 - `BlobStorage__ContainerName`: Name of the blob container for caching game data (default: `games-cache`)
 
 These settings store the API key securely on the server side and enable blob storage caching for game details.
