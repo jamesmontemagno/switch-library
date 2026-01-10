@@ -51,11 +51,22 @@ create table if not exists public.api_usage (
   timestamp timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+-- Friend lists table
+create table if not exists public.friend_lists (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users on delete cascade not null,
+  friend_share_id uuid references public.share_profiles(share_id) on delete cascade not null,
+  nickname text not null check (length(nickname) <= 50),
+  added_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  unique(user_id, friend_share_id)
+);
+
 -- Enable Row Level Security
 alter table public.profiles enable row level security;
 alter table public.games enable row level security;
 alter table public.share_profiles enable row level security;
 alter table public.api_usage enable row level security;
+alter table public.friend_lists enable row level security;
 
 -- Profiles policies
 create policy "Users can view their own profile"
@@ -136,6 +147,23 @@ create policy "Users can insert their own API usage"
   on public.api_usage for insert
   with check (auth.uid() = user_id);
 
+-- Friend lists policies
+create policy "Users can view their own friends"
+  on public.friend_lists for select
+  using (auth.uid() = user_id);
+
+create policy "Users can add their own friends"
+  on public.friend_lists for insert
+  with check (auth.uid() = user_id);
+
+create policy "Users can update their own friends"
+  on public.friend_lists for update
+  using (auth.uid() = user_id);
+
+create policy "Users can delete their own friends"
+  on public.friend_lists for delete
+  using (auth.uid() = user_id);
+
 -- Function to automatically update updated_at
 create or replace function public.handle_updated_at()
 returns trigger as $$
@@ -185,6 +213,8 @@ begin
       'https://ui-avatars.com/api/?name=' || split_part(new.email, '@', 1) || '&background=e60012&color=fff'
     )
   );
+create index if not exists friend_lists_user_id_idx on public.friend_lists(user_id);
+create index if not exists friend_lists_friend_share_id_idx on public.friend_lists(friend_share_id);
   return new;
 end;
 $$;

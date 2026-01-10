@@ -60,8 +60,7 @@ export function Home() {
             <div className="feature-icon">🔗</div>
             <h3>Share & Compare</h3>
             <p>
-              Share your collection with friends via a link and compare 
-              libraries to find games in common.
+              Share your collection with friends, save their libraries to your friends list for quick access, and easily compare collections to find games in common.
             </p>
           </div>
 

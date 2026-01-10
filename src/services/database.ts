@@ -1,7 +1,8 @@
 import { supabase, isSupabaseConfigured } from './supabase';
-import type { GameEntry, ShareProfile } from '../types';
+import type { GameEntry, ShareProfile, FriendEntry, FriendWithDetails } from '../types';
 
 const LOCAL_STORAGE_KEY = 'switch-library-games';
+const FRIENDS_STORAGE_KEY = 'switch-library-friends';
 
 // Check if we should use Supabase or localStorage
 const useSupabase = isSupabaseConfigured();
@@ -665,6 +666,244 @@ export async function getUserProfile(userId: string): Promise<{ displayName: str
   return null;
 }
 
+// ===== Friend List Functions =====
+
+// Mapping functions for friend entries
+function mapSupabaseFriendToEntry(row: Record<string, unknown>): FriendEntry {
+  return {
+    id: row.id as string,
+    userId: row.user_id as string,
+    friendShareId: row.friend_share_id as string,
+    nickname: row.nickname as string,
+    addedAt: row.added_at as string,
+  };
+}
+
+// Load friends from localStorage
+function loadFriendsFromLocalStorage(userId: string): FriendEntry[] {
+  try {
+    const stored = localStorage.getItem(FRIENDS_STORAGE_KEY);
+    if (stored) {
+      const allFriends = JSON.parse(stored) as FriendEntry[];
+      return allFriends.filter(friend => friend.userId === userId);
+    }
+  } catch (error) {
+    console.error('Failed to load friends from localStorage:', error);
+  }
+  return [];
+}
+
+// Save friends to localStorage
+function saveFriendsToLocalStorage(friends: FriendEntry[]): void {
+  try {
+    const stored = localStorage.getItem(FRIENDS_STORAGE_KEY);
+    const allFriends = stored ? JSON.parse(stored) as FriendEntry[] : [];
+    const otherUsersFriends = allFriends.filter(f => !friends.some(nf => nf.userId === f.userId));
+    localStorage.setItem(FRIENDS_STORAGE_KEY, JSON.stringify([...otherUsersFriends, ...friends]));
+  } catch (error) {
+    console.error('Failed to save friends to localStorage:', error);
+  }
+}
+
+// Delete friend from localStorage
+function deleteFriendFromLocalStorage(friendId: string): void {
+  try {
+    const stored = localStorage.getItem(FRIENDS_STORAGE_KEY);
+    if (stored) {
+      const allFriends = JSON.parse(stored) as FriendEntry[];
+      const filtered = allFriends.filter(f => f.id !== friendId);
+      localStorage.setItem(FRIENDS_STORAGE_KEY, JSON.stringify(filtered));
+    }
+  } catch (error) {
+    console.error('Failed to delete friend from localStorage:', error);
+  }
+}
+
+// Check if user has added this friend already
+export async function isFriend(userId: string, shareId: string): Promise<boolean> {
+  if (useSupabase) {
+    const { data, error } = await supabase
+      .from('friend_lists')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('friend_share_id', shareId)
+      .single();
+
+    if (error || !data) {
+      return false;
+    }
+    return true;
+  }
+
+  // localStorage fallback
+  const friends = loadFriendsFromLocalStorage(userId);
+  return friends.some(f => f.friendShareId === shareId);
+}
+
+// Add a friend
+export async function addFriend(userId: string, shareId: string, nickname?: string): Promise<FriendEntry | null> {
+  // Check if already friends
+  const alreadyFriend = await isFriend(userId, shareId);
+  if (alreadyFriend) {
+    console.log('Already friends with this user');
+    return null;
+  }
+
+  // Fetch the friend's profile to auto-fill nickname if not provided
+  let finalNickname = nickname;
+  if (!finalNickname) {
+    const profile = await getSharedUserProfile(shareId);
+    if (profile) {
+      finalNickname = profile.displayName;
+    }
+  }
+
+  // Trim and validate nickname
+  if (!finalNickname) {
+    console.error('Nickname is required');
+    return null;
+  }
+
+  finalNickname = finalNickname.trim().substring(0, 50);
+
+  if (useSupabase) {
+    const { data, error } = await supabase
+      .from('friend_lists')
+      .insert({
+        user_id: userId,
+        friend_share_id: shareId,
+        nickname: finalNickname,
+      })
+      .select()
+      .single();
+
+    if (error || !data) {
+      console.error('Failed to add friend:', error);
+      return null;
+    }
+
+    return mapSupabaseFriendToEntry(data as Record<string, unknown>);
+  }
+
+  // localStorage fallback
+  const newFriend: FriendEntry = {
+    id: crypto.randomUUID(),
+    userId,
+    friendShareId: shareId,
+    nickname: finalNickname,
+    addedAt: new Date().toISOString(),
+  };
+
+  const friends = loadFriendsFromLocalStorage(userId);
+  friends.push(newFriend);
+  saveFriendsToLocalStorage(friends);
+
+  return newFriend;
+}
+
+// Remove a friend
+export async function removeFriend(userId: string, friendId: string): Promise<boolean> {
+  if (useSupabase) {
+    const { error } = await supabase
+      .from('friend_lists')
+      .delete()
+      .eq('id', friendId)
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('Failed to remove friend:', error);
+      return false;
+    }
+    return true;
+  }
+
+  // localStorage fallback
+  deleteFriendFromLocalStorage(friendId);
+  return true;
+}
+
+// Update friend nickname
+export async function updateFriendNickname(userId: string, friendId: string, newNickname: string): Promise<boolean> {
+  const trimmedNickname = newNickname.trim().substring(0, 50);
+
+  if (!trimmedNickname) {
+    console.error('Nickname cannot be empty');
+    return false;
+  }
+
+  if (useSupabase) {
+    const { error } = await supabase
+      .from('friend_lists')
+      .update({ nickname: trimmedNickname })
+      .eq('id', friendId)
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('Failed to update friend nickname:', error);
+      return false;
+    }
+    return true;
+  }
+
+  // localStorage fallback
+  try {
+    const stored = localStorage.getItem(FRIENDS_STORAGE_KEY);
+    if (stored) {
+      const allFriends = JSON.parse(stored) as FriendEntry[];
+      const friendIndex = allFriends.findIndex(f => f.id === friendId && f.userId === userId);
+      
+      if (friendIndex !== -1) {
+        allFriends[friendIndex].nickname = trimmedNickname;
+        localStorage.setItem(FRIENDS_STORAGE_KEY, JSON.stringify(allFriends));
+        return true;
+      }
+    }
+  } catch (error) {
+    console.error('Failed to update friend nickname in localStorage:', error);
+  }
+  return false;
+}
+
+// Get friends with enriched details
+export async function getFriends(userId: string): Promise<FriendWithDetails[]> {
+  let friendEntries: FriendEntry[] = [];
+
+  if (useSupabase) {
+    const { data, error } = await supabase
+      .from('friend_lists')
+      .select('*')
+      .eq('user_id', userId)
+      .order('added_at', { ascending: false });
+
+    if (error || !data) {
+      console.error('Failed to load friends from Supabase:', error);
+      return [];
+    }
+
+    friendEntries = ((data as Record<string, unknown>[] | null) || []).map(mapSupabaseFriendToEntry);
+  } else {
+    friendEntries = loadFriendsFromLocalStorage(userId);
+  }
+
+  // Enrich with profile data and game counts
+  const enrichedFriends = await Promise.all(
+    friendEntries.map(async (friend) => {
+      const [profile, games] = await Promise.all([
+        getSharedUserProfile(friend.friendShareId),
+        loadSharedGames(friend.friendShareId),
+      ]);
+
+      return {
+        ...friend,
+        profile,
+        gameCount: games.length,
+      };
+    })
+  );
+
+  return enrichedFriends;
+}
+
 // Delete user account and all associated data
 export async function deleteUserAccount(userId: string): Promise<boolean> {
   if (useSupabase) {
@@ -674,6 +913,9 @@ export async function deleteUserAccount(userId: string): Promise<boolean> {
       
       // Delete API usage records
       await supabase.from('api_usage').delete().eq('user_id', userId);
+      
+      // Delete friend lists
+      await supabase.from('friend_lists').delete().eq('user_id', userId);
       
       // Delete share profile
       await supabase.from('share_profiles').delete().eq('user_id', userId);
@@ -713,6 +955,14 @@ export async function deleteUserAccount(userId: string): Promise<boolean> {
       const profiles = JSON.parse(shareStored) as ShareProfile[];
       const filtered = profiles.filter(p => p.userId !== userId);
       localStorage.setItem(shareKey, JSON.stringify(filtered));
+    }
+    
+    // Clear friend lists
+    const friendsStored = localStorage.getItem(FRIENDS_STORAGE_KEY);
+    if (friendsStored) {
+      const allFriends = JSON.parse(friendsStored) as FriendEntry[];
+      const filtered = allFriends.filter(f => f.userId !== userId);
+      localStorage.setItem(FRIENDS_STORAGE_KEY, JSON.stringify(filtered));
     }
     
     // Clear API usage

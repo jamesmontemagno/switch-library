@@ -110,12 +110,25 @@ export function Auth() {
         }
 
         setIsLoading(true);
-        const { error: signupError } = await signUpWithEmail(email, password);
+        const { error: signupError, needsConfirmation } = await signUpWithEmail(email, password);
         if (signupError) {
           setError(signupError.message || 'Failed to create account');
+        } else if (needsConfirmation) {
+          // Email confirmation is required
+          setSuccess(
+            'Account created successfully! ' +
+            'Please check your email inbox (and spam folder) for a confirmation link. ' +
+            'You\'ll need to confirm your email address before you can sign in.'
+          );
+          setPassword('');
+          setConfirmPassword('');
+          // Switch to sign in mode after showing the message
+          setTimeout(() => {
+            setMode('signin');
+          }, 8000);
         } else {
-          // On successful signup, user is already authenticated
-          // Navigate to library immediately (auth context will handle the redirect)
+          // On successful signup without confirmation, user is already authenticated
+          // Navigate to library immediately
           navigate('/library');
         }
       } else {
@@ -128,7 +141,13 @@ export function Auth() {
         setIsLoading(true);
         const { error: loginError } = await loginWithEmail(email, password);
         if (loginError) {
-          setError(loginError.message || 'Invalid email or password');
+          // Check if error is related to email confirmation
+          const errorMsg = loginError.message || 'Invalid email or password';
+          if (errorMsg.toLowerCase().includes('email') && errorMsg.toLowerCase().includes('confirm')) {
+            setError('Please confirm your email address before signing in. Check your inbox for the confirmation link.');
+          } else {
+            setError(errorMsg);
+          }
         } else {
           navigate('/library');
         }

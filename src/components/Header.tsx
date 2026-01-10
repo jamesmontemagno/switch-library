@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMagnifyingGlass, faBookOpen } from '@fortawesome/free-solid-svg-icons';
+import { faMagnifyingGlass, faBookOpen, faUserGroup } from '@fortawesome/free-solid-svg-icons';
 import './Header.css';
 
 // Simple MD5-like hash for Gravatar (Note: For production, use a proper MD5 library)
@@ -57,10 +57,16 @@ export function Header() {
             <FontAwesomeIcon icon={faMagnifyingGlass} />
           </Link>
           {isAuthenticated && (
-            <Link to="/library" className={`nav-link ${isActive('/library') ? 'active' : ''}`}>
-              <FontAwesomeIcon icon={faBookOpen} />
-              <span>Library</span>
-            </Link>
+            <>
+              <Link to="/library" className={`nav-link ${isActive('/library') ? 'active' : ''}`}>
+                <FontAwesomeIcon icon={faBookOpen} />
+                <span>Library</span>
+              </Link>
+              <Link to="/friends" className={`nav-link ${isActive('/friends') ? 'active' : ''}`}>
+                <FontAwesomeIcon icon={faUserGroup} />
+                <span>Friends</span>
+              </Link>
+            </>
           )}
         </nav>
 

@@ -6,6 +6,7 @@ import { Home } from './pages/Home';
 import { Auth } from './pages/Auth';
 import { Library } from './pages/Library';
 import { Search } from './pages/Search';
+import { Friends } from './pages/Friends';
 import { GameDetails } from './pages/GameDetails';
 import { SharedLibrary } from './pages/SharedLibrary';
 import { Compare } from './pages/Compare';
@@ -31,6 +32,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Library />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="friends"
+              element={
+                <ProtectedRoute>
+                  <Friends />
                 </ProtectedRoute>
               }
             />

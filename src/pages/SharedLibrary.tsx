@@ -3,7 +3,8 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useSEO } from '../hooks/useSEO';
 import type { GameEntry } from '../types';
-import { loadSharedGames, getSharedUserProfile, getShareProfile } from '../services/database';
+import { loadSharedGames, getSharedUserProfile, getShareProfile, isFriend } from '../services/database';
+import { AddFriendModal } from '../components/AddFriendModal';
 import './SharedLibrary.css';
 
 type SortOption = 'title_asc' | 'title_desc' | 'added_newest' | 'platform' | 'format';
@@ -31,6 +32,10 @@ export function SharedLibrary() {
   
   // For compare functionality
   const [myShareId, setMyShareId] = useState<string | null>(null);
+  
+  // For friend functionality
+  const [isAlreadyFriend, setIsAlreadyFriend] = useState(false);
+  const [showAddFriendModal, setShowAddFriendModal] = useState(false);
 
   // Dynamic SEO for shared library
   useSEO({
@@ -65,12 +70,16 @@ export function SharedLibrary() {
         setGames(sharedGames);
         setUserInfo(sharedUserInfo);
         
-        // Get current user's share ID for compare feature
+        // Get current user's share ID for compare feature and check if already friends
         if (user) {
-          const myProfile = await getShareProfile(user.id);
+          const [myProfile, alreadyFriend] = await Promise.all([
+            getShareProfile(user.id),
+            isFriend(user.id, shareId)
+          ]);
           if (myProfile?.enabled) {
             setMyShareId(myProfile.shareId);
           }
+          setIsAlreadyFriend(alreadyFriend);
         }
       } catch (err) {
         console.error('Failed to load shared library:', err);
@@ -163,6 +172,17 @@ export function SharedLibrary() {
               📊 Compare Libraries
             </Link>
           )}
+          {user && shareId && myShareId !== shareId && (
+            isAlreadyFriend ? (
+              <Link to="/friends" className="btn-friend-status">
+                ✓ In Friends List
+              </Link>
+            ) : (
+              <button onClick={() => setShowAddFriendModal(true)} className="btn-add-friend">
+                + Add Friend
+              </button>
+            )
+          )}
         </div>
       </header>
 
@@ -253,6 +273,20 @@ export function SharedLibrary() {
             ))}
           </div>
         </>
+      )}
+      
+      {showAddFriendModal && shareId && userInfo && (
+        <AddFriendModal
+          onClose={() => setShowAddFriendModal(false)}
+          onAdd={async () => {
+            if (user && shareId) {
+              const alreadyFriend = await isFriend(user.id, shareId);
+              setIsAlreadyFriend(alreadyFriend);
+            }
+          }}
+          prefilledShareId={shareId}
+          prefilledNickname={userInfo.displayName}
+        />
       )}
     </div>
   );

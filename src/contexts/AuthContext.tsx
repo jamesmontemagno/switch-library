@@ -224,9 +224,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
         dispatch({ type: 'LOGIN_ERROR' });
         return { error };
       }
+      
+      // Check if email confirmation is required
+      // If session is null but user exists, email confirmation is needed
+      if (data.user && !data.session) {
+        dispatch({ type: 'LOGIN_ERROR' });
+        return { error: null, needsConfirmation: true };
+      }
+      
       if (data.user) {
         try {
-          // Note: User might need to confirm email depending on Supabase settings
+          // User is authenticated immediately (email confirmation disabled)
           const user = mapSupabaseUser(data.user);
           dispatch({ type: 'LOGIN_SUCCESS', payload: user });
         } catch (mappingError) {
@@ -235,7 +243,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           return { error: new Error('Failed to process user data') };
         }
       }
-      return { error: null };
+      return { error: null, needsConfirmation: false };
     } else {
       // Demo mode
       console.warn('Supabase not configured. Using demo mode.');
@@ -250,7 +258,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(mockUser));
       dispatch({ type: 'LOGIN_SUCCESS', payload: mockUser });
-      return { error: null };
+      return { error: null, needsConfirmation: false };
     }
   };
 

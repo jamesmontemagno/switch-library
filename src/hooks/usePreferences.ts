@@ -23,6 +23,10 @@ export interface UserPreferences {
     sortBy: SortOption;
     viewMode: ViewMode;
   };
+  friends?: {
+    sortBy: 'added_desc' | 'added_asc' | 'nickname_asc' | 'nickname_desc' | 'games_desc' | 'games_asc';
+    viewMode: ViewMode;
+  };
 }
 
 const STORAGE_KEY = 'switch-library-preferences';
@@ -40,6 +44,10 @@ const DEFAULT_PREFERENCES: UserPreferences = {
     filterFormat: 'all',
     filterCompleted: 'all',
     sortBy: 'added_newest',
+    viewMode: 'grid',
+  },
+  friends: {
+    sortBy: 'added_desc',
     viewMode: 'grid',
   },
 };

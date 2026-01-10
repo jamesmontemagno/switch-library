@@ -43,6 +43,27 @@ export interface ShareProfile {
   revokedAt?: string;
 }
 
+export interface FriendEntry {
+  id: string;
+  userId: string;
+  friendShareId: string;
+  nickname: string;
+  addedAt: string;
+}
+
+export interface FriendWithDetails {
+  id: string;
+  userId: string;
+  friendShareId: string;
+  nickname: string;
+  addedAt: string;
+  profile: {
+    displayName: string;
+    avatarUrl: string;
+  } | null;
+  gameCount: number;
+}
+
 export interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
