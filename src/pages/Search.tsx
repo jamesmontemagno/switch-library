@@ -108,7 +108,7 @@ export function Search() {
             setShowUsageLimitModal(true);
             return;
           }
-        } catch (e) {
+        } catch {
           // Error checking cache, show modal to be safe
           setShowUsageLimitModal(true);
           return;
@@ -160,7 +160,7 @@ export function Search() {
           if (cachedResult && Date.now() - cachedResult.timestamp < SEARCH_CACHE_EXPIRY_MS) {
             wasCached = true;
           }
-        } catch (e) {
+        } catch {
           // Ignore cache check errors
         }
       }

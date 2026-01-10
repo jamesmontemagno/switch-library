@@ -189,11 +189,11 @@ async function getMonthlyUsageFromSupabase(userId: string): Promise<number> {
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   
   try {
-    const { count, error } = await supabase
+    const { count, error } = (await supabase
       .from('api_usage')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
-      .gte('timestamp', monthStart.toISOString()) as any;
+      .gte('timestamp', monthStart.toISOString())) as { count: number | null; error: unknown };
 
     if (error) {
       console.error('Failed to get monthly usage from Supabase:', error);
@@ -241,13 +241,13 @@ export async function getMonthlySearchCount(userId: string): Promise<MonthlyUsag
 
 async function logSearchToSupabase(userId: string, searchQuery: string): Promise<void> {
   try {
-    const { error } = await supabase
+    const { error } = (await supabase
       .from('api_usage')
       .insert({
         user_id: userId,
         search_query: searchQuery,
         timestamp: new Date().toISOString()
-      }) as any;
+      })) as { error: unknown };
 
     if (error) {
       console.error('Failed to log search to Supabase:', error);
