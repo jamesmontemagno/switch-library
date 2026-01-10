@@ -99,9 +99,45 @@ Without an API key, the app works but won't have game search functionality.
 
 ## Deployment
 
-### Recommended: Azure with Azure Functions Backend
+### Hybrid Deployment: GitHub Pages + Azure Functions (Recommended for this setup)
 
-For production deployments with game search functionality, this project includes an **Azure Functions backend** (C# with .NET 10) that proxies API requests to avoid CORS issues.
+This approach keeps the static frontend on GitHub Pages (free hosting) while deploying the backend to Azure Functions. This is ideal for personal projects and provides the best of both worlds.
+
+#### Step 1: Deploy Backend to Azure Functions
+
+1. **Deploy the Azure Functions backend:**
+   ```bash
+   cd backend-api
+   func azure functionapp publish switchlibrary-api
+   ```
+   
+2. **Note your Azure Functions URL** (e.g., `https://switchlibrary-api.azurewebsites.net`)
+
+3. **Configure CORS in Azure Portal:**
+   - Go to your Function App → CORS
+   - Add your GitHub Pages URL (e.g., `https://jamesmontemagno.github.io`)
+   - Save the settings
+
+See [backend-api/README.md](backend-api/README.md) for detailed deployment instructions.
+
+#### Step 2: Deploy Frontend to GitHub Pages
+
+1. **Configure environment variables in GitHub Secrets:**
+   - Go to your repository → Settings → Secrets and variables → Actions
+   - Add the following secrets:
+     - `VITE_SUPABASE_URL`: Your Supabase project URL
+     - `VITE_SUPABASE_ANON_KEY`: Your Supabase anon key
+     - `VITE_THEGAMESDB_API_KEY`: Your TheGamesDB API key
+     - `VITE_API_BASE_URL`: Your Azure Functions URL (e.g., `https://switchlibrary-api.azurewebsites.net/api/thegamesdb`)
+     - `VITE_BASE_PATH`: `/switch-library/` (or your repo name)
+
+2. **The GitHub Actions workflow will automatically deploy on push to `main`**
+
+3. **Access your app at:** `https://YOUR_USERNAME.github.io/switch-library/`
+
+### Alternative: Integrated Azure Deployment
+
+For production deployments where you want everything on Azure, you can use Azure Static Web Apps with integrated Azure Functions.
 
 #### Frontend Deployment (Azure Static Web Apps)
 
@@ -125,8 +161,6 @@ For production deployments with game search functionality, this project includes
 
 #### Backend Deployment (Azure Functions)
 
-See the [backend-api/README.md](backend-api/README.md) for detailed instructions on deploying the Azure Functions backend.
-
 Quick deployment:
 ```bash
 cd backend-api
@@ -135,7 +169,7 @@ func azure functionapp publish switchlibrary-api
 
 After deployment:
 1. Note the Azure Functions URL (e.g., `https://switchlibrary-api.azurewebsites.net`)
-2. Update the frontend to use the backend URL (or configure Azure Static Web Apps to proxy to the backend)
+2. Update the frontend to use the backend URL via `VITE_API_BASE_URL` environment variable
 3. Configure CORS in the Azure Function App to allow your frontend domain
 
 ### Local Development
@@ -154,19 +188,6 @@ After deployment:
    npm run dev
    ```
    The frontend will run on `http://localhost:5173` and proxy API requests to the backend
-
-### Alternative: GitHub Pages (Static Only)
-
-⚠️ **Note:** GitHub Pages only supports static hosting and cannot proxy API requests. Game search features will not work due to CORS restrictions without a separate backend.
-
-To deploy to GitHub Pages:
-
-1. Set the base path:
-   ```env
-   VITE_BASE_PATH=/switch-library/
-   ```
-
-2. The GitHub Actions workflow will automatically deploy on push to `main`.
 
 ## Demo Mode
 

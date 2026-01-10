@@ -103,8 +103,13 @@ Set up CI/CD pipelines to automatically deploy on push to main branch.
 ### CORS Settings
 In Azure Portal, configure CORS for your Function App:
 1. Go to your Function App → CORS
-2. Add your frontend domain (e.g., `https://myswitchlibrary.com`)
-3. For development, you can add `http://localhost:5173`
+2. Add your frontend domain:
+   - For custom domain: `https://myswitchlibrary.com`
+   - For GitHub Pages: `https://YOUR_USERNAME.github.io`
+   - For development: `http://localhost:5173`
+3. Click "Save"
+
+**Important:** Do NOT use wildcards (`*`) in production as this defeats the purpose of CORS security.
 
 ### Application Settings
 No additional application settings are required for the proxy function, as it doesn't store any API keys server-side.
