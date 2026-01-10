@@ -869,8 +869,8 @@
     },
     "pages": {
         "previous": null,
-        "current": "https://api.thegamesdb.net/v1/Games/ByGameName?name=mario&fields=players%2Cpublishers%2Cgenres%2Coverview%2Clast_updated%2Crating%2Cplatform%2Ccoop%2Cyoutube%2Cos%2Cprocessor%2Cram%2Chdd%2Cvideo%2Csound%2Calternates&include=boxart%2Cplatform&filter%5Bplatform%5D=4971&apikey=510466cf6f16a422d1651bd59ae2f045671a0c54c5b9eae5c7d303fb049a6e41&page=1",
-        "next": "https://api.thegamesdb.net/v1/Games/ByGameName?name=mario&fields=players%2Cpublishers%2Cgenres%2Coverview%2Clast_updated%2Crating%2Cplatform%2Ccoop%2Cyoutube%2Cos%2Cprocessor%2Cram%2Chdd%2Cvideo%2Csound%2Calternates&include=boxart%2Cplatform&filter%5Bplatform%5D=4971&apikey=510466cf6f16a422d1651bd59ae2f045671a0c54c5b9eae5c7d303fb049a6e41&page=2"
+        "current": "https://api.thegamesdb.net/v1/Games/ByGameName?name=mario&fields=players%2Cpublishers%2Cgenres%2Coverview%2Clast_updated%2Crating%2Cplatform%2Ccoop%2Cyoutube%2Cos%2Cprocessor%2Cram%2Chdd%2Cvideo%2Csound%2Calternates&include=boxart%2Cplatform&filter%5Bplatform%5D=4971&apikey=1&page=1",
+        "next": "https://api.thegamesdb.net/v1/Games/ByGameName?name=mario&fields=players%2Cpublishers%2Cgenres%2Coverview%2Clast_updated%2Crating%2Cplatform%2Ccoop%2Cyoutube%2Cos%2Cprocessor%2Cram%2Chdd%2Cvideo%2Csound%2Calternates&include=boxart%2Cplatform&filter%5Bplatform%5D=4971&apikey=1&page=2"
     },
     "remaining_monthly_allowance": 998,
     "extra_allowance": 0,
