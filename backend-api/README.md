@@ -18,6 +18,7 @@ This Azure Functions app provides a server-side proxy for TheGamesDB API request
 backend-api/
 ├── Program.cs                  # Application entry point and dependency injection setup
 ├── TheGamesDbProxy.cs          # HTTP trigger function for proxying TheGamesDB API requests
+├── GetGameById.cs              # HTTP trigger function for getting game details with blob storage caching
 ├── SwitchLibraryApi.csproj     # Project file with dependencies
 ├── host.json                   # Azure Functions host configuration
 ├── local.settings.json         # Local development settings (not committed)
@@ -31,6 +32,15 @@ backend-api/
 - **Description**: Proxies requests to `https://api.thegamesdb.net/v1/{path}` and automatically adds the API key
 - **Example**: `GET /api/thegamesdb/Games/ByGameName?name=zelda`
   - Backend adds the API key and forwards to: `https://api.thegamesdb.net/v1/Games/ByGameName?name=zelda&apikey=xxx`
+
+### Get Game By ID (with Caching)
+- **Route**: `GET /api/games/{gameId}`
+- **Description**: Gets game details by ID with blob storage caching. Checks blob storage first, then fetches from TheGamesDB API if not found and caches the result
+- **Example**: `GET /api/games/12345`
+- **Benefits**: 
+  - Reduces API calls to TheGamesDB
+  - Faster response times for cached games
+  - Preserves API allowance
 
 ## Local Development
 
@@ -48,12 +58,20 @@ backend-api/
 2. Configure your API key in `local.settings.json`:
    ```json
    {
-       "Values": {
-           "TheGamesDB__ApiKey": "your-api-key-here"
+       "Values": {,
+           "BlobStorage__ConnectionString": "UseDevelopmentStorage=true",
+           "BlobStorage__ContainerName": "games-cache"
        }
    }
    ```
 
+3. **(Optional) For local blob storage testing**: Install and start [Azurite](https://learn.microsoft.com/azure/storage/common/storage-use-azurite):
+   ```bash
+   npm install -g azurite
+   azurite
+   ```
+
+4
 3. Build the project:
    ```bash
    dotnet build
@@ -64,9 +82,16 @@ backend-api/
    dotnet run
    ```
    Or with the Azure Functions Core Tools:
-   ```bash
-   func start
-   ```
+   ```bashendpoints:
+
+**Proxy endpoint:**
+```bash
+curl "http://localhost:7071/api/thegamesdb/Games/ByGameName?name=zelda"
+```
+
+**Cached game details endpoint:**
+```bash
+curl "http://localhost:7071/api/games/12345
 
 The API will be available at `http://localhost:7071` by default.
 
@@ -121,18 +146,21 @@ In Azure Portal, configure CORS for your Function App:
 3. Click "Save"
 
 **Important:** Do NOT use wildcards (`*`) in production as this defeats the purpose of CORS security.
-Configure the following application setting in the Azure Portal (Function App → Configuration → Application settings):
-- `TheGamesDB__ApiKey`: Your TheGamesDB API key
 
-This setting stores the API key securely on the server 
 ### Application Settings
-No additional application settings are required for the proxy function, as it doesn't store any API keys server-side.
-API keys are securely stored in Azure Application Settings (backend) instead of being exposed in
+Configure the following application settings in the Azure Portal (Function App → Configuration → Application settings):
+- `TheGamesDB__ApiKey`: Your TheGamesDB API key
+- `BlobStorage__ConnectionString`: Azure Blob Storage connection string (use your storage account connection string in production)
+- `BlobStorage__ContainerName`: Name of the blob container for caching game data (default: `games-cache`)
+
+These settings store the API key securely on the server side and enable blob storage caching for game details.
+
 ## Security Considerations
 
 - The proxy function uses `AuthorizationLevel.Anonymous` to allow public access
 - CORS is configured to only allow requests from your frontend domain
-- No API keys are stored in the backend; they are passed through from the frontend
+- API keys are securely stored in Azure Application Settings (backend) instead of being exposed in the frontend
+- Game details are cached in blob storage to reduce API calls and improve performance
 - Rate limiting should be implemented at the Azure level if needed
 
 ## Monitoring

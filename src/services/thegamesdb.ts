@@ -29,6 +29,16 @@ export interface TheGamesDBGame {
   video?: string;
   sound?: string;
   alternates?: string[];
+  // Boxart data when included in search results
+  boxart?: {
+    filename: string;
+    original: string;
+    small: string;
+    thumb: string;
+    cropped_center_thumb: string;
+    medium: string;
+    large: string;
+  };
 }
 
 export interface TheGamesDBSearchResult {
@@ -37,6 +47,14 @@ export interface TheGamesDBSearchResult {
   debugUrl?: string; // For debugging purposes
   remaining_monthly_allowance?: number;
   extra_allowance?: number;
+  base_url?: {
+    original: string;
+    small: string;
+    thumb: string;
+    cropped_center_thumb: string;
+    medium: string;
+    large: string;
+  };
 }
 
 export interface TheGamesDBImage {
@@ -226,7 +244,7 @@ export async function searchGames(
 ): Promise<TheGamesDBSearchResult> {
   const {
     platformId = PLATFORM_IDS.NINTENDO_SWITCH,
-    includeFields = ['boxart'],
+    includeFields = ['boxart', 'platform'],
     page = 1,
   } = options;
 
@@ -240,8 +258,10 @@ export async function searchGames(
   }
 
   // API key is now added by the backend proxy
+  // Request all available fields to get complete game information
   const params = new URLSearchParams({
     name: query,
+    fields: 'players,publishers,genres,overview,last_updated,rating,platform,coop,youtube,os,processor,ram,hdd,video,sound,alternates',
     include: includeFields.join(','),
   });
 
@@ -295,18 +315,19 @@ export async function getGameById(gameId: number): Promise<TheGamesDBGame | null
     return cachedGame;
   }
 
-  // API key is now added by the backend proxy
-  const params = new URLSearchParams({
-    id: gameId.toString(),
-    fields: 'players,publishers,genres,overview,last_updated,rating,platform,coop,youtube,os,processor,ram,hdd,video,sound,alternates',
-    include: 'boxart,platform',
-  });
-
   try {
-    const response = await fetch(`${API_BASE_URL}/Games/ByGameID?${params}`);
+    // Call the backend caching endpoint which handles blob storage and API calls
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL?.replace('/thegamesdb', '') || '/api';
+    const response = await fetch(`${apiBaseUrl}/games/${gameId}`);
+    
     if (!response.ok) {
-      throw new Error(`TheGamesDB API error: ${response.status}`);
+      if (response.status === 404) {
+        console.log(`Game ${gameId} not found`);
+        return null;
+      }
+      throw new Error(`Backend API error: ${response.status}`);
     }
+    
     const data = await response.json();
     console.log('getGameById raw response:', data);
     

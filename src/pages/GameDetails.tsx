@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import type { GameEntry } from '../types';
 import { loadGames, saveGame } from '../services/database';
-import { getGameById, getGameImages, getBoxartUrl, getGenres, getDevelopers, getPublishers, mapIdsToNames } from '../services/thegamesdb';
+import { getGameById, getGenres, getDevelopers, getPublishers, mapIdsToNames } from '../services/thegamesdb';
 import type { TheGamesDBGame } from '../services/thegamesdb';
 import { EditGameModal } from '../components/EditGameModal';
 import './GameDetails.css';
@@ -58,16 +58,15 @@ export function GameDetails() {
             setGenreNames(mapIdsToNames(gameData.genres, genres));
             setDeveloperNames(mapIdsToNames(gameData.developers, developers));
             setPublisherNames(mapIdsToNames(gameData.publishers, publishers));
-          }
-          
-          // If we don't have a cover URL yet, try to get one
-          if (!foundGame.coverUrl && gameData) {
-            const images = await getGameImages(foundGame.thegamesdbId);
-            const coverUrl = getBoxartUrl(images, foundGame.thegamesdbId);
-            if (coverUrl) {
-              const updatedGame = { ...foundGame, coverUrl };
-              await saveGame(updatedGame);
-              setGame(updatedGame);
+            
+            // If we don't have a cover URL yet and boxart is available, save it
+            if (!foundGame.coverUrl && gameData.boxart) {
+              const coverUrl = gameData.boxart.medium || gameData.boxart.original;
+              if (coverUrl) {
+                const updatedGame = { ...foundGame, coverUrl };
+                await saveGame(updatedGame);
+                setGame(updatedGame);
+              }
             }
           }
         }

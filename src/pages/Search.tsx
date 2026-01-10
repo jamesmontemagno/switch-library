@@ -3,8 +3,6 @@ import { useAuth } from '../hooks/useAuth';
 import type { GameEntry, Platform, Format } from '../types';
 import { 
   searchGames, 
-  getGameImages, 
-  getBoxartUrl,
   PLATFORM_IDS,
   isTheGamesDBConfigured,
   getStoredAllowance,
@@ -133,23 +131,22 @@ export function Search() {
         return;
       }
       
-      // Fetch boxart for all results
-      const resultsWithImages = await Promise.all(
-        result.games.map(async (game) => {
-          const images = await getGameImages(game.id);
-          const boxartUrl = getBoxartUrl(images, game.id, 'medium');
-          return {
-            id: game.id,
-            title: game.game_title,
-            releaseDate: game.release_date,
-            platform: 'Nintendo Switch',
-            overview: game.overview,
-            boxartUrl: boxartUrl || undefined,
-            players: game.players,
-            rating: game.rating,
-          };
-        })
-      );
+      // Map results with boxart from search results (no additional API calls needed)
+      const resultsWithImages = result.games.map((game) => {
+        // Boxart is now included in the search results
+        const boxartUrl = game.boxart ? game.boxart.medium || game.boxart.original : undefined;
+        
+        return {
+          id: game.id,
+          title: game.game_title,
+          releaseDate: game.release_date,
+          platform: 'Nintendo Switch',
+          overview: game.overview,
+          boxartUrl,
+          players: game.players,
+          rating: game.rating,
+        };
+      });
       
       // Apply filters
       let filtered = resultsWithImages;
