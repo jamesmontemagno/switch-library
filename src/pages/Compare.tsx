@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useSEO } from '../hooks/useSEO';
 import type { GameEntry } from '../types';
 import { loadSharedGames, getSharedUserProfile } from '../services/database';
 import './Compare.css';
@@ -23,6 +24,16 @@ export function Compare() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<CompareTab>('common');
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Dynamic page title based on compared users
+  useSEO({
+    title: leftUser && rightUser 
+      ? `Compare Libraries: ${leftUser.displayName} vs ${rightUser.displayName}`
+      : 'Compare Libraries',
+    description: leftUser && rightUser
+      ? `Compare Nintendo Switch game collections between ${leftUser.displayName} and ${rightUser.displayName}. Find common games and unique titles.`
+      : 'Compare two Nintendo Switch game libraries side by side',
+  });
 
   useEffect(() => {
     async function loadBothLibraries() {

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useSEO } from '../hooks/useSEO';
 import type { GameEntry } from '../types';
 import { loadGames, saveGame } from '../services/database';
 import { getGameById, getGenres, getDevelopers, getPublishers, mapIdsToNames } from '../services/thegamesdb';
@@ -23,6 +24,14 @@ export function GameDetails() {
   const [genreNames, setGenreNames] = useState<string[]>([]);
   const [developerNames, setDeveloperNames] = useState<string[]>([]);
   const [publisherNames, setPublisherNames] = useState<string[]>([]);
+  
+  // Dynamic page title based on game
+  useSEO({
+    title: game ? `${game.title} - Game Details` : 'Game Details',
+    description: game 
+      ? `View details for ${game.title} on ${game.platform}. ${game.completed ? 'Completed' : 'In your library'}.`
+      : 'View game details from your Nintendo Switch library',
+  });
 
   useEffect(() => {
     async function fetchGameDetails() {

@@ -1,6 +1,7 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useSEO } from '../hooks/useSEO';
 import './Auth.css';
 
 type AuthMode = 'signin' | 'signup' | 'reset';
@@ -29,6 +30,16 @@ export function Auth() {
   const [mode, setMode] = useState<AuthMode>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  
+  // Dynamic page title based on auth mode
+  useSEO({
+    title: mode === 'signin' ? 'Sign In' : mode === 'signup' ? 'Sign Up' : 'Reset Password',
+    description: mode === 'signin' 
+      ? 'Sign in to your Nintendo Switch Library account'
+      : mode === 'signup'
+      ? 'Create a free account to track your Nintendo Switch games'
+      : 'Reset your account password',
+  });
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);

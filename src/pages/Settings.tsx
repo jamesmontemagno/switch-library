@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { usePreferences } from '../hooks/usePreferences';
+import { useSEO } from '../hooks/useSEO';
 import { getShareProfile, enableSharing, disableSharing, deleteUserAccount } from '../services/database';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSun, faMoon, faDesktop } from '@fortawesome/free-solid-svg-icons';
@@ -14,6 +15,11 @@ export function Settings() {
   const [displayName, setDisplayName] = useState(user?.displayName || '');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  
+  useSEO({
+    title: 'Settings',
+    description: 'Manage your profile, appearance, sharing settings, and account preferences',
+  });
 
   // Load existing share profile on mount
   useEffect(() => {
