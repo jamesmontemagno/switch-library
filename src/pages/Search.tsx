@@ -60,6 +60,9 @@ export function Search() {
   // View
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   
+  // Mobile filters toggle
+  const [showFilters, setShowFilters] = useState(false);
+  
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMoreResults, setHasMoreResults] = useState(false);
@@ -463,8 +466,39 @@ export function Search() {
         </div>
       </div>
 
+      {/* Filters - Mobile Toggle Button */}
+      <div className="filters-mobile-header">
+        <button 
+          className="btn-toggle-filters"
+          onClick={() => setShowFilters(!showFilters)}
+          aria-expanded={showFilters}
+          aria-label="Toggle filters"
+        >
+          <span>🔧 Filters & Sort</span>
+          <span className="toggle-icon">{showFilters ? '▲' : '▼'}</span>
+        </button>
+        <div className="view-toggle view-toggle-mobile">
+          <button
+            className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
+            onClick={() => setViewMode('grid')}
+            title="Grid View"
+            aria-label="Grid View"
+          >
+            ▦
+          </button>
+          <button
+            className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
+            onClick={() => setViewMode('list')}
+            title="List View"
+            aria-label="List View"
+          >
+            ☰
+          </button>
+        </div>
+      </div>
+
       {/* Filters */}
-      <div className="search-filters-bar">
+      <div className={`search-filters-bar ${showFilters ? 'filters-expanded' : 'filters-collapsed'}`}>
         <div className="filter-item">
           <label>Platform</label>
           <select value={platform} onChange={(e) => setPlatform(e.target.value as 'all' | Platform)}>
@@ -533,11 +567,12 @@ export function Search() {
           <span>With Boxart Only</span>
         </label>
         
-        <div className="view-toggle">
+        <div className="view-toggle view-toggle-desktop">
           <button
             className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
             onClick={() => setViewMode('grid')}
             title="Grid View"
+            aria-label="Grid View"
           >
             ▦
           </button>
@@ -545,6 +580,7 @@ export function Search() {
             className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
             onClick={() => setViewMode('list')}
             title="List View"
+            aria-label="List View"
           >
             ☰
           </button>

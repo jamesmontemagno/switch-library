@@ -33,6 +33,9 @@ export function SharedLibrary() {
   const [searchQuery, setSearchQuery] = useState('');
   const [platformFilter, setPlatformFilter] = useState<PlatformFilter>('all');
   
+  // Mobile filters toggle
+  const [showFilters, setShowFilters] = useState(false);
+  
   // For compare functionality
   const [myShareId, setMyShareId] = useState<string | null>(null);
   
@@ -261,7 +264,38 @@ export function SharedLibrary() {
         </div>
       </header>
 
-      <div className="shared-toolbar">
+      {/* Mobile Toolbar Header */}
+      <div className="toolbar-mobile-header">
+        <button 
+          className="btn-toggle-filters"
+          onClick={() => setShowFilters(!showFilters)}
+          aria-expanded={showFilters}
+          aria-label="Toggle filters and sort"
+        >
+          <span>🔧 Filters & Sort</span>
+          <span className="toggle-icon">{showFilters ? '▲' : '▼'}</span>
+        </button>
+        <div className="view-toggle view-toggle-mobile">
+          <button
+            className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
+            onClick={() => setViewMode('grid')}
+            title="Grid View"
+            aria-label="Grid View"
+          >
+            ▦
+          </button>
+          <button
+            className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
+            onClick={() => setViewMode('list')}
+            title="List View"
+            aria-label="List View"
+          >
+            ☰
+          </button>
+        </div>
+      </div>
+
+      <div className={`shared-toolbar ${showFilters ? 'toolbar-expanded' : 'toolbar-collapsed'}`}>
         <input
           type="search"
           placeholder="Search games..."
@@ -289,11 +323,12 @@ export function SharedLibrary() {
           <option value="platform">Platform</option>
           <option value="format">Format</option>
         </select>
-        <div className="view-toggle">
+        <div className="view-toggle view-toggle-desktop">
           <button
             className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
             onClick={() => setViewMode('grid')}
             title="Grid View"
+            aria-label="Grid View"
           >
             ▦
           </button>
@@ -301,6 +336,7 @@ export function SharedLibrary() {
             className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
             onClick={() => setViewMode('list')}
             title="List View"
+            aria-label="List View"
           >
             ☰
           </button>

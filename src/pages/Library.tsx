@@ -36,6 +36,9 @@ export function Library() {
   const [sortBy, setSortBy] = useState<SortOption>(preferences.library?.sortBy || 'added_newest');
   const [viewMode, setViewMode] = useState<ViewMode>(preferences.library?.viewMode || 'grid');
   
+  // Mobile filters toggle
+  const [showFilters, setShowFilters] = useState(false);
+  
   // Share state
   const [shareProfile, setShareProfile] = useState<ShareProfile | null>(null);
   const [isLoadingShare, setIsLoadingShare] = useState(false);
@@ -426,7 +429,46 @@ export function Library() {
         </div>
       )}
 
-      <div className="library-toolbar">
+      {/* Mobile Toolbar Header */}
+      <div className="toolbar-mobile-header">
+        <button 
+          className="btn-toggle-filters"
+          onClick={() => setShowFilters(!showFilters)}
+          aria-expanded={showFilters}
+          aria-label="Toggle filters and sort"
+        >
+          <span>🔧 Filters & Sort</span>
+          <span className="toggle-icon">{showFilters ? '▲' : '▼'}</span>
+        </button>
+        <div className="view-toggle view-toggle-mobile">
+          <button
+            className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
+            onClick={() => setViewMode('grid')}
+            title="Grid View"
+            aria-label="Grid View"
+          >
+            ▦
+          </button>
+          <button
+            className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
+            onClick={() => setViewMode('list')}
+            title="List View"
+            aria-label="List View"
+          >
+            ☰
+          </button>
+          <button
+            className={`view-btn ${viewMode === 'compact' ? 'active' : ''}`}
+            onClick={() => setViewMode('compact')}
+            title="Compact View"
+            aria-label="Compact View"
+          >
+            ▤
+          </button>
+        </div>
+      </div>
+
+      <div className={`library-toolbar ${showFilters ? 'toolbar-expanded' : 'toolbar-collapsed'}`}>
         <input
           type="search"
           placeholder="Search library..."
@@ -482,11 +524,12 @@ export function Library() {
           <option value="completed_first">Completed First</option>
           <option value="not_completed_first">Not Completed First</option>
         </select>
-        <div className="view-toggle">
+        <div className="view-toggle view-toggle-desktop">
           <button
             className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
             onClick={() => setViewMode('grid')}
             title="Grid View"
+            aria-label="Grid View"
           >
             ▦
           </button>
@@ -494,6 +537,7 @@ export function Library() {
             className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
             onClick={() => setViewMode('list')}
             title="List View"
+            aria-label="List View"
           >
             ☰
           </button>
@@ -501,6 +545,7 @@ export function Library() {
             className={`view-btn ${viewMode === 'compact' ? 'active' : ''}`}
             onClick={() => setViewMode('compact')}
             title="Compact View"
+            aria-label="Compact View"
           >
             ▤
           </button>
