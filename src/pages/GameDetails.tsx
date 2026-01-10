@@ -61,7 +61,7 @@ export function GameDetails() {
             
             // If we don't have a cover URL yet and boxart is available, save it
             if (!foundGame.coverUrl && gameData.boxart) {
-              const coverUrl = gameData.boxart.medium || gameData.boxart.original;
+              const coverUrl = gameData.boxart.thumb || gameData.boxart.small || gameData.boxart.medium || gameData.boxart.original;
               if (coverUrl) {
                 const updatedGame = { ...foundGame, coverUrl };
                 await saveGame(updatedGame);

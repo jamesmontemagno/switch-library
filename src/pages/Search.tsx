@@ -134,7 +134,7 @@ export function Search() {
       // Map results with boxart from search results (no additional API calls needed)
       const resultsWithImages = result.games.map((game) => {
         // Boxart is now included in the search results
-        const boxartUrl = game.boxart ? game.boxart.medium || game.boxart.original : undefined;
+        const boxartUrl = game.boxart ? (game.boxart.thumb || game.boxart.small || game.boxart.medium || game.boxart.original) : undefined;
         
         return {
           id: game.id,
