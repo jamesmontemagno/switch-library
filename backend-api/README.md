@@ -30,8 +30,10 @@ backend-api/
 ### TheGamesDB Proxy
 - **Route**: `GET /api/thegamesdb/{*path}`
 - **Description**: Proxies requests to `https://api.thegamesdb.net/v1/{path}` and automatically adds the API key
+- **Caching**: When search requests are made (`Games/ByGameName`), automatically caches all returned games to blob storage in the background
 - **Example**: `GET /api/thegamesdb/Games/ByGameName?name=zelda`
   - Backend adds the API key and forwards to: `https://api.thegamesdb.net/v1/Games/ByGameName?name=zelda&apikey=xxx`
+  - Games in the search results are cached to blob storage for faster future lookups
 
 ### Get Game By ID (with Caching)
 - **Route**: `GET /api/games/{gameId}`

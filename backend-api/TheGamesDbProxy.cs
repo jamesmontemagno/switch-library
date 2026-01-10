@@ -1,9 +1,11 @@
+using Azure.Storage.Blobs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Net;
+using System.Text;
 using System.Text.Json;
 
 namespace SwitchLibraryApi;
@@ -17,6 +19,8 @@ public class TheGamesDbProxy
     private readonly ILogger<TheGamesDbProxy> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly string? _apiKey;
+    private readonly string? _blobConnectionString;
+    private readonly string _containerName;
     private const string ApiBaseUrl = "https://api.thegamesdb.net/v1";
 
     public TheGamesDbProxy(ILogger<TheGamesDbProxy> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
@@ -24,6 +28,8 @@ public class TheGamesDbProxy
         _logger = logger;
         _httpClientFactory = httpClientFactory;
         _apiKey = configuration["TheGamesDB:ApiKey"];
+        _blobConnectionString = configuration["BlobStorage:ConnectionString"];
+        _containerName = configuration["BlobStorage:ContainerName"] ?? "games-cache";
     }
 
     /// <summary>
@@ -87,6 +93,12 @@ public class TheGamesDbProxy
             // Parse and return as JSON
             var jsonDocument = JsonDocument.Parse(content);
             
+            // If this is a search result with games, cache them in blob storage
+            if (path.StartsWith("Games/ByGameName", StringComparison.OrdinalIgnoreCase))
+            {
+                _ = Task.Run(() => CacheSearchResultsAsync(jsonDocument.RootElement));
+            }
+            
             return new OkObjectResult(jsonDocument.RootElement)
             {
                 StatusCode = 200,
@@ -119,4 +131,82 @@ public class TheGamesDbProxy
             };
         }
     }
+
+    private async Task CacheSearchResultsAsync(JsonElement responseData)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(_blobConnectionString))
+            {
+                return;
+            }
+
+            // Extract games from the response
+            if (!responseData.TryGetProperty("data", out var data) ||
+                !data.TryGetProperty("games", out var gamesArray))
+            {
+                return;
+            }
+
+            var blobServiceClient = new BlobServiceClient(_blobConnectionString);
+            var containerClient = blobServiceClient.GetBlobContainerClient(_containerName);
+            
+            // Ensure container exists
+            await containerClient.CreateIfNotExistsAsync();
+
+            // Cache each game individually
+            var cacheTasks = new List<Task>();
+            
+            foreach (var game in gamesArray.EnumerateArray())
+            {
+                if (game.TryGetProperty("id", out var idProperty))
+                {
+                    var gameId = idProperty.GetInt32();
+                    cacheTasks.Add(SaveGameToBlobAsync(containerClient, gameId, responseData));
+                }
+                
+                // Limit concurrent operations
+                if (cacheTasks.Count >= 5)
+                {
+                    await Task.WhenAll(cacheTasks);
+                    cacheTasks.Clear();
+                }
+            }
+            
+            // Wait for remaining tasks
+            if (cacheTasks.Count > 0)
+            {
+                await Task.WhenAll(cacheTasks);
+            }
+            
+            _logger.LogInformation("Cached {Count} games from search results", gamesArray.GetArrayLength());
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error caching search results to blob storage");
+        }
+    }
+
+    private async Task SaveGameToBlobAsync(BlobContainerClient containerClient, int gameId, JsonElement fullResponse)
+    {
+        try
+        {
+            var blobClient = containerClient.GetBlobClient($"game-{gameId}.json");
+            
+            var json = JsonSerializer.Serialize(fullResponse, new JsonSerializerOptions 
+            { 
+                WriteIndented = true 
+            });
+            
+            var bytes = Encoding.UTF8.GetBytes(json);
+            
+            using var stream = new MemoryStream(bytes);
+            await blobClient.UploadAsync(stream, overwrite: true);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error saving game {GameId} to blob storage", gameId);
+        }
+    }
 }
+
