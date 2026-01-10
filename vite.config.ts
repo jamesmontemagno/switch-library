@@ -12,7 +12,6 @@ export default defineConfig({
         // Proxy to Azure Functions backend running locally
         target: 'http://localhost:7071',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/thegamesdb/, '/api/thegamesdb'),
       },
     },
   },
