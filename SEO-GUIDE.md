@@ -195,7 +195,7 @@ Track your SEO performance using:
 
 ## 🎯 Next Steps
 
-1. ✅ **og-image.png created** - Replace with custom design if desired
+1. ✅ **og-image.png created** - Properly sized and optimized (1200x630px, 757KB)
 2. **Test social sharing** using the debugging tools above
 3. **Submit sitemap** to Google Search Console
 4. **Monitor performance** and iterate on meta descriptions
