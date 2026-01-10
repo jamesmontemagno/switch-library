@@ -12,6 +12,7 @@ import {
 } from '../services/thegamesdb';
 import { saveGame, loadGames, getMonthlySearchCount, logSearchUsage, deleteGame as deleteGameFromDb } from '../services/database';
 import { UsageLimitModal } from '../components/UsageLimitModal';
+import { ManualAddGameModal } from '../components/ManualAddGameModal';
 import './Search.css';
 
 type SortOption = 'relevance' | 'release_desc' | 'release_asc' | 'title_asc' | 'title_desc';
@@ -82,6 +83,9 @@ export function Search() {
   const [quickAddGame, setQuickAddGame] = useState<SearchResult | null>(null);
   const [quickAddFormat, setQuickAddFormat] = useState<Format>('Physical');
   const [quickAddPlatform, setQuickAddPlatform] = useState<Platform>('Nintendo Switch');
+  
+  // Manual add modal
+  const [showManualAddModal, setShowManualAddModal] = useState(false);
   
   const searchRequestIdRef = useRef(0);
   const hasTheGamesDB = isTheGamesDBConfigured();
@@ -382,6 +386,29 @@ export function Search() {
     }
   };
 
+  const handleManualAdd = async (game: Omit<GameEntry, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
+    if (!user) return;
+    
+    const newGame: GameEntry = {
+      ...game,
+      id: crypto.randomUUID(),
+      userId: user.id,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    
+    // Update UI immediately for instant feedback
+    setUserGames(prev => [...prev, newGame]);
+    setShowManualAddModal(false);
+    
+    // Save to database in background (fire and forget)
+    saveGame(newGame, userGames).catch(err => {
+      console.error('Failed to save game in background:', err);
+      // Optionally: show a toast notification to user about the failure
+      // and revert the optimistic update
+    });
+  };
+
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return 'Unknown';
     const date = new Date(dateStr);
@@ -403,8 +430,15 @@ export function Search() {
   return (
     <div className="search-page">
       <header className="search-header">
-        <h1>🔍 Game Search</h1>
-        <p>Search TheGamesDB to find and add games to your collection</p>
+        <div>
+          <h1>🔍 Game Search</h1>
+          <p>Search TheGamesDB to find and add games to your collection</p>
+        </div>
+        {isAuthenticated && (
+          <button onClick={() => setShowManualAddModal(true)} className="btn-add-manual">
+            + Add Manually
+          </button>
+        )}
       </header>
 
       {/* Search Bar */}
@@ -835,6 +869,14 @@ export function Search() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Manual Add Modal */}
+      {showManualAddModal && (
+        <ManualAddGameModal
+          onClose={() => setShowManualAddModal(false)}
+          onAdd={handleManualAdd}
+        />
       )}
     </div>
   );

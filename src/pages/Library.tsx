@@ -5,10 +5,9 @@ import { usePreferences } from '../hooks/usePreferences';
 import { useSEO } from '../hooks/useSEO';
 import type { GameEntry, Platform, ShareProfile } from '../types';
 import { loadGames, saveGame, deleteGame as deleteGameFromDb, getShareProfile, enableSharing, disableSharing, regenerateShareId, updateSharePrivacy, updateDisplayName, getUserProfile } from '../services/database';
-import { ManualAddGameModal } from '../components/ManualAddGameModal';
 import { EditGameModal } from '../components/EditGameModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMagnifyingGlass, faCheck, faPenToSquare, faGear, faClipboard, faEye, faGamepad, faTrash, faCartShopping, faTrophy, faLink, faUser, faLock, faRotate, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faPenToSquare, faGear, faClipboard, faEye, faGamepad, faTrash, faCartShopping, faTrophy, faLink, faUser, faLock, faRotate, faXmark, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import './Library.css';
 
 type SortOption = 'title_asc' | 'title_desc' | 'added_newest' | 'added_oldest' | 'purchase_newest' | 'purchase_oldest' | 'platform' | 'format' | 'completed_first' | 'not_completed_first';
@@ -28,7 +27,6 @@ export function Library() {
   
   const [games, setGames] = useState<GameEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [showAddModal, setShowAddModal] = useState(false);
   const [editingGame, setEditingGame] = useState<GameEntry | null>(null);
   const [gameToDelete, setGameToDelete] = useState<GameEntry | null>(null);
   const [filterPlatform, setFilterPlatform] = useState<Platform | 'all'>(preferences.library?.filterPlatform || 'all');
@@ -130,24 +128,6 @@ export function Library() {
           return 0;
       }
     });
-
-  const addGame = async (game: Omit<GameEntry, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
-    if (!user) return;
-    
-    const newGame: GameEntry = {
-      ...game,
-      id: crypto.randomUUID(),
-      userId: user.id,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    
-    const savedGame = await saveGame(newGame, games);
-    if (savedGame) {
-      setGames(prev => [...prev, savedGame]);
-    }
-    setShowAddModal(false);
-  };
 
   const handleDeleteGame = async (id: string) => {
     const gameToDelete = games.find(g => g.id === id);
@@ -316,11 +296,8 @@ export function Library() {
           >
             <FontAwesomeIcon icon={faLink} /> {showSharePanel ? 'Hide Sharing' : 'Share'}
           </button>
-          <button onClick={() => navigate('/search')} className="btn-search">
-            <FontAwesomeIcon icon={faMagnifyingGlass} /> Search Games
-          </button>
-          <button onClick={() => setShowAddModal(true)} className="btn-add">
-            + Add Manually
+          <button onClick={() => navigate('/search')} className="btn-add">
+            + Add Games
           </button>
         </div>
       </header>
@@ -537,8 +514,8 @@ export function Library() {
               <div className="empty-icon"><FontAwesomeIcon icon={faGamepad} /></div>
               <h2>No games yet</h2>
               <p>Start building your collection by adding your first game!</p>
-              <button onClick={() => setShowAddModal(true)} className="btn-add">
-                + Add Your First Game
+              <button onClick={() => navigate('/search')} className="btn-add">
+                + Add Games
               </button>
             </>
           ) : (
@@ -568,13 +545,6 @@ export function Library() {
         </>
       )}
 
-      {showAddModal && (
-        <ManualAddGameModal
-          onClose={() => setShowAddModal(false)}
-          onAdd={addGame}
-        />
-      )}
-      
       {editingGame && (
         <EditGameModal
           game={editingGame}
