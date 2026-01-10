@@ -9,9 +9,10 @@ export default defineConfig({
   server: {
     proxy: {
       '/api/thegamesdb': {
-        target: 'https://api.thegamesdb.net',
+        // Proxy to Azure Functions backend running locally
+        target: 'http://localhost:7071',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/thegamesdb/, '/v1'),
+        rewrite: (path) => path.replace(/^\/api\/thegamesdb/, '/api/thegamesdb'),
       },
     },
   },

@@ -99,34 +99,65 @@ Without an API key, the app works but won't have game search functionality.
 
 ## Deployment
 
-### Recommended: Netlify (with API Proxy)
+### Recommended: Azure with Azure Functions Backend
 
-For production deployments with game search functionality, **Netlify is recommended** as it supports serverless functions to handle API proxying and avoid CORS issues.
+For production deployments with game search functionality, this project includes an **Azure Functions backend** (C# with .NET 10) that proxies API requests to avoid CORS issues.
 
-1. **Connect your repository to Netlify:**
-   - Sign up at [netlify.com](https://netlify.com)
-   - Click "Add new site" → "Import an existing project"
-   - Connect your GitHub repository
+#### Frontend Deployment (Azure Static Web Apps)
 
-2. **Configure build settings:**
+1. **Create an Azure Static Web App:**
+   ```bash
+   az login
+   az staticwebapp create --name myswitchlibrary --resource-group SwitchLibraryRG \
+     --location eastus2 --source https://github.com/YOUR_USERNAME/switch-library \
+     --branch main --app-location "/" --output-location "dist"
+   ```
+
+2. **Configure environment variables in Azure Portal:**
+   - `VITE_SUPABASE_URL`: Your Supabase project URL
+   - `VITE_SUPABASE_ANON_KEY`: Your Supabase anon key
+   - `VITE_THEGAMESDB_API_KEY`: Your TheGamesDB API key
+
+3. **Build settings:**
    - Build command: `npm run build`
-   - Publish directory: `dist`
-   - Node version: 20 or higher
+   - App location: `/`
+   - Output location: `dist`
 
-3. **Add environment variables:**
+#### Backend Deployment (Azure Functions)
+
+See the [backend-api/README.md](backend-api/README.md) for detailed instructions on deploying the Azure Functions backend.
+
+Quick deployment:
+```bash
+cd backend-api
+func azure functionapp publish switchlibrary-api
+```
+
+After deployment:
+1. Note the Azure Functions URL (e.g., `https://switchlibrary-api.azurewebsites.net`)
+2. Update the frontend to use the backend URL (or configure Azure Static Web Apps to proxy to the backend)
+3. Configure CORS in the Azure Function App to allow your frontend domain
+
+### Local Development
+
+#### Running the Full Stack Locally
+
+1. **Start the backend** (in one terminal):
+   ```bash
+   cd backend-api
+   dotnet run
    ```
-   VITE_SUPABASE_URL=https://your-project.supabase.co
-   VITE_SUPABASE_ANON_KEY=your-anon-key
-   VITE_THEGAMESDB_API_KEY=your-api-key
+   The backend will run on `http://localhost:7071`
+
+2. **Start the frontend** (in another terminal):
+   ```bash
+   npm run dev
    ```
+   The frontend will run on `http://localhost:5173` and proxy API requests to the backend
 
-4. **Deploy:**
-   - Netlify will automatically deploy on push to `main`
-   - The `netlify.toml` configuration includes serverless functions for API proxying
+### Alternative: GitHub Pages (Static Only)
 
-### Alternative: GitHub Pages
-
-⚠️ **Note:** GitHub Pages only supports static hosting and cannot proxy API requests. Game search features will not work due to CORS restrictions.
+⚠️ **Note:** GitHub Pages only supports static hosting and cannot proxy API requests. Game search features will not work due to CORS restrictions without a separate backend.
 
 To deploy to GitHub Pages:
 
@@ -136,15 +167,6 @@ To deploy to GitHub Pages:
    ```
 
 2. The GitHub Actions workflow will automatically deploy on push to `main`.
-
-### Other Static Hosts
-
-You can also deploy to:
-- **Vercel** - Supports serverless functions (similar to Netlify)
-- **Railway** - Supports full-stack deployments
-- **Cloudflare Pages** - Supports Workers for API proxying
-
-For any static-only hosting, you'll need to set up a separate backend or API proxy to avoid CORS issues with TheGamesDB API.
 
 ## Demo Mode
 
