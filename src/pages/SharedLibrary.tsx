@@ -5,6 +5,8 @@ import { useSEO } from '../hooks/useSEO';
 import type { GameEntry } from '../types';
 import { loadSharedGames, getSharedUserProfile, getShareProfile, isFriend } from '../services/database';
 import { AddFriendModal } from '../components/AddFriendModal';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faArrowsLeftRight } from '@fortawesome/free-solid-svg-icons';
 import './SharedLibrary.css';
 
 type SortOption = 'title_asc' | 'title_desc' | 'added_newest' | 'platform' | 'format';
@@ -169,7 +171,7 @@ export function SharedLibrary() {
         <div className="shared-actions">
           {user && myShareId && myShareId !== shareId && (
             <Link to={`/compare/${myShareId}/${shareId}`} className="btn-compare">
-              📊 Compare Libraries
+              <FontAwesomeIcon icon={faArrowsLeftRight} /> Compare Libraries
             </Link>
           )}
           {user && shareId && myShareId !== shareId && (
