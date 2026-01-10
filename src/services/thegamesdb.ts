@@ -290,12 +290,38 @@ export async function searchGames(
     
     const games = data.data?.games || [];
     
+    // Extract base_url for constructing image URLs
+    const baseUrl = data.include?.boxart?.base_url;
+    const boxartData = data.include?.boxart?.data || {};
+    
+    // Enhance games with constructed boxart URLs
+    const gamesWithBoxart = games.map((game: TheGamesDBGame) => {
+      const gameBoxart = boxartData[game.id];
+      if (baseUrl && gameBoxart && gameBoxart.length > 0) {
+        // Find front boxart
+        const frontBoxart = gameBoxart.find((img: TheGamesDBImage) => img.type === 'boxart' && img.side === 'front');
+        if (frontBoxart && frontBoxart.filename) {
+          game.boxart = {
+            filename: frontBoxart.filename,
+            original: `${baseUrl.original}${frontBoxart.filename}`,
+            small: `${baseUrl.small}${frontBoxart.filename}`,
+            thumb: `${baseUrl.thumb}${frontBoxart.filename}`,
+            cropped_center_thumb: `${baseUrl.cropped_center_thumb}${frontBoxart.filename}`,
+            medium: `${baseUrl.medium}${frontBoxart.filename}`,
+            large: `${baseUrl.large}${frontBoxart.filename}`,
+          };
+        }
+      }
+      return game;
+    });
+    
     const result: TheGamesDBSearchResult = {
-      count: games.length,
-      games,
+      count: gamesWithBoxart.length,
+      games: gamesWithBoxart,
       debugUrl: url,
       remaining_monthly_allowance: data.remaining_monthly_allowance,
       extra_allowance: data.extra_allowance,
+      base_url: baseUrl,
     };
     
     // Cache the result
@@ -344,6 +370,28 @@ export async function getGameById(gameId: number): Promise<TheGamesDBGame | null
     } else if (games && games[gameId]) {
       // Fallback: if games is an object keyed by ID
       game = games[gameId];
+    }
+    
+    // Construct boxart URLs if available
+    if (game) {
+      const baseUrl = data.include?.boxart?.base_url;
+      const boxartData = data.include?.boxart?.data?.[gameId];
+      
+      if (baseUrl && boxartData && boxartData.length > 0) {
+        // Find front boxart
+        const frontBoxart = boxartData.find((img: TheGamesDBImage) => img.type === 'boxart' && img.side === 'front');
+        if (frontBoxart && frontBoxart.filename) {
+          game.boxart = {
+            filename: frontBoxart.filename,
+            original: `${baseUrl.original}${frontBoxart.filename}`,
+            small: `${baseUrl.small}${frontBoxart.filename}`,
+            thumb: `${baseUrl.thumb}${frontBoxart.filename}`,
+            cropped_center_thumb: `${baseUrl.cropped_center_thumb}${frontBoxart.filename}`,
+            medium: `${baseUrl.medium}${frontBoxart.filename}`,
+            large: `${baseUrl.large}${frontBoxart.filename}`,
+          };
+        }
+      }
     }
     
     // Cache the result

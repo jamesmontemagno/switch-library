@@ -1,0 +1,878 @@
+{
+    "code": 200,
+    "status": "Success",
+    "data": {
+        "count": 20,
+        "games": [
+            {
+                "id": 127346,
+                "game_title": "Mario & Luigi: L'épopée Fraternelle",
+                "release_date": "2024-11-07",
+                "platform": 4971,
+                "region_id": 6,
+                "country_id": 17,
+                "players": 1,
+                "overview": "All hands on deck for an island-hopping adventure starring Mario and Luigi!\r\n\r\nThe brothers return for a brand new adventure on the high seas! Set sail with Mario and Luigi on Shipshape Island (part ship, part island) and journey through the vast world of Concordia. Launch out of Shipshape’s cannon to visit, explore, and quest your way through islands that range from tropical rainforests to bustling cities.\r\n\r\nMeet new friends along the way, like Connie and Snoutlet (who's definitely not a pig), and encounter familiar faces from the Mushroom Kingdom like Peach and Bowser, who may help you on your journey!\r\n\r\nYou’ll have to rely on Mario and Luigi’s brotherly bond to succeed. Use Bros. Moves to get past obstacles while you explore, and powerful Bros. Attacks in a dynamic twist on turn-based combat. You’ll need every edge this 'brothership' will give you to save the day!",
+                "last_updated": "2024-07-01 19:38:47",
+                "rating": "Not Rated",
+                "coop": "No",
+                "youtube": "s5I3DcapElQ",
+                "os": null,
+                "processor": null,
+                "ram": null,
+                "hdd": null,
+                "video": null,
+                "sound": null,
+                "developers": null,
+                "genres": [
+                    1,
+                    2,
+                    4
+                ],
+                "publishers": [
+                    3
+                ],
+                "alternates": [
+                    "Mario & Luigi: Brothership"
+                ]
+            },
+            {
+                "id": 130998,
+                "game_title": "Mario & Luigi: Brothership",
+                "release_date": "2024-11-07",
+                "platform": 4971,
+                "region_id": 6,
+                "country_id": 9,
+                "players": 1,
+                "overview": "Alle an Deck für ein Inselreise-Abenteuer!\r\n\r\nKombiniere bei der Inselerkundung die Kräfte beider Brüder!\r\n\r\n- Als Brüderball schaffst du's durch jede Röhre!\r\n- Mit dem Kreisel-Ufo fliegst du durch die Luft!",
+                "last_updated": "2025-03-30 14:49:03",
+                "rating": "Not Rated",
+                "coop": "No",
+                "youtube": "",
+                "os": null,
+                "processor": null,
+                "ram": null,
+                "hdd": null,
+                "video": null,
+                "sound": null,
+                "developers": [
+                    221
+                ],
+                "genres": [
+                    1,
+                    2,
+                    4
+                ],
+                "publishers": [
+                    3
+                ],
+                "alternates": null
+            },
+            {
+                "id": 129888,
+                "game_title": "Mario & Luigi: Brothership",
+                "release_date": "2024-11-07",
+                "platform": 4971,
+                "region_id": 2,
+                "country_id": 50,
+                "players": 1,
+                "overview": "All hands on deck for an island-hopping adventure starring Mario and Luigi! The brothers return for a brand-new adventure on the high seas! When the Uni-Tree is destroyed and the world of Concordia is broken apart, Mario and Luigi must try to reconnect a fractured world, one island at a time.\r\n\r\nUnleash the mighty power of Mario and Luigi’s brotherly bond to overcome adversity and thwart foes!\r\nUse Bros. Moves to get past obstacles while you explore, and powerful Bros. Attacks in a dynamic twist on turn-based combat. You’ll need every edge this “brothership” will give you to save the day.",
+                "last_updated": "2024-11-30 23:51:02",
+                "rating": "E - Everyone",
+                "coop": "No",
+                "youtube": "",
+                "os": null,
+                "processor": null,
+                "ram": null,
+                "hdd": null,
+                "video": null,
+                "sound": null,
+                "developers": [
+                    221
+                ],
+                "genres": [
+                    1,
+                    2,
+                    4
+                ],
+                "publishers": [
+                    3
+                ],
+                "alternates": [
+                    "Mario and Luigi Brothership",
+                    "Mario and Luigi: Brothership"
+                ]
+            },
+            {
+                "id": 127334,
+                "game_title": "Mario & Luigi: Brothership",
+                "release_date": "2024-11-07",
+                "platform": 4971,
+                "region_id": 1,
+                "country_id": 50,
+                "players": 1,
+                "overview": "All hands on deck for an island-hopping adventure starring Mario and Luigi!\r\nThe brothers return for a brand new adventure on the high seas! Set sail with Mario and Luigi on Shipshape Island (part ship, part island) and journey through the vast world of Concordia. Launch out of Shipshape’s cannon to visit, explore, and quest your way through islands that range from tropical rainforests to bustling cities.\r\nMeet new friends along the way, like Connie and Snoutlet (who's definitely not a pig), and encounter familiar faces from the Mushroom Kingdom like Peach and Bowser, who may help you on your journey!\r\nYou’ll have to rely on Mario and Luigi’s brotherly bond to succeed. Use Bros. Moves to get past obstacles while you explore, and powerful Bros. Attacks in a dynamic twist on turn-based combat. You’ll need every edge this 'brothership' will give you to save the day!",
+                "last_updated": "2025-01-08 06:19:50",
+                "rating": "E - Everyone",
+                "coop": "No",
+                "youtube": "s5I3DcapElQ",
+                "os": null,
+                "processor": null,
+                "ram": null,
+                "hdd": null,
+                "video": null,
+                "sound": null,
+                "developers": [
+                    221
+                ],
+                "genres": [
+                    1,
+                    2,
+                    4
+                ],
+                "publishers": [
+                    3
+                ],
+                "alternates": [
+                    "Mario and Luigi: Brothership",
+                    "Mario and Luigi Brothership"
+                ]
+            },
+            {
+                "id": 130010,
+                "game_title": "Mario & Luigi: Conexión fraternal",
+                "release_date": "2024-11-07",
+                "platform": 4971,
+                "region_id": 6,
+                "country_id": 15,
+                "players": 1,
+                "overview": "¡El inimitable dúo de hermanos regresa para una nueva aventura en alta mar! Leva anclas en compañía de Mario y Luigi a bordo de la Isla Nao (mitad barco, mitad isla), y recorre el ancho mundo de Concordia. Usa el cañón de la Isla Nao para visitar, explorar y vivir mil peripecias en todo tipo de islas, que albergan desde selvas tropicales hasta bulliciosas ciudades. Conoce a nuevos amigos por el camino, como Conetta y Porcopolo (que no es un cerdo en absoluto), y crúzate con personajes conocidos del Reino Champiñón, como Peach y Bowser, que quizá te echen una mano durante la aventura.\r\n\r\nTendrás que recurrir al vínculo que une a Mario y Luigi para lograr la victoria. Usa las acciones tándem para salvar obstáculos mientras exploras, y ejecuta poderosos ataques tándem que les dan un toque muy dinámico a los clásicos combates por turnos. ¡Necesitarás sacarle todo el provecho a esta \"conexión fraternal\" para que los hermanos salgan airosos!",
+                "last_updated": null,
+                "rating": "E - Everyone",
+                "coop": "No",
+                "youtube": "https://www.youtube.com/watch?v=sqM6drB2qSY",
+                "os": null,
+                "processor": null,
+                "ram": null,
+                "hdd": null,
+                "video": null,
+                "sound": null,
+                "developers": [
+                    221
+                ],
+                "genres": [
+                    1,
+                    2,
+                    15
+                ],
+                "publishers": [
+                    3
+                ],
+                "alternates": null
+            },
+            {
+                "id": 65349,
+                "game_title": "Mario & Sonic at the Olympic Games Tokyo 2020",
+                "release_date": "2019-11-08",
+                "platform": 4971,
+                "region_id": 2,
+                "country_id": 0,
+                "players": 4,
+                "overview": "It’s party time, and everyone’s invited!\r\nTeam up with Mario, Sonic, and friends on Nintendo Switch in action-packed sporting events! Bring your best moves to the track, the gym, the ring, or the water in dozens of different party games everyone will enjoy.\r\n\r\nSkateboard, surf, and race your way to the top! With more than 30 events to master in this fun-filled Olympic Games contest, there are plenty of ways to prove your skills to your friends in multiplayer mode.\r\n\r\nThe team’s all here! Play as Mario, Sonic, or choose from a star-studded cast of colorful characters from your favorite games.\r\n\r\nDive into unique Dream Events that layer fantastical chaos with reality. Zip through a downhill obstacle course on your hoverboard, throwdown for territorial control with lightning-fast karate action, or smash the most targets inside a traditional Japanese manor!\r\n\r\nAnd you won’t want to miss an epic story mode that sends you to 1964 to compete in classic, retro 2D sports events.\r\n\r\nPlay any way you want on your Nintendo Switch. We’re talking motion and button controls, single and dual Joy-Con, single-player and multiplayer, local split-screen and online!",
+                "last_updated": "2023-10-23 13:25:10",
+                "rating": "E10+ - Everyone 10+",
+                "coop": "Yes",
+                "youtube": "https://youtu.be/_hDzyvQIJb0",
+                "os": null,
+                "processor": null,
+                "ram": null,
+                "hdd": null,
+                "video": null,
+                "sound": null,
+                "developers": [
+                    7549
+                ],
+                "genres": [
+                    11
+                ],
+                "publishers": [
+                    15
+                ],
+                "alternates": null
+            },
+            {
+                "id": 94809,
+                "game_title": "Mario & Sonic at the Olympic Games Tokyo 2020 (JP)",
+                "release_date": "2019-11-01",
+                "platform": 4971,
+                "region_id": 4,
+                "country_id": 28,
+                "players": 4,
+                "overview": "",
+                "last_updated": "2024-07-01 19:38:47",
+                "rating": "Not Rated",
+                "coop": "No",
+                "youtube": "",
+                "os": null,
+                "processor": null,
+                "ram": null,
+                "hdd": null,
+                "video": null,
+                "sound": null,
+                "developers": null,
+                "genres": [
+                    11
+                ],
+                "publishers": null,
+                "alternates": null
+            },
+            {
+                "id": 73806,
+                "game_title": "Mario + Rabbids & Starlink [Walmart Family Bundle]",
+                "release_date": "2019-11-20",
+                "platform": 4971,
+                "region_id": 0,
+                "country_id": 0,
+                "players": 2,
+                "overview": "Ubisoft is offering a special “Family Bundle” that contains a copy of Mario + Rabbids: Kingdom Battle and Starlink: Battle for Atlas at Walmart locations in the states.\r\n\r\nThe bundle contains two copies of the game in special Walmart and Ubisoft packaging",
+                "last_updated": "2021-03-15 08:34:18",
+                "rating": "E10+ - Everyone 10+",
+                "coop": "No",
+                "youtube": "",
+                "os": null,
+                "processor": null,
+                "ram": null,
+                "hdd": null,
+                "video": null,
+                "sound": null,
+                "developers": null,
+                "genres": [
+                    1,
+                    2,
+                    4,
+                    8
+                ],
+                "publishers": [
+                    4566
+                ],
+                "alternates": null
+            },
+            {
+                "id": 98159,
+                "game_title": "Mario + Rabbids Kindom Battle: Donkey Kong Adventure",
+                "release_date": "2018-06-26",
+                "platform": 4971,
+                "region_id": 1,
+                "country_id": 50,
+                "players": 2,
+                "overview": "Embark on an epic battle against Rabbid Kong, who takes over a mysterious island. Donkey Kong, Rabbid Peach, and a moody new Rabbid hero, Rabbid Cranky, team up on a journey across four brand-new environments. Discover a world of tactical gameplay and secrets to uncover. Experience a new story that expands the Mario + Rabbids® Kingdom Battle universe! Discover hours of new gameplay with more than a dozen battles and tactical adventures to experience. Witness a world of Donkey Kong references and the Rabbids’ irreverence that create offbeat situations and fun encounters. Chain together new moves, like swinging with dandelions or climbing high ground, to conquer your foes.",
+                "last_updated": "2024-07-01 19:38:47",
+                "rating": "E10+ - Everyone 10+",
+                "coop": "No",
+                "youtube": "",
+                "os": null,
+                "processor": null,
+                "ram": null,
+                "hdd": null,
+                "video": null,
+                "sound": null,
+                "developers": null,
+                "genres": [
+                    2,
+                    6
+                ],
+                "publishers": null,
+                "alternates": null
+            },
+            {
+                "id": 118846,
+                "game_title": "Mario + Rabbids Kingdom Battle",
+                "release_date": "2017-08-29",
+                "platform": 4971,
+                "region_id": 6,
+                "country_id": 4,
+                "players": 2,
+                "overview": "Two worlds collide in Mario + Rabbids Kingdom Battle! The Mushroom Kingdom has been torn apart by a mysterious vortex, transporting the chaotic Rabbids into this once-peaceful land. To restore order, Mario, Luigi, Princess Peach, and Yoshi must team up with a whole new crew: four Rabbids heroes! Together, they will battle with weapons through four worlds filled with combat, puzzles, and unpredictable enemies. Developed exclusively for the Nintendo Switch system, Mario + Rabbids Kingdom Battle is the best of the Mario and Rabbids franchises, combining all that you love about Mario's iconic universe with the side-splitting antics of the Rabbids.\r\n\r\n* Mario & Rabbids universes collide in this new adventure that combines the best of these two worlds!\r\n* Mario, Luigi, Princess Peach, and Yoshi join forces with four Rabbids heroes with their own unique personalities.\r\n* Easy to play, difficult to master. Solo and co-op turn-based combat is a fresh gameplay experience.\r\n* Battle with an arsenal of weapons through four new worlds filled with enemies, puzzles, and humorous fun!\r\n* Pick up and play anywhere exclusively on the Nintendo Switch system, even on the go.",
+                "last_updated": "2024-07-01 19:38:47",
+                "rating": "E - Everyone",
+                "coop": "Yes",
+                "youtube": "https://www.youtube.com/watch?v=Ok4_QXyo1ew",
+                "os": null,
+                "processor": null,
+                "ram": null,
+                "hdd": null,
+                "video": null,
+                "sound": null,
+                "developers": [
+                    9150
+                ],
+                "genres": [
+                    2,
+                    6
+                ],
+                "publishers": [
+                    4566
+                ],
+                "alternates": null
+            },
+            {
+                "id": 120761,
+                "game_title": "Mario + Rabbids Kingdom Battle Season Pass",
+                "release_date": "2017-11-17",
+                "platform": 4971,
+                "region_id": 9,
+                "country_id": 0,
+                "players": 2,
+                "overview": "",
+                "last_updated": "2024-07-01 19:38:47",
+                "rating": "Not Rated",
+                "coop": "No",
+                "youtube": "",
+                "os": null,
+                "processor": null,
+                "ram": null,
+                "hdd": null,
+                "video": null,
+                "sound": null,
+                "developers": [
+                    9150
+                ],
+                "genres": [
+                    2,
+                    27
+                ],
+                "publishers": [
+                    3,
+                    4566
+                ],
+                "alternates": null
+            },
+            {
+                "id": 87536,
+                "game_title": "Mario + Rabbids Sparks of Hope",
+                "release_date": "2022-10-20",
+                "platform": 4971,
+                "region_id": 1,
+                "country_id": 50,
+                "players": 1,
+                "overview": "Mario, Rabbid Peach and their friends are back for a new adventure of cosmic scale! Cursa, a mysterious and malevolent entity seeks out energy to further its nefarious plans, plunging the galaxy into chaos. Twisting the planets with its evil influence, it’s determined to consume all the energy of the Sparks, uncanny creatures formed by the fusion of Lumas & Rabbids, and destroy all who stand in its way. To bring order back to the galaxy and save the Sparks, Mario and friends team up with Rabbids heroes in a journey through mysterious and ever-surprising planets.\r\n\r\nJoin them on their adventure to take on Cursa and its dangerous minions while exploring a variety of planets filled with strange inhabitants and hilarious secrets. Outwit enemies in an innovative combat system mixing turn-based tactics and real time action. When this unlikely team combines forces with the Sparks’ immense energy, anything is possible…for better OR worse!\r\n\r\nOnly the most extravagant team of Heroes can rekindle the sparks of hope across the galaxy!\r\n\r\nMario + Rabbids Sparks of Hope will be available for Nintendo Switch on 2022.\r\n\r\nFeatures\r\n\r\nAN EXTRAVAGANT TEAM GALORE!\r\n\r\n- Meet Mario & the Rabbids Heroes and build your dream team with three Heroes among an eclectic roster of nine, including all-time favourites Rabbid Peach, Luigi, Rabbid Mario, Princess Peach and some unexpected newcomers.\r\n- Take advantage of Heroes’ special abilities to outwit even the strongest enemies in battle.\r\n\r\nTACTICAL MEETS ACTION\r\n\r\n- Use your Heroes’ skills in an innovative combat system, mixing turn-based tactics and real time action.\r\n- Take control of your Heroes to dash your enemies, team jump on your allies, hide behind cover…and make the best out of your turn.\r\n- Specialize your Heroes with the Sparks you choose. Use all the exotic powers and tools at your disposal to craft your own strategies and prevail against all odds.\r\n\r\nA GALACTIC ADVENTURE LIKE NO OTHER\r\n\r\n- Embark on an epic journey through the galaxy with your spaceship to help bring order back to the galaxy\r\n- Free each planet you cross from Cursa’s evil influence. Explore each one of them, meet their curious inhabitants to uncover mysterious secrets.\r\n- Face surprising bosses, familiar enemies from the Nintendo universe and exceptional Rabbids enemies in your cosmic quest!\r\n\r\nSAVE THE SPARKS TO EARN THEIR HELP & POWERS!\r\n\r\n- Rescue the uncanny Sparks, born when Lumas and Rabbids merged, before Cursa gets a hold of them!\r\n- Use their special abilities and powers in battle, ranging from energy barriers to fire rain to gain the upper hand in combat\r\n- Each Spark has a distinct power and personality. There are dozens of Sparks throughout the galaxy to locate, save and join your journey.\r\n\r\nMario + Rabbids Sparks of Hope is only the beginning to your cosmic adventure as more content will come in post launch.",
+                "last_updated": "2024-07-01 19:38:47",
+                "rating": "E10+ - Everyone 10+",
+                "coop": "No",
+                "youtube": "Ncv7Cav-rQo",
+                "os": null,
+                "processor": null,
+                "ram": null,
+                "hdd": null,
+                "video": null,
+                "sound": null,
+                "developers": [
+                    9150
+                ],
+                "genres": [
+                    6
+                ],
+                "publishers": [
+                    4566
+                ],
+                "alternates": null
+            },
+            {
+                "id": 107211,
+                "game_title": "Mario + Rabbids Sparks of Hope [Cosmic Edition]",
+                "release_date": "2022-10-20",
+                "platform": 4971,
+                "region_id": 1,
+                "country_id": 50,
+                "players": 1,
+                "overview": "The Cosmic Edition includes: base game plus the Galactic Prestige Collection, with 3 exclusive weapon skins for your team. Offer subject to change. Internet connection and Nintendo account required. May be available for purchase and/or as giveaway(s) separately at Ubisoft’s discretion at any time.\r\n\r\nBuild your dream team with three heroes from an eclectic roster of nine.\r\n\r\nTake down all new bosses, along with some familiar enemies throughout the galaxy.\r\n\r\nRescue the adorable Sparks throughout the galaxy, who provide distinct powers that will help you in battle.\r\n\r\nUnleash your heroes' skills but be strategic as you dash your enemies, team jump on your allies, and hide behind covers.",
+                "last_updated": "2024-07-01 19:38:47",
+                "rating": "E - Everyone",
+                "coop": "Yes",
+                "youtube": "",
+                "os": null,
+                "processor": null,
+                "ram": null,
+                "hdd": null,
+                "video": null,
+                "sound": null,
+                "developers": [
+                    9156
+                ],
+                "genres": [
+                    2,
+                    6
+                ],
+                "publishers": [
+                    4566
+                ],
+                "alternates": null
+            },
+            {
+                "id": 119810,
+                "game_title": "Mario + Rabbids Sparks of Hope [Cosmic Edition]",
+                "release_date": "2022-10-20",
+                "platform": 4971,
+                "region_id": 6,
+                "country_id": 27,
+                "players": 1,
+                "overview": "Mario, Rabbid Peach and their friends are back for a new adventure of cosmic scale! Cursa, a mysterious and malevolent entity seeks out energy to further its nefarious plans, plunging the galaxy into chaos. Twisting the planets with its evil influence, it’s determined to consume all the energy of the Sparks, uncanny creatures formed by the fusion of Lumas & Rabbids, and destroy all who stand in its way. To bring order back to the galaxy and save the Sparks, Mario and friends team up with Rabbids heroes in a journey through mysterious and ever-surprising planets.\r\nJoin them on their adventure to take on Cursa and its dangerous minions while exploring a variety of planets filled with strange inhabitants and hilarious secrets. Outwit enemies in an innovative combat system mixing turn-based tactics and real time action. When this unlikely team combines forces with the Sparks’ immense energy, anything is possible…for better OR worse!\r\nOnly the most extravagant team of Heroes can rekindle the sparks of hope across the galaxy!\r\n\r\nAN EXTRAVAGANT TEAM GALORE!\r\n- Meet Mario & the Rabbids Heroes and build your dream team with three Heroes among an eclectic roster of nine, including all-time favourites Rabbid Peach, Luigi, Rabbid Mario, Princess Peach and some unexpected newcomers.\r\n- Take advantage of Heroes’ special abilities to outwit even the strongest enemies in battle.\r\n\r\nTACTICAL MEETS ACTION\r\n- Use your Heroes’ skills in an innovative combat system, mixing turn-based tactics and real time action.\r\n- Take control of your Heroes to dash your enemies, team jump on your allies, hide behind cover…and make the best out of your turn.\r\n- Specialize your Heroes with the Sparks you choose. Use all the exotic powers and tools at your disposal to craft your own strategies and prevail against all odds.\r\n\r\nA GALACTIC ADVENTURE LIKE NO OTHER\r\n- Embark on an epic journey through the galaxy with your spaceship to help bring order back to the galaxy\r\n- Free each planet you cross from Cursa’s evil influence. Explore each one of them, meet their curious inhabitants to uncover mysterious secrets.\r\n- Face surprising bosses, familiar enemies from the Nintendo universe and exceptional Rabbids enemies in your cosmic quest!\r\n\r\nSAVE THE SPARKS TO EARN THEIR HELP & POWERS!\r\n- Rescue the uncanny Sparks, born when Lumas and Rabbids merged, before Cursa gets a hold of them!\r\n- Use their special abilities and powers in battle, ranging from energy barriers to fire rain to gain the upper hand in combat\r\n- Each Spark has a distinct power and personality. There are dozens of Sparks throughout the galaxy to locate, save and join your journey.\r\n\r\nMario + Rabbids Sparks of Hope is only the beginning to your cosmic adventure as more content will come in post launch.",
+                "last_updated": "2024-07-01 19:38:47",
+                "rating": "E10+ - Everyone 10+",
+                "coop": "No",
+                "youtube": "https://www.youtube.com/watch?v=VEAusFKB368&ab_channel=NintendoofAmerica",
+                "os": null,
+                "processor": null,
+                "ram": null,
+                "hdd": null,
+                "video": null,
+                "sound": null,
+                "developers": [
+                    9156
+                ],
+                "genres": [
+                    2,
+                    6
+                ],
+                "publishers": [
+                    3,
+                    4566
+                ],
+                "alternates": null
+            },
+            {
+                "id": 105568,
+                "game_title": "Mario + Rabbids Sparks of Hope [Gold Edition]",
+                "release_date": "2022-10-20",
+                "platform": 4971,
+                "region_id": 1,
+                "country_id": 50,
+                "players": 1,
+                "overview": "Mario, Rabbid Peach and their friends are back for a new adventure of cosmic scale! Cursa, a mysterious and malevolent entity seeks out energy to further its nefarious plans, plunging the galaxy into chaos. Twisting the planets with its evil influence, it’s determined to consume all the energy of the Sparks, uncanny creatures formed by the fusion of Lumas & Rabbids, and destroy all who stand in its way. To bring order back to the galaxy and save the Sparks, Mario and friends team up with Rabbids heroes in a journey through mysterious and ever-surprising planets.\r\n\r\nJoin them on their adventure to take on Cursa and its dangerous minions while exploring a variety of planets filled with strange inhabitants and hilarious secrets. Outwit enemies in an innovative combat system mixing turn-based tactics and real time action. When this unlikely team combines forces with the Sparks’ immense energy, anything is possible…for better OR worse!\r\n\r\nOnly the most extravagant team of Heroes can rekindle the sparks of hope across the galaxy!\r\n\r\nMario + Rabbids Sparks of Hope will be available for Nintendo Switch on 2022.\r\n\r\nFeatures\r\n\r\nAN EXTRAVAGANT TEAM GALORE!\r\n\r\n- Meet Mario & the Rabbids Heroes and build your dream team with three Heroes among an eclectic roster of nine, including all-time favourites Rabbid Peach, Luigi, Rabbid Mario, Princess Peach and some unexpected newcomers.\r\n- Take advantage of Heroes’ special abilities to outwit even the strongest enemies in battle.\r\n\r\nTACTICAL MEETS ACTION\r\n\r\n- Use your Heroes’ skills in an innovative combat system, mixing turn-based tactics and real time action.\r\n- Take control of your Heroes to dash your enemies, team jump on your allies, hide behind cover…and make the best out of your turn.\r\n- Specialize your Heroes with the Sparks you choose. Use all the exotic powers and tools at your disposal to craft your own strategies and prevail against all odds.\r\n\r\nA GALACTIC ADVENTURE LIKE NO OTHER\r\n\r\n- Embark on an epic journey through the galaxy with your spaceship to help bring order back to the galaxy\r\n- Free each planet you cross from Cursa’s evil influence. Explore each one of them, meet their curious inhabitants to uncover mysterious secrets.\r\n- Face surprising bosses, familiar enemies from the Nintendo universe and exceptional Rabbids enemies in your cosmic quest!\r\n\r\nSAVE THE SPARKS TO EARN THEIR HELP & POWERS!\r\n\r\n- Rescue the uncanny Sparks, born when Lumas and Rabbids merged, before Cursa gets a hold of them!\r\n- Use their special abilities and powers in battle, ranging from energy barriers to fire rain to gain the upper hand in combat\r\n- Each Spark has a distinct power and personality. There are dozens of Sparks throughout the galaxy to locate, save and join your journey.\r\n\r\nMario + Rabbids Sparks of Hope is only the beginning to your cosmic adventure as more content will come in post launch.",
+                "last_updated": "2024-07-01 19:38:47",
+                "rating": "E10+ - Everyone 10+",
+                "coop": "No",
+                "youtube": "https://youtube.com/watch?v=https://youtu.be/Ncv7Cav-rQo",
+                "os": null,
+                "processor": null,
+                "ram": null,
+                "hdd": null,
+                "video": null,
+                "sound": null,
+                "developers": [
+                    9150
+                ],
+                "genres": [
+                    2,
+                    6
+                ],
+                "publishers": [
+                    4566
+                ],
+                "alternates": null
+            },
+            {
+                "id": 111502,
+                "game_title": "Mario + Rabbids: Kingdom Battle",
+                "release_date": "1970-01-01",
+                "platform": 4971,
+                "region_id": 6,
+                "country_id": 0,
+                "players": 2,
+                "overview": "Two worlds collide in Mario + Rabbids Kingdom Battle! The Mushroom Kingdom has been torn apart by a mysterious vortex, transporting the chaotic Rabbids into this once-peaceful land. To restore order, Mario, Luigi, Princess Peach, and Yoshi must team up with a whole new crew: four Rabbids heroes! Together, they will battle with weapons through four worlds filled with combat, puzzles, and unpredictable enemies. Developed exclusively for the Nintendo Switch system, Mario + Rabbids Kingdom Battle is the best of the Mario and Rabbids franchises, combining all that you love about Mario's iconic universe with the side-splitting antics of the Rabbids.\r\n\r\n* Mario & Rabbids universes collide in this new adventure that combines the best of these two worlds!\r\n* Mario, Luigi, Princess Peach, and Yoshi join forces with four Rabbids heroes with their own unique personalities.\r\n* Easy to play, difficult to master. Solo and co-op turn-based combat is a fresh gameplay experience.\r\n* Battle with an arsenal of weapons through four new worlds filled with enemies, puzzles, and humorous fun!\r\n* Pick up and play anywhere exclusively on the Nintendo Switch system, even on the go.",
+                "last_updated": "2024-07-01 19:38:47",
+                "rating": "E10+ - Everyone 10+",
+                "coop": "Yes",
+                "youtube": "Ok4_QXyo1ew",
+                "os": null,
+                "processor": null,
+                "ram": null,
+                "hdd": null,
+                "video": null,
+                "sound": null,
+                "developers": null,
+                "genres": [
+                    2,
+                    6
+                ],
+                "publishers": null,
+                "alternates": null
+            },
+            {
+                "id": 46940,
+                "game_title": "Mario + Rabbids: Kingdom Battle",
+                "release_date": "2017-08-29",
+                "platform": 4971,
+                "region_id": 1,
+                "country_id": 0,
+                "players": 2,
+                "overview": "Two worlds collide in Mario + Rabbids Kingdom Battle! The Mushroom Kingdom has been torn apart by a mysterious vortex, transporting the chaotic Rabbids into this once-peaceful land. To restore order, Mario, Luigi, Princess Peach, and Yoshi must team up with a whole new crew: four Rabbids heroes! Together, they will battle with weapons through four worlds filled with combat, puzzles, and unpredictable enemies. Developed exclusively for the Nintendo Switch system, Mario + Rabbids Kingdom Battle is the best of the Mario and Rabbids franchises, combining all that you love about Mario's iconic universe with the side-splitting antics of the Rabbids.\r\n\r\n* Mario & Rabbids universes collide in this new adventure that combines the best of these two worlds!\r\n* Mario, Luigi, Princess Peach, and Yoshi join forces with four Rabbids heroes with their own unique personalities.\r\n* Easy to play, difficult to master. Solo and co-op turn-based combat is a fresh gameplay experience.\r\n* Battle with an arsenal of weapons through four new worlds filled with enemies, puzzles, and humorous fun!\r\n* Pick up and play anywhere exclusively on the Nintendo Switch system, even on the go.",
+                "last_updated": "2023-03-17 09:53:10",
+                "rating": "E10+ - Everyone 10+",
+                "coop": "Yes",
+                "youtube": "https://www.youtube.com/watch?v=Ok4_QXyo1ew",
+                "os": null,
+                "processor": null,
+                "ram": null,
+                "hdd": null,
+                "video": null,
+                "sound": null,
+                "developers": [
+                    9156
+                ],
+                "genres": [
+                    2,
+                    6
+                ],
+                "publishers": [
+                    4566
+                ],
+                "alternates": null
+            },
+            {
+                "id": 48740,
+                "game_title": "Mario + Rabbids: Kingdom Battle [Collector's Edition]",
+                "release_date": "2017-08-29",
+                "platform": 4971,
+                "region_id": 0,
+                "country_id": 0,
+                "players": 2,
+                "overview": "The Mushroom Kingdom has been torn apart by a mysterious vortex, transporting the Rabbids into the once-peaceful area, splintering this beloved land. To bring order back to the Kingdom, Mario, Luigi, Princess Peach, and Yoshi team up with Rabbids heroes in a journey through four different worlds.",
+                "last_updated": "2021-03-15 08:17:55",
+                "rating": "E10+ - Everyone 10+",
+                "coop": "Yes",
+                "youtube": "",
+                "os": null,
+                "processor": null,
+                "ram": null,
+                "hdd": null,
+                "video": null,
+                "sound": null,
+                "developers": [
+                    9150
+                ],
+                "genres": [
+                    1
+                ],
+                "publishers": [
+                    7
+                ],
+                "alternates": null
+            },
+            {
+                "id": 123428,
+                "game_title": "Mario + Rabbids: Kingdom Battle [Collector’s Edition]",
+                "release_date": "2017-08-29",
+                "platform": 4971,
+                "region_id": 6,
+                "country_id": 0,
+                "players": 2,
+                "overview": "Mario + Rabbids Kingdom Battle is an action-adventure turn-based tactics video game developed by Ubisoft Milan and Ubisoft Paris and published by Ubisoft for the Nintendo Switch video game console. The game is a crossover between Nintendo's Mario and Ubisoft's Rabbids franchise. In Kingdom Battle, the story follows Mario, his friends, and a group of Rabbids who try to save the Mushroom Kingdom from invading Rabbids that accidentally misused a powerful invention and began to wreak havoc.",
+                "last_updated": "2024-07-01 19:38:47",
+                "rating": "E10+ - Everyone 10+",
+                "coop": "Yes",
+                "youtube": "",
+                "os": null,
+                "processor": null,
+                "ram": null,
+                "hdd": null,
+                "video": null,
+                "sound": null,
+                "developers": [
+                    9147,
+                    9156
+                ],
+                "genres": [
+                    1,
+                    2,
+                    6
+                ],
+                "publishers": [
+                    4566
+                ],
+                "alternates": null
+            },
+            {
+                "id": 61302,
+                "game_title": "Mario + Rabbids: Kingdom Battle [Gold Edition]",
+                "release_date": "2018-11-17",
+                "platform": 4971,
+                "region_id": 6,
+                "country_id": 0,
+                "players": 2,
+                "overview": "Gold Edition includes game and season pass:\r\n\r\n8 new solo challenges + 5 co-op maps\r\n16 new weapons.\r\nAn exclusive world featuring a new hero, coming in early 2018.\r\nThe Mushroom Kingdom has been torn apart by a mysterious vortex, transporting the chaotic Rabbids into this once-peaceful land. To restore order, Mario, Luigi, Princess Peach, and Yoshi must team up with a whole new crew: four Rabbids heroes!\r\n\r\nTogether, they will battle with weapons through four worlds filled with combat, puzzles, and unpredictable enemies. Developed exclusively for the Nintendo Switch™ system, Mario + Rabbids Kingdom Battle is the best of the Mario and Rabbids franchises, combining all that you love about Mario's iconic universe with the side-splitting antics of the Rabbids.",
+                "last_updated": "2023-03-02 19:20:53",
+                "rating": "Not Rated",
+                "coop": "Yes",
+                "youtube": "",
+                "os": null,
+                "processor": null,
+                "ram": null,
+                "hdd": null,
+                "video": null,
+                "sound": null,
+                "developers": [
+                    9150
+                ],
+                "genres": [
+                    6
+                ],
+                "publishers": [
+                    8305
+                ],
+                "alternates": null
+            }
+        ]
+    },
+    "include": {
+        "boxart": {
+            "base_url": {
+                "original": "https://cdn.thegamesdb.net/images/original/",
+                "small": "https://cdn.thegamesdb.net/images/small/",
+                "thumb": "https://cdn.thegamesdb.net/images/thumb/",
+                "cropped_center_thumb": "https://cdn.thegamesdb.net/images/cropped_center_thumb/",
+                "medium": "https://cdn.thegamesdb.net/images/medium/",
+                "large": "https://cdn.thegamesdb.net/images/large/"
+            },
+            "data": {
+                "46940": [
+                    {
+                        "id": 202270,
+                        "type": "boxart",
+                        "side": "back",
+                        "filename": "boxart/back/46940-1.jpg",
+                        "resolution": null
+                    },
+                    {
+                        "id": 264869,
+                        "type": "boxart",
+                        "side": "front",
+                        "filename": "boxart/front/46940-1.jpg",
+                        "resolution": null
+                    }
+                ],
+                "48740": [
+                    {
+                        "id": 125252,
+                        "type": "boxart",
+                        "side": "front",
+                        "filename": "boxart/front/48740-1.jpg",
+                        "resolution": "3012x3571"
+                    },
+                    {
+                        "id": 125253,
+                        "type": "boxart",
+                        "side": "back",
+                        "filename": "boxart/back/48740-1.jpg",
+                        "resolution": "3010x3507"
+                    }
+                ],
+                "61302": [
+                    {
+                        "id": 379984,
+                        "type": "boxart",
+                        "side": "back",
+                        "filename": "boxart/back/61302-1.jpg",
+                        "resolution": null
+                    },
+                    {
+                        "id": 379986,
+                        "type": "boxart",
+                        "side": "front",
+                        "filename": "boxart/front/61302-1.jpg",
+                        "resolution": null
+                    }
+                ],
+                "65349": [
+                    {
+                        "id": 255373,
+                        "type": "boxart",
+                        "side": "front",
+                        "filename": "boxart/front/65349-1.jpg",
+                        "resolution": null
+                    },
+                    {
+                        "id": 255374,
+                        "type": "boxart",
+                        "side": "back",
+                        "filename": "boxart/back/65349-1.jpg",
+                        "resolution": null
+                    }
+                ],
+                "73806": [
+                    {
+                        "id": 236605,
+                        "type": "boxart",
+                        "side": "front",
+                        "filename": "boxart/front/73806-1.jpg",
+                        "resolution": null
+                    }
+                ],
+                "87536": [
+                    {
+                        "id": 290486,
+                        "type": "boxart",
+                        "side": "front",
+                        "filename": "boxart/front/87536-1.jpg",
+                        "resolution": null
+                    },
+                    {
+                        "id": 459009,
+                        "type": "boxart",
+                        "side": "back",
+                        "filename": "boxart/back/87536-1.jpg",
+                        "resolution": null
+                    }
+                ],
+                "94809": [
+                    {
+                        "id": 319313,
+                        "type": "boxart",
+                        "side": "front",
+                        "filename": "boxart/front/94809-1.jpg",
+                        "resolution": null
+                    }
+                ],
+                "98159": [
+                    {
+                        "id": 353118,
+                        "type": "boxart",
+                        "side": "front",
+                        "filename": "boxart/front/98159-1.jpg",
+                        "resolution": null
+                    }
+                ],
+                "105568": [
+                    {
+                        "id": 362135,
+                        "type": "boxart",
+                        "side": "front",
+                        "filename": "boxart/front/105568-1.jpg",
+                        "resolution": null
+                    }
+                ],
+                "107211": [
+                    {
+                        "id": 369099,
+                        "type": "boxart",
+                        "side": "front",
+                        "filename": "boxart/front/107211-1.jpg",
+                        "resolution": null
+                    }
+                ],
+                "111502": [
+                    {
+                        "id": 382068,
+                        "type": "boxart",
+                        "side": "front",
+                        "filename": "boxart/front/111502-1.jpg",
+                        "resolution": null
+                    }
+                ],
+                "118846": [
+                    {
+                        "id": 406456,
+                        "type": "boxart",
+                        "side": "front",
+                        "filename": "boxart/front/118846-1.jpg",
+                        "resolution": null
+                    }
+                ],
+                "119810": [
+                    {
+                        "id": 410664,
+                        "type": "boxart",
+                        "side": "front",
+                        "filename": "boxart/front/119810-1.jpg",
+                        "resolution": null
+                    }
+                ],
+                "120761": [
+                    {
+                        "id": 415961,
+                        "type": "boxart",
+                        "side": "front",
+                        "filename": "boxart/front/120761-1.jpg",
+                        "resolution": null
+                    }
+                ],
+                "123428": [
+                    {
+                        "id": 428042,
+                        "type": "boxart",
+                        "side": "front",
+                        "filename": "boxart/front/123428-1.jpg",
+                        "resolution": null
+                    }
+                ],
+                "127334": [
+                    {
+                        "id": 441881,
+                        "type": "boxart",
+                        "side": "front",
+                        "filename": "boxart/front/127334-1.jpg",
+                        "resolution": null
+                    },
+                    {
+                        "id": 459006,
+                        "type": "boxart",
+                        "side": "back",
+                        "filename": "boxart/back/127334-1.jpg",
+                        "resolution": null
+                    }
+                ],
+                "127346": [
+                    {
+                        "id": 441882,
+                        "type": "boxart",
+                        "side": "front",
+                        "filename": "boxart/front/127346-1.jpg",
+                        "resolution": null
+                    }
+                ],
+                "129888": [
+                    {
+                        "id": 452905,
+                        "type": "boxart",
+                        "side": "front",
+                        "filename": "boxart/front/129888-1.jpg",
+                        "resolution": null
+                    }
+                ],
+                "130010": [
+                    {
+                        "id": 453495,
+                        "type": "boxart",
+                        "side": "front",
+                        "filename": "boxart/front/130010-1.jpg",
+                        "resolution": null
+                    }
+                ],
+                "130998": [
+                    {
+                        "id": 458638,
+                        "type": "boxart",
+                        "side": "front",
+                        "filename": "boxart/front/130998-1.jpg",
+                        "resolution": null
+                    }
+                ]
+            }
+        },
+        "platform": {
+            "4971": {
+                "id": 4971,
+                "name": "Nintendo Switch",
+                "alias": "nintendo-switch"
+            }
+        }
+    },
+    "pages": {
+        "previous": null,
+        "current": "https://api.thegamesdb.net/v1/Games/ByGameName?name=mario&fields=players%2Cpublishers%2Cgenres%2Coverview%2Clast_updated%2Crating%2Cplatform%2Ccoop%2Cyoutube%2Cos%2Cprocessor%2Cram%2Chdd%2Cvideo%2Csound%2Calternates&include=boxart%2Cplatform&filter%5Bplatform%5D=4971&apikey=510466cf6f16a422d1651bd59ae2f045671a0c54c5b9eae5c7d303fb049a6e41&page=1",
+        "next": "https://api.thegamesdb.net/v1/Games/ByGameName?name=mario&fields=players%2Cpublishers%2Cgenres%2Coverview%2Clast_updated%2Crating%2Cplatform%2Ccoop%2Cyoutube%2Cos%2Cprocessor%2Cram%2Chdd%2Cvideo%2Csound%2Calternates&include=boxart%2Cplatform&filter%5Bplatform%5D=4971&apikey=510466cf6f16a422d1651bd59ae2f045671a0c54c5b9eae5c7d303fb049a6e41&page=2"
+    },
+    "remaining_monthly_allowance": 998,
+    "extra_allowance": 0,
+    "allowance_refresh_timer": 2413544
+}
