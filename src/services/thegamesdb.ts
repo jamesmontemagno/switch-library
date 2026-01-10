@@ -569,6 +569,7 @@ export function mapIdsToNames(ids: number[] | undefined, lookup: Record<number, 
 
 // Region mappings (based on TheGamesDB region IDs)
 export const REGIONS: Record<number, string> = {
+  0: 'Global',
   1: 'North America',
   2: 'North America',
   3: 'Japan',
