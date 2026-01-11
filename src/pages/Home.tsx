@@ -89,7 +89,7 @@ export function Home() {
             <h3>Cloud Sync</h3>
             <p>
               Your library is saved to your account and accessible 
-              from any device. Works offline too with demo mode.
+              from any device.
             </p>
           </div>
         </div>
