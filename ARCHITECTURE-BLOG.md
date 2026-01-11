@@ -14,7 +14,7 @@ My Switch Library is a web app that lets you track your Nintendo Switch (and the
 - ✍️ Manual entry for those obscure indie titles
 - 📊 Multiple view modes (grid, list, compact)
 - 🔗 Share your collection and compare with friends
-- � Twitter-like follow/follower system with follow-back requests
+- 👥 Twitter-like follow/follower system (instant follows, no approval needed)
 - �💾 Dual-mode operation: full Supabase cloud sync OR localStorage fallback
 - 🔐 GitHub OAuth authentication (or email/password, or demo mode)
 
@@ -370,12 +370,11 @@ One of the most interesting features I built is the social system. Instead of tr
 
 **Following is instant** - When you visit someone's shared library, click "Follow" and boom, you're following them. No waiting for approval, no pending requests. Just instant connection.
 
-**Three-tab interface:**
+**Two-tab interface:**
 1. **Following** - People you follow (with "Follows you" badges if mutual)
 2. **Followers** - People who follow you
-3. **Requests** - Follow-back requests (when someone you follow asks you to follow them back)
 
-**Follow-back requests** - This is the clever bit. If someone follows you but you haven't followed them back, they can send a "follow-back request". You can accept (follow them back) or ignore it. If you ignore or don't respond within 30 days, the request flag is cleared but they still follow you.
+That's it. Simple, clean, and friction-free. Mutual follows emerge naturally when two people find each other's collections interesting.
 
 ### The Database Design
 
@@ -388,8 +387,6 @@ create table public.friend_lists (
   friend_share_id uuid references share_profiles(share_id),
   nickname text check (length(nickname) <= 50),
   status text default 'accepted' check (status in ('accepted')),
-  follow_back_requested boolean default false,
-  requested_at timestamp with time zone,
   added_at timestamp with time zone default now(),
   unique(user_id, friend_share_id)
 );
@@ -397,37 +394,17 @@ create table public.friend_lists (
 
 Key points:
 - **status** is always 'accepted' (following is instant)
-- **follow_back_requested** tracks optional requests
-- **requested_at** enables automatic 30-day expiration
 - **nickname** lets you label people however you want
+- **unique constraint** prevents duplicate follows
 
 ### Privacy Controls
 
 Users have granular control:
 - **Share toggle** - Enable/disable library sharing entirely
-- **Accept follow-back requests** - Allow/block follow-back requests (doesn't affect initial follows)
+- **Display name visibility** - Show/hide your display name on shared profiles
+- **Avatar visibility** - Show/hide your avatar on shared profiles
 
-Even when follow-back requests are disabled, people can still follow you. The toggle only controls whether they can request you to follow them back.
-
-### Automatic Cleanup
-
-A scheduled function clears follow-back requests older than 30 days:
-
-```sql
-CREATE FUNCTION cleanup_expired_follow_requests()
-RETURNS integer AS $$
-BEGIN
-  UPDATE friend_lists
-  SET follow_back_requested = false, requested_at = null
-  WHERE follow_back_requested = true
-  AND requested_at < now() - interval '30 days';
-  
-  RETURN ROW_COUNT;
-END;
-$$ LANGUAGE plpgsql;
-```
-
-This keeps the database clean without breaking follow relationships. The person still follows you, just no nagging request.
+When sharing is disabled, your library won't be discoverable, but existing followers can still see it (you can unfollow specific users to revoke access).
 
 ### Why This Model?
 
@@ -437,9 +414,9 @@ The Twitter model removes friction:
 - **Instant gratification** - Follow someone, see their library in your Following tab immediately
 - **No rejection anxiety** - Nobody has to "accept" or "reject" you
 - **Mutual follows emerge naturally** - If both people find each other interesting, they both follow
-- **Follow-back requests are optional** - Only use them if you want someone to follow you back
+- **No complex states** - Just following/followers, nothing to manage
 
-And the entire thing works in both Supabase mode and localStorage mode. The dual-mode pattern strikes again.
+Simplicity is a feature. The entire thing works in both Supabase mode and localStorage mode. The dual-mode pattern strikes again.
 
 ## What's Next?
 
