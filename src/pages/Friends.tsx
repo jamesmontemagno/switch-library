@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { usePreferences } from '../hooks/usePreferences';
 import { useSEO } from '../hooks/useSEO';
+import { logger } from '../services/logger';
 import type { FriendWithDetails, FollowerEntry } from '../types';
 import { 
   getFollowing, 
@@ -95,10 +96,10 @@ export function Friends() {
     fetchData();
   }, [fetchData]);
 
-  // DEBUG: Log the actual logged-in user
+  // Log the current logged-in user for debugging
   useEffect(() => {
     if (user) {
-      console.log('[DEBUG Friends] Logged in as user:', {
+      logger.info('Friends page loaded', {
         userId: user.id,
         displayName: user.displayName,
         email: user.email,

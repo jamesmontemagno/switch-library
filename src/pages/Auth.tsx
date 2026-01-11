@@ -117,7 +117,8 @@ export function Auth() {
           // Email confirmation is required
           setSuccess(
             'Account created successfully! ' +
-            'Please check your email inbox (and spam folder) for a confirmation link. ' +
+            'Please check your email inbox (and spam folder) for a confirmation email. ' +
+            'The email will be from "Supabase Auth <noreply@mail.app.supabase.io>" with the subject "Confirm your signup". ' +
             'You\'ll need to confirm your email address before you can sign in.'
           );
           setPassword('');
@@ -287,6 +288,22 @@ export function Auth() {
                   required
                   disabled={isLoading}
                 />
+              </div>
+            )}
+
+            {mode === 'signup' && (
+              <div className="auth-info-box" style={{
+                padding: '0.75rem',
+                backgroundColor: 'var(--surface-alt, rgba(59, 130, 246, 0.1))',
+                borderRadius: '0.5rem',
+                fontSize: '0.875rem',
+                color: 'var(--text-secondary, #6b7280)',
+                marginBottom: '1rem',
+              }}>
+                <strong style={{ display: 'block', marginBottom: '0.25rem', color: 'var(--text-primary)' }}>
+                  📧 Email Confirmation Required
+                </strong>
+                After signing up, you'll receive a confirmation email from <strong>Supabase Auth &lt;noreply@mail.app.supabase.io&gt;</strong> with the subject <strong>"Confirm your signup"</strong>. Please check your spam folder if you don't see it.
               </div>
             )}
 

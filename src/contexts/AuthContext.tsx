@@ -2,6 +2,7 @@ import { useReducer, useEffect, type ReactNode } from 'react';
 import type { User, AuthState } from '../types';
 import { AuthContext } from './AuthContextType';
 import { supabase, isSupabaseConfigured } from '../services/supabase';
+import { logger } from '../services/logger';
 
 const STORAGE_KEY = 'switch-library-auth';
 
@@ -22,18 +23,24 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
     case 'LOGIN_START':
       return { ...state, isLoading: true };
     case 'LOGIN_SUCCESS':
+      logger.setUser(action.payload.id);
+      logger.auth('User logged in', { userId: action.payload.id, login: action.payload.login });
       return {
         user: action.payload,
         isAuthenticated: true,
         isLoading: false,
       };
     case 'LOGIN_ERROR':
+      logger.setUser(null);
+      logger.auth('Login failed or user logged out');
       return {
         user: null,
         isAuthenticated: false,
         isLoading: false,
       };
     case 'LOGOUT':
+      logger.setUser(null);
+      logger.auth('User logged out');
       return {
         user: null,
         isAuthenticated: false,
@@ -97,6 +104,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           }
         } catch (error) {
           console.error('Failed to check Supabase auth:', error);
+          logger.error('Failed to check Supabase auth', error);
           dispatch({ type: 'LOGIN_ERROR' });
         }
       } else {
@@ -111,6 +119,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           }
         } catch (error) {
           console.error('Failed to check auth:', error);
+          logger.error('Failed to check localStorage auth', error);
           dispatch({ type: 'LOGIN_ERROR' });
         }
       }

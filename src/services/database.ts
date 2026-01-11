@@ -1,5 +1,6 @@
 import { supabase, isSupabaseConfigured } from './supabase';
 import type { GameEntry, ShareProfile, FriendEntry, FriendWithDetails, FollowerEntry } from '../types';
+import { logger } from './logger';
 
 const LOCAL_STORAGE_KEY = 'switch-library-games';
 const FRIENDS_STORAGE_KEY = 'switch-library-friends';
@@ -136,15 +137,28 @@ function mapEntryToSupabaseGame(entry: GameEntry): Record<string, unknown> {
 
 // Exported database service functions
 export async function loadGames(userId: string): Promise<GameEntry[]> {
+  logger.database('loadGames', 'games', { userId, mode: useSupabase ? 'supabase' : 'localStorage' });
   if (useSupabase) {
-    return loadGamesFromSupabase(userId);
+    const games = await loadGamesFromSupabase(userId);
+    logger.info('Games loaded from Supabase', { count: games.length, userId });
+    return games;
   }
-  return loadGamesFromLocalStorage(userId);
+  const games = loadGamesFromLocalStorage(userId);
+  logger.info('Games loaded from localStorage', { count: games.length, userId });
+  return games;
 }
 
 export async function saveGame(game: GameEntry, allGames?: GameEntry[]): Promise<GameEntry | null> {
+  logger.database('saveGame', 'games', { gameId: game.id, title: game.title, mode: useSupabase ? 'supabase' : 'localStorage' });
+  
   if (useSupabase) {
-    return saveGameToSupabase(game);
+    const result = await saveGameToSupabase(game);
+    if (result) {
+      logger.info('Game saved to Supabase', { gameId: result.id, title: result.title });
+    } else {
+      logger.error('Failed to save game to Supabase', undefined, { gameId: game.id, title: game.title });
+    }
+    return result;
   }
   
   // For localStorage, we need all games to save
@@ -154,15 +168,26 @@ export async function saveGame(game: GameEntry, allGames?: GameEntry[]): Promise
       ? allGames.map(g => g.id === game.id ? game : g)
       : [...allGames, game];
     saveGamesToLocalStorage(updatedGames.filter(g => g.userId === game.userId));
+    logger.info('Game saved to localStorage', { gameId: game.id, title: game.title, isUpdate: !!existing });
   }
   return game;
 }
 
 export async function deleteGame(gameId: string): Promise<boolean> {
+  logger.database('deleteGame', 'games', { gameId, mode: useSupabase ? 'supabase' : 'localStorage' });
+  
   if (useSupabase) {
-    return deleteGameFromSupabase(gameId);
+    const success = await deleteGameFromSupabase(gameId);
+    if (success) {
+      logger.info('Game deleted from Supabase', { gameId });
+    } else {
+      logger.error('Failed to delete game from Supabase', undefined, { gameId });
+    }
+    return success;
   }
+  
   deleteGameFromLocalStorage(gameId);
+  logger.info('Game deleted from localStorage', { gameId });
   return true;
 }
 
@@ -745,12 +770,12 @@ export async function isFollowing(userId: string, shareId: string): Promise<bool
 // Check if user accepts follow-back requests
 // Follow a user (instant, no approval needed)
 export async function followUser(userId: string, shareId: string, nickname?: string): Promise<FriendEntry | null> {
-  console.log('[DEBUG followUser] Called with:', { userId, shareId, nickname });
+  logger.database('followUser', 'friend_lists', { userId, shareId, nickname });
   
   // Check if already following
   const alreadyFollowing = await isFollowing(userId, shareId);
   if (alreadyFollowing) {
-    console.log('[DEBUG followUser] Already following this user');
+    logger.warn('Already following this user', { userId, shareId });
     return null;
   }
 
@@ -765,7 +790,7 @@ export async function followUser(userId: string, shareId: string, nickname?: str
 
   // Trim and validate nickname
   if (!finalNickname) {
-    console.error('[DEBUG followUser] Nickname is required');
+    logger.error('Nickname is required for followUser', undefined, { userId, shareId });
     return null;
   }
 
@@ -773,7 +798,7 @@ export async function followUser(userId: string, shareId: string, nickname?: str
   const now = new Date().toISOString();
 
   if (useSupabase) {
-    console.log('[DEBUG followUser] Attempting Supabase INSERT:', {
+    logger.debug('Inserting follow relationship into Supabase', {
       user_id: userId,
       friend_share_id: shareId,
       nickname: finalNickname,
@@ -791,16 +816,16 @@ export async function followUser(userId: string, shareId: string, nickname?: str
       .single();
 
     if (error) {
-      console.error('[DEBUG followUser] Supabase error:', error);
+      logger.error('Failed to follow user - Supabase error', error, { userId, shareId });
       return null;
     }
     
     if (!data) {
-      console.error('[DEBUG followUser] No data returned from insert');
+      logger.error('No data returned from follow insert', undefined, { userId, shareId });
       return null;
     }
 
-    console.log('[DEBUG followUser] Supabase SUCCESS, inserted data:', data);
+    logger.info('Successfully followed user', { followId: data.id, nickname: finalNickname });
     return mapSupabaseFriendToEntry(data as Record<string, unknown>);
   }
 
@@ -957,21 +982,20 @@ async function isFollowingShareId(userId: string, shareId: string): Promise<bool
 
 // Get people following you (Followers)
 export async function getFollowers(userId: string): Promise<FollowerEntry[]> {
-  console.log('[DEBUG getFollowers] Called with userId:', userId);
+  logger.database('getFollowers', 'friend_lists', { userId });
   
   // Get my share profile
   const myShareProfile = await getShareProfile(userId);
-  console.log('[DEBUG getFollowers] My share profile:', myShareProfile);
   
   if (!myShareProfile) {
-    console.log('[DEBUG getFollowers] No share profile found, returning empty');
+    logger.debug('No share profile found, no followers', { userId });
     return [];
   }
 
   let followerEntries: FriendEntry[] = [];
 
   if (useSupabase) {
-    console.log('[DEBUG getFollowers] Querying Supabase for friend_share_id:', myShareProfile.shareId);
+    logger.debug('Querying followers from Supabase', { myShareId: myShareProfile.shareId });
     
     // Get all entries where friend_share_id = my share ID
     const { data, error } = await supabase
@@ -980,15 +1004,14 @@ export async function getFollowers(userId: string): Promise<FollowerEntry[]> {
       .eq('friend_share_id', myShareProfile.shareId)
       .order('added_at', { ascending: false });
 
-    console.log('[DEBUG getFollowers] Supabase query result:', { data, error });
-
     if (error || !data) {
+      logger.error('Failed to load followers from Supabase', error, { userId, myShareId: myShareProfile.shareId });
       console.error('Failed to load followers from Supabase:', error);
       return [];
     }
 
     followerEntries = ((data as Record<string, unknown>[] | null) || []).map(mapSupabaseFriendToEntry);
-    console.log('[DEBUG getFollowers] Mapped follower entries:', followerEntries);
+    logger.info('Followers loaded from Supabase', { count: followerEntries.length });
   } else {
     // localStorage fallback - search all entries for ones pointing to my share ID
     try {
@@ -1018,32 +1041,30 @@ export async function getFollowers(userId: string): Promise<FollowerEntry[]> {
   }
 
   // Enrich with profile data
-  console.log('[DEBUG getFollowers] Starting enrichment for', followerEntries.length, 'followers');
+  logger.debug('Enriching followers with profile data', { followerCount: followerEntries.length });
   
   const enrichedFollowers = await Promise.all(
     followerEntries.map(async (follower, index) => {
-      console.log(`[DEBUG getFollowers] Enriching follower ${index + 1}:`, follower);
+      logger.debug('Enriching follower', { index: index + 1, followerId: follower.id, followerUserId: follower.userId });
       
       // Get the follower's share profile (so we can link to their library)
       const followerShareProfile = await getShareProfileByUserId(follower.userId);
-      console.log(`[DEBUG getFollowers] Follower ${index + 1} share profile:`, followerShareProfile);
       
       let profile: { displayName: string; avatarUrl: string } | null = null;
       let gameCount = 0;
       let followerShareId: string | null = null;
 
       if (followerShareProfile && followerShareProfile.enabled) {
-        console.log(`[DEBUG getFollowers] Follower ${index + 1} has enabled share profile, getting profile data`);
+        logger.debug('Follower has enabled sharing', { index: index + 1, shareId: followerShareProfile.shareId });
         profile = await getSharedUserProfile(followerShareProfile.shareId);
         const games = await loadSharedGames(followerShareProfile.shareId);
         gameCount = games.length;
         followerShareId = followerShareProfile.shareId;
-        console.log(`[DEBUG getFollowers] Follower ${index + 1} profile data:`, { profile, gameCount });
+        logger.debug('Follower profile loaded', { index: index + 1, gameCount });
       } else {
         // They don't have sharing enabled, try to get basic profile
-        console.log(`[DEBUG getFollowers] Follower ${index + 1} no share profile or disabled, getting basic profile`);
+        logger.debug('Follower sharing disabled, using basic profile', { index: index + 1 });
         profile = await getUserProfile(follower.userId);
-        console.log(`[DEBUG getFollowers] Follower ${index + 1} basic profile:`, profile);
       }
 
       // Check if I follow them back
@@ -1062,12 +1083,12 @@ export async function getFollowers(userId: string): Promise<FollowerEntry[]> {
         youFollowThem,
       };
       
-      console.log(`[DEBUG getFollowers] Follower ${index + 1} enriched result:`, enrichedFollower);
+      logger.debug('Follower enrichment complete', { index: index + 1, hasProfile: !!profile, gameCount, youFollowThem });
       return enrichedFollower;
     })
   );
 
-  console.log('[DEBUG getFollowers] Final enriched followers:', enrichedFollowers);
+  logger.info('All followers enriched', { totalCount: enrichedFollowers.length });
   return enrichedFollowers;
 }
 

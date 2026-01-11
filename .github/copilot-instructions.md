@@ -104,6 +104,38 @@ type GameStatus = 'Owned' | 'Wishlist' | 'Borrowed' | 'Lent' | 'Sold';
 
 **Critical**: These must match database constraints in [schema.sql](supabase/schema.sql). Don't add new values without migration.
 
+### Universal Logger ([src/services/logger.ts](src/services/logger.ts), [LOGGING-GUIDE.md](LOGGING-GUIDE.md))
+
+The app includes a conditional logger that only outputs for specific users in production:
+```typescript
+import { logger } from './services/logger';
+
+// Automatically initialized on user login/logout via AuthContext
+// Only logs when current user ID matches VITE_DEBUG_USER_ID env var
+
+logger.info('Games loaded', { count: games.length });
+logger.database('insert', 'games', { gameId, title });
+logger.apiUsage('TheGamesDB.searchGames', { query });
+logger.cache('hit', 'game:12345');
+logger.error('Failed to save', error, { context });
+```
+
+**Key Features**:
+- Zero performance impact when disabled (immediate return)
+- Automatic user tracking via AuthContext integration
+- Specialized methods: `auth()`, `database()`, `apiUsage()`, `cache()`, `navigation()`, `component()`
+- Colored console output with timestamps and context
+- Safe for production - only enabled for `VITE_DEBUG_USER_ID`
+
+**When to use**:
+- Add logging to all service functions (database, API calls)
+- Log component lifecycle events in complex components
+- Track cache hits/misses for performance debugging
+- Log authentication state changes
+- Record API usage to diagnose rate limiting
+
+**Don't log**: Passwords, API keys, tokens, or PII. See [LOGGING-GUIDE.md](LOGGING-GUIDE.md) for full documentation.
+
 ## Backend Patterns (Azure Functions)
 
 ### Function Structure
@@ -220,6 +252,7 @@ The project uses GitHub Actions for automated deployment to GitHub Pages. Key co
    - `VITE_SUPABASE_KEY` - Publishable or anon key
    - `VITE_API_BASE_URL` - Azure Functions URL (e.g., `https://switchlibrary-api.azurewebsites.net/api`)
    - `VITE_BASE_PATH` - Base path for routing (e.g., `/switch-library/`)
+   - `VITE_DEBUG_USER_ID` - (Optional) Enable logging for specific user ID
 
 2. **Build Process**:
    ```bash
@@ -265,10 +298,12 @@ func azure functionapp publish <function-app-name>
 | [src/contexts/AuthContext.tsx](src/contexts/AuthContext.tsx) | Dual-mode auth with GitHub OAuth/email/demo |
 | [src/services/database.ts](src/services/database.ts) | Supabase ↔ localStorage abstraction layer |
 | [src/services/thegamesdb.ts](src/services/thegamesdb.ts) | Frontend API client with multi-tier caching |
+| [src/services/logger.ts](src/services/logger.ts) | Universal conditional logger for debugging |
 | [backend-api/TheGamesDbProxy.cs](backend-api/TheGamesDbProxy.cs) | CORS proxy + background blob caching |
 | [backend-api/GetGameById.cs](backend-api/GetGameById.cs) | Blob-first lookup with API fallback |
 | [supabase/schema.sql](supabase/schema.sql) | Database schema with RLS policies |
 | [vite.config.ts](vite.config.ts) | Dev proxy configuration |
+| [LOGGING-GUIDE.md](LOGGING-GUIDE.md) | Complete logger documentation |
 
 ## Quick Command Reference
 

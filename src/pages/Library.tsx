@@ -6,6 +6,7 @@ import { useSEO } from '../hooks/useSEO';
 import type { GameEntry, Platform, ShareProfile } from '../types';
 import { loadGames, saveGame, deleteGame as deleteGameFromDb, getShareProfile, enableSharing, disableSharing, updateSharePrivacy, updateDisplayName, getUserProfile } from '../services/database';
 import { EditGameModal } from '../components/EditGameModal';
+import { logger } from '../services/logger';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faPenToSquare, faGear, faClipboard, faEye, faGamepad, faTrash, faCartShopping, faTrophy, faLink, faUser, faLock, faXmark, faMagnifyingGlass, faTableCells, faList, faGripLines } from '@fortawesome/free-solid-svg-icons';
 import './Library.css';
@@ -18,6 +19,8 @@ export function Library() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { preferences, updatePreferences } = usePreferences();
+  
+  logger.component('Library', 'mount');
   
   useSEO({
     title: 'My Library - My Switch Library',
@@ -66,6 +69,7 @@ export function Library() {
   // Load games on mount
   const fetchGames = useCallback(async () => {
     if (!user) return;
+    logger.info('Fetching library games', { userId: user.id });
     setIsLoading(true);
     try {
       const [userGames, userShareProfile, userProfile] = await Promise.all([
@@ -78,6 +82,10 @@ export function Library() {
       if (userProfile) {
         setDisplayName(userProfile.displayName);
       }
+      logger.info('Library data loaded', { 
+        gamesCount: userGames.length, 
+        hasShareProfile: !!userShareProfile 
+      });
     } catch (error) {
       console.error('Failed to load games:', error);
     } finally {

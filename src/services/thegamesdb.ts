@@ -1,6 +1,8 @@
 // TheGamesDB API Service
 // API Documentation: https://api.thegamesdb.net/
 
+import { logger } from './logger';
+
 // Always use proxy to avoid CORS issues in both development and production
 // Development: Proxy configured in vite.config.ts to http://localhost:7071
 // Production: Can be either relative path (integrated) or full Azure Functions URL
@@ -254,10 +256,12 @@ export async function searchGames(
   const cachedResult = getCachedSearch(cacheKey);
   if (cachedResult) {
     // Cache hit - no API call, no tracking needed
+    logger.cache('hit', `search:${cacheKey}`, { query, gameCount: cachedResult.count });
     return cachedResult;
   }
 
-  // Cache miss - will make API call, tracking will be done by caller
+  logger.cache('miss', `search:${cacheKey}`, { query });
+  logger.apiUsage('TheGamesDB.searchGames', { query, platformId, page });
   // API key is now added by the backend proxy
   // Request all available fields to get complete game information
   const params = new URLSearchParams({
@@ -280,6 +284,7 @@ export async function searchGames(
     const url = `${API_BASE_URL}/thegamesdb/Games/ByGameName?${params}`;
     const response = await fetch(url);
     if (!response.ok) {
+      logger.error('TheGamesDB API error', new Error(`Status ${response.status}`), { query, url });
       throw new Error(`TheGamesDB API error: ${response.status}`);
     }
     const data = await response.json();
@@ -287,6 +292,10 @@ export async function searchGames(
     // Store API allowance if available
     if (data.remaining_monthly_allowance !== undefined) {
       storeAllowance(data.remaining_monthly_allowance);
+      logger.info('API allowance updated', { 
+        remaining: data.remaining_monthly_allowance, 
+        extra: data.extra_allowance 
+      });
     }
     
     const games = data.data?.games || [];
@@ -327,9 +336,12 @@ export async function searchGames(
     
     // Cache the result
     setSearchCache(cacheKey, result);
+    logger.cache('set', `search:${cacheKey}`, { query, gameCount: result.count });
+    logger.info('Games search completed', { query, count: result.count, remaining: result.remaining_monthly_allowance });
     
     return result;
   } catch (error) {
+    logger.error('Failed to search games', error, { query });
     console.error('Failed to search games:', error);
     return { count: 0, games: [] };
   }
@@ -339,8 +351,12 @@ export async function getGameById(gameId: number): Promise<TheGamesDBGame | null
   // Check cache first
   const cachedGame = getCachedGame(gameId);
   if (cachedGame) {
+    logger.cache('hit', `game:${gameId}`, { gameId, title: cachedGame.game_title });
     return cachedGame;
   }
+
+  logger.cache('miss', `game:${gameId}`, { gameId });
+  logger.apiUsage('TheGamesDB.getGameById', { gameId });
 
   try {
     // Call the backend caching endpoint which handles blob storage and API calls
@@ -348,9 +364,11 @@ export async function getGameById(gameId: number): Promise<TheGamesDBGame | null
     
     if (!response.ok) {
       if (response.status === 404) {
+        logger.warn('Game not found', { gameId });
         console.log(`Game ${gameId} not found`);
         return null;
       }
+      logger.error('Backend API error', new Error(`Status ${response.status}`), { gameId });
       throw new Error(`Backend API error: ${response.status}`);
     }
     
@@ -398,10 +416,15 @@ export async function getGameById(gameId: number): Promise<TheGamesDBGame | null
     // Cache the result
     if (game) {
       setGameCache(gameId, game);
+      logger.cache('set', `game:${gameId}`, { gameId, title: game.game_title });
+      logger.info('Game loaded by ID', { gameId, title: game.game_title });
+    } else {
+      logger.warn('Game not found in response', { gameId });
     }
     
     return game;
   } catch (error) {
+    logger.error('Failed to get game by ID', error, { gameId });
     console.error('Failed to get game:', error);
     return null;
   }

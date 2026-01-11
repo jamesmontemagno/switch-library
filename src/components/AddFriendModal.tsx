@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { getSharedUserProfile, isFollowing, followUser } from '../services/database';
 import { useAuth } from '../hooks/useAuth';
+import { logger } from '../services/logger';
 import './AddGameModal.css';
 
 interface AddFriendModalProps {
@@ -108,7 +109,7 @@ export function AddFriendModal({ onClose, onAdd, prefilledShareId, prefilledNick
     setError('');
 
     try {
-      console.log('[DEBUG AddFriendModal] Calling followUser with:', {
+      logger.info('Following user', {
         userId: user.id,
         shareId: extractedShareId,
         nickname: trimmedNickname,
@@ -116,19 +117,18 @@ export function AddFriendModal({ onClose, onAdd, prefilledShareId, prefilledNick
       
       const result = await followUser(user.id, extractedShareId, trimmedNickname);
       
-      console.log('[DEBUG AddFriendModal] followUser returned:', result);
-      
       if (result) {
-        console.log('[DEBUG AddFriendModal] Success! Calling onAdd callback');
+        logger.info('Successfully followed user', { followId: result.id, nickname: result.nickname });
         await onAdd();
         onClose();
       } else {
-        console.error('[DEBUG AddFriendModal] followUser returned null/falsy');
+        logger.error('followUser returned null', undefined, { userId: user.id, shareId: extractedShareId });
         setError('Failed to follow user. Please try again.');
       }
     } catch (err) {
+      logger.error('Error following user', err, { userId: user.id, shareId: extractedShareId });
       setError('Failed to follow user. Please try again.');
-      console.error('[DEBUG AddFriendModal] Error following user:', err);
+      console.error('Error following user:', err);
     } finally {
       setIsLoading(false);
     }

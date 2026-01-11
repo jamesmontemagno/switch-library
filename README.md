@@ -86,9 +86,22 @@ Create a `.env` file with:
 ```env
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_KEY=your-publishable-key-or-anon-key
+
+# Optional: Enable debug logging for specific user
+# VITE_DEBUG_USER_ID=user-uuid-here
 ```
 
 > **Note:** Use a publishable key (format: `sb_publishable_...`) for better security, or an anon key for backward compatibility.
+
+#### Debug Logging
+
+The app includes a universal logger that can be enabled for specific users via the `VITE_DEBUG_USER_ID` environment variable. This is useful for debugging production issues without exposing logs for all users.
+
+See [LOGGING-GUIDE.md](LOGGING-GUIDE.md) for complete documentation on:
+- How to use the logger
+- Setting up debug logging
+- Examples and best practices
+- Security considerations
 
 ### 5. Configure Backend API Key
 
