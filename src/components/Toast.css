@@ -21,6 +21,9 @@
   border-left: 4px solid var(--primary);
   animation: slideIn 0.3s ease-out;
   min-width: 300px;
+  max-width: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .toast.success {
@@ -55,18 +58,25 @@
 .toast-content {
   flex: 1;
   color: var(--text-primary);
+  min-width: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .toast-title {
   font-weight: 600;
   margin-bottom: 0.25rem;
   font-size: 0.95rem;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .toast-message {
   font-size: 0.875rem;
   color: var(--text-secondary);
   margin: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .toast-close {

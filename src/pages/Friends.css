@@ -154,16 +154,15 @@
   line-height: 1.4;
   max-width: 500px;
   width: auto;
-  height: auto;
-  min-height: auto;
-  max-height: 60px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  white-space: nowrap;
   z-index: 1000;
   animation: slideDown 0.3s ease;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  text-align: center;
 }
 
 .toast-success {

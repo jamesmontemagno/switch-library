@@ -1001,7 +1001,9 @@
   max-width: 90%;
   width: auto;
   display: inline-block;
-  white-space: nowrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  text-align: center;
   z-index: 1001;
   animation: toast-slide-up 0.3s ease-out;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
