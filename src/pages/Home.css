@@ -27,15 +27,9 @@
 
 .hero-subtitle {
   font-size: 1.125rem;
-  color: #666;
+  color: var(--text-secondary);
   line-height: 1.6;
   margin: 0 0 2rem;
-}
-
-@media (prefers-color-scheme: dark) {
-  .hero-subtitle {
-    color: #aaa;
-  }
 }
 
 .hero-cta {
@@ -65,15 +59,9 @@
 
 .features {
   padding: 3rem 1rem;
-  background: #f8f9fa;
+  background: var(--bg-secondary);
   border-radius: 24px;
   margin: 2rem 0;
-}
-
-@media (prefers-color-scheme: dark) {
-  .features {
-    background: #1a1a1a;
-  }
 }
 
 .feature-grid {
@@ -85,17 +73,11 @@
 }
 
 .feature-card {
-  background: white;
+  background: var(--card-bg);
   padding: 1.5rem;
   border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px var(--card-shadow);
   text-align: left;
-}
-
-@media (prefers-color-scheme: dark) {
-  .feature-card {
-    background: #2a2a2a;
-  }
 }
 
 .feature-icon {
@@ -111,15 +93,9 @@
 
 .feature-card p {
   margin: 0;
-  color: #666;
+  color: var(--text-secondary);
   font-size: 0.9375rem;
   line-height: 1.5;
-}
-
-@media (prefers-color-scheme: dark) {
-  .feature-card p {
-    color: #aaa;
-  }
 }
 
 .platforms {
@@ -172,14 +148,12 @@
   color: white;
 }
 
-@media (prefers-color-scheme: dark) {
-  .platform-badge::before {
-    background: linear-gradient(145deg, #2a2a2a, #1f1f1f);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  }
+:root[data-theme="dark"] .platform-badge::before {
+  background: linear-gradient(145deg, #2a2a2a, #1f1f1f);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
 
-  .platform-badge.switch2 {
-    background: #333;
-    border: 1px solid #444;
-  }
+:root[data-theme="dark"] .platform-badge.switch2 {
+  background: var(--bg-hover);
+  border: 1px solid var(--border-color);
 }

@@ -6,23 +6,13 @@
 .segmented-control {
   display: inline-flex;
   gap: 4px;
-  --control-bg: #f5f5f5;
+  --control-bg: var(--bg-tertiary);
   --control-active-bg: linear-gradient(135deg, #e60012 0%, #b8000e 100%);
   --control-active-color: white;
-  --control-hover-bg: rgba(230, 0, 18, 0.05);
-  --control-hover-color: #e60012;
-  --control-inactive-color: #666;
-  --control-border-color: #e0e0e0;
-}
-
-@media (prefers-color-scheme: dark) {
-  .segmented-control {
-    --control-bg: #1a1a1a;
-    --control-hover-bg: rgba(230, 0, 18, 0.15);
-    --control-hover-color: #ff4444;
-    --control-inactive-color: #aaa;
-    --control-border-color: #444;
-  }
+  --control-hover-bg: var(--primary-light);
+  --control-hover-color: var(--primary);
+  --control-inactive-color: var(--text-secondary);
+  --control-border-color: var(--border-color);
 }
 
 /* Base button styles */
@@ -80,10 +70,8 @@
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-@media (prefers-color-scheme: dark) {
-  .segmented-control--default {
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
-  }
+:root[data-theme="dark"] .segmented-control--default {
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 /* Tabs variant - underlined tabs style */

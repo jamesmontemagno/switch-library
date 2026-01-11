@@ -283,10 +283,9 @@ export function Friends() {
             { value: 'followers', label: 'Followers', icon: <FontAwesomeIcon icon={faUsers} />, count: followers.length },
           ]}
           value={activeTab}
-          onChange={setActiveTab}
+          onChange={(value) => setActiveTab(value as TabType)}
           ariaLabel="Friends tabs"
-          variant="tabs"
-          fullWidth
+          variant="default"
         />
       </div>
 

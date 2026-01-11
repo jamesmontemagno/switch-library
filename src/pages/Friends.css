@@ -364,36 +364,34 @@
 }
 
 .filter-select option:checked {
-  background: #e60012;
+  background: var(--primary);
   color: white;
   font-weight: 600;
 }
 
-@media (prefers-color-scheme: dark) {
-  .filter-select {
-    background: #2a2a2a;
-    border-color: #555;
-    color: #ffffff;
-  }
-  
-  .filter-select:hover {
-    background: #333;
-    border-color: #666;
-  }
-  
-  .filter-select:focus {
-    background: #333;
-  }
-  
-  .filter-select option {
-    background: #2a2a2a;
-    color: #ffffff;
-  }
-  
-  .filter-select option:checked {
-    background: #e60012;
-    color: white;
-  }
+:root[data-theme="dark"] .filter-select {
+  background: var(--input-bg);
+  border-color: var(--border-dark);
+  color: var(--text-primary);
+}
+
+:root[data-theme="dark"] .filter-select:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-dark);
+}
+
+:root[data-theme="dark"] .filter-select:focus {
+  background: var(--bg-hover);
+}
+
+:root[data-theme="dark"] .filter-select option {
+  background: var(--input-bg);
+  color: var(--text-primary);
+}
+
+:root[data-theme="dark"] .filter-select option:checked {
+  background: var(--primary);
+  color: white;
 }
 
 .view-toggle {
@@ -428,27 +426,27 @@
 }
 
 .view-btn:hover:not(.active) {
-  background: #e8e9eb;
-  border-color: #b0b0b0;
-  color: #000;
+  background: var(--bg-hover);
+  border-color: var(--border-dark);
+  color: var(--text-primary);
 }
 
-@media (prefers-color-scheme: dark) {
-  .view-btn {
-    background: #1a1a1a;
-    border-color: #555;
-    color: #e0e0e0;
-  }
-  .view-btn.active {
-    background: #e60012;
-    color: white;
-    border-color: #e60012;
-  }
-  .view-btn:hover:not(.active) {
-    background: #2a2a2a;
-    border-color: #666;
-    color: white;
-  }
+:root[data-theme="dark"] .view-btn {
+  background: var(--bg-secondary);
+  border-color: var(--border-dark);
+  color: var(--text-primary);
+}
+
+:root[data-theme="dark"] .view-btn.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+:root[data-theme="dark"] .view-btn:hover:not(.active) {
+  background: var(--bg-hover);
+  border-color: var(--border-dark);
+  color: var(--text-primary);
 }
 
 /* Friend Cards */
@@ -695,15 +693,12 @@
   opacity: 1;
 }
 
-/* Dark Mode */
-@media (prefers-color-scheme: dark) {
-  .friend-card {
-    background: var(--bg-tertiary, #2a2a2a);
-  }
-  
-  .friend-avatar {
-    border-color: var(--border-color-dark, #444);
-  }
+:root[data-theme="dark"] .friend-card {
+  background: var(--bg-tertiary);
+}
+
+:root[data-theme="dark"] .friend-avatar {
+  border-color: var(--border-color);
 }
 
 /* Responsive */

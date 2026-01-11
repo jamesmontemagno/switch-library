@@ -109,6 +109,67 @@ type GameStatus = 'Owned' | 'Wishlist' | 'Borrowed' | 'Lent' | 'Sold';
 
 **Critical**: These must match database constraints in [schema.sql](supabase/schema.sql). Don't add new values without migration.
 
+### CSS Theme System ([src/index.css](src/index.css), [src/hooks/usePreferences.ts](src/hooks/usePreferences.ts))
+
+The app uses a centralized CSS variable system for light/dark theme support:
+
+**Architecture**:
+- Theme controlled via `data-theme` attribute on `<html>` element (`light`, `dark`, or `system`)
+- [usePreferences](src/hooks/usePreferences.ts) hook manages theme state and persists to localStorage
+- CSS variables defined in [index.css](src/index.css) with three contexts:
+  1. `:root[data-theme="light"]` - Light theme values
+  2. `:root[data-theme="dark"]` - Dark theme values  
+  3. `@media (prefers-color-scheme: dark)` - System preference fallback (only in index.css)
+
+**Available CSS Variables**:
+```css
+/* Backgrounds */
+--bg-primary, --bg-secondary, --bg-tertiary, --bg-hover
+
+/* Text */
+--text-primary, --text-secondary, --text-muted
+
+/* Borders & Inputs */
+--border-color, --card-bg, --input-bg
+
+/* Brand Colors */
+--primary, --primary-hover, --accent, --accent-hover
+
+/* Status Colors */
+--error, --error-bg, --error-border
+--success, --success-bg, --success-border
+--info, --info-bg, --info-border
+
+/* Buttons */
+--btn-secondary-bg, --btn-secondary-hover
+
+/* Tags */
+--tag-switch-bg, --tag-switch-text
+--tag-switch2-bg, --tag-switch2-text
+--tag-physical-bg, --tag-physical-text
+--tag-digital-bg, --tag-digital-text
+```
+
+**When adding new styles**:
+```css
+/* ✅ DO: Use CSS variables */
+.my-component {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+/* ❌ DON'T: Use hardcoded colors or media queries in component CSS */
+.my-component {
+  background: #2a2a2a;  /* Bad - hardcoded */
+}
+@media (prefers-color-scheme: dark) {  /* Bad - won't respond to manual toggle */
+  .my-component { background: #333; }
+}
+```
+
+**Critical**: Never use `@media (prefers-color-scheme: dark)` in component CSS files. This only responds to OS preference, not the manual theme toggle. All dark mode styling should use CSS variables that automatically update based on `[data-theme]`.
+
 ### Universal Logger ([src/services/logger.ts](src/services/logger.ts), [LOGGING-GUIDE.md](LOGGING-GUIDE.md))
 
 The app includes a conditional logger that only outputs for specific users in production:

@@ -15,15 +15,83 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ==============================================
+   COMPREHENSIVE THEME SYSTEM
+   All theme variables defined in one place
+   ============================================== */
+
 /* Light theme (default) */
+:root,
 :root[data-theme="light"] {
   color-scheme: light;
+  
+  /* Background colors */
   --bg-primary: #ffffff;
   --bg-secondary: #f8f9fa;
   --bg-tertiary: #e9ecef;
+  --bg-hover: #f0f0f0;
+  --bg-tooltip: rgba(0, 0, 0, 0.9);
+  
+  /* Text colors */
   --text-primary: #213547;
   --text-secondary: #64748b;
+  --text-muted: #999999;
+  --text-inverse: #ffffff;
+  
+  /* Border colors */
   --border-color: #dee2e6;
+  --border: #dee2e6;
+  --border-light: #e0e0e0;
+  --border-dark: #d0d0d0;
+  
+  /* Primary brand colors (Nintendo Red) */
+  --primary: #e60012;
+  --primary-color: #e60012;
+  --primary-hover: #c4000f;
+  --primary-light: rgba(230, 0, 18, 0.1);
+  
+  /* Accent colors */
+  --accent: #e60012;
+  --accent-hover: #c4000f;
+  --accent-light: rgba(230, 0, 18, 0.1);
+  
+  /* Status colors */
+  --success: #4caf50;
+  --success-bg: #e8f5e9;
+  --success-text: #2d6a2d;
+  --success-border: #a5d6a7;
+  --error: #e60012;
+  --error-bg: #fff0f0;
+  --error-text: #c00000;
+  --error-border: #fcc;
+  --warning: #f59e0b;
+  --warning-bg: rgba(245, 158, 11, 0.15);
+  --info: #3b82f6;
+  --info-bg: rgba(59, 130, 246, 0.1);
+  --info-border: #d0e0ff;
+  
+  /* Button colors */
+  --btn-secondary-bg: #f0f0f0;
+  --btn-secondary-hover: #e0e0e0;
+  
+  /* Component-specific */
+  --card-bg: #ffffff;
+  --card-shadow: rgba(0, 0, 0, 0.08);
+  --card-shadow-hover: rgba(0, 0, 0, 0.12);
+  --modal-overlay: rgba(0, 0, 0, 0.5);
+  --input-bg: #ffffff;
+  --input-border: #e0e0e0;
+  --input-border-focus: #e60012;
+  
+  /* Tag colors - Light theme */
+  --tag-physical-bg: #e0f4e0;
+  --tag-physical-text: #2d6a2d;
+  --tag-digital-bg: #e0e8f4;
+  --tag-digital-text: #2d4a6a;
+  --tag-switch-bg: #e60012;
+  --tag-switch2-bg: #1a1a1a;
+  
+  /* Apply base colors */
   color: var(--text-primary);
   background-color: var(--bg-primary);
 }
@@ -31,40 +99,150 @@
 /* Dark theme */
 :root[data-theme="dark"] {
   color-scheme: dark;
+  
+  /* Background colors */
   --bg-primary: #121212;
   --bg-secondary: #1e1e1e;
   --bg-tertiary: #2d2d2d;
+  --bg-hover: #333333;
+  --bg-tooltip: rgba(0, 0, 0, 0.95);
+  
+  /* Text colors */
   --text-primary: rgba(255, 255, 255, 0.87);
   --text-secondary: rgba(255, 255, 255, 0.6);
+  --text-muted: #888888;
+  --text-inverse: #121212;
+  
+  /* Border colors */
   --border-color: #3f3f3f;
+  --border: #3f3f3f;
+  --border-light: #444444;
+  --border-dark: #555555;
+  
+  /* Primary brand colors (Nintendo Red - same in dark) */
+  --primary: #e60012;
+  --primary-color: #e60012;
+  --primary-hover: #ff1a2e;
+  --primary-light: rgba(230, 0, 18, 0.2);
+  
+  /* Accent colors */
+  --accent: #e60012;
+  --accent-hover: #ff1a2e;
+  --accent-light: rgba(230, 0, 18, 0.2);
+  
+  /* Status colors */
+  --success: #81c784;
+  --success-bg: #1a3a1a;
+  --success-text: #8fc78f;
+  --success-border: #2a5a2a;
+  --error: #ff6b6b;
+  --error-bg: #3a1a1a;
+  --error-text: #ff6b6b;
+  --error-border: #6a2020;
+  --warning: #fbbf24;
+  --warning-bg: rgba(251, 191, 36, 0.15);
+  --info: #60a5fa;
+  --info-bg: rgba(96, 165, 250, 0.15);
+  --info-border: #2a3a4a;
+  
+  /* Button colors */
+  --btn-secondary-bg: #444444;
+  --btn-secondary-hover: #555555;
+  
+  /* Component-specific */
+  --card-bg: #2a2a2a;
+  --card-shadow: rgba(0, 0, 0, 0.3);
+  --card-shadow-hover: rgba(0, 0, 0, 0.4);
+  --modal-overlay: rgba(0, 0, 0, 0.7);
+  --input-bg: #2a2a2a;
+  --input-border: #444444;
+  --input-border-focus: #e60012;
+  
+  /* Tag colors - Dark theme */
+  --tag-physical-bg: #1a3a1a;
+  --tag-physical-text: #8fc78f;
+  --tag-digital-bg: #1a2a3a;
+  --tag-digital-text: #8fa7c7;
+  --tag-switch-bg: #e60012;
+  --tag-switch2-bg: #444444;
+  
+  /* Apply base colors */
   color: var(--text-primary);
   background-color: var(--bg-primary);
 }
 
-/* System theme - matches OS preference */
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme]) {
-    color-scheme: light;
-    --bg-primary: #ffffff;
-    --bg-secondary: #f8f9fa;
-    --bg-tertiary: #e9ecef;
-    --text-primary: #213547;
-    --text-secondary: #64748b;
-    --border-color: #dee2e6;
-    color: var(--text-primary);
-    background-color: var(--bg-primary);
-  }
-}
-
+/* System theme - matches OS preference when no explicit theme is set */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) {
     color-scheme: dark;
+    
+    /* Background colors */
     --bg-primary: #121212;
     --bg-secondary: #1e1e1e;
     --bg-tertiary: #2d2d2d;
+    --bg-hover: #333333;
+    --bg-tooltip: rgba(0, 0, 0, 0.95);
+    
+    /* Text colors */
     --text-primary: rgba(255, 255, 255, 0.87);
     --text-secondary: rgba(255, 255, 255, 0.6);
+    --text-muted: #888888;
+    --text-inverse: #121212;
+    
+    /* Border colors */
     --border-color: #3f3f3f;
+    --border: #3f3f3f;
+    --border-light: #444444;
+    --border-dark: #555555;
+    
+    /* Primary brand colors */
+    --primary: #e60012;
+    --primary-color: #e60012;
+    --primary-hover: #ff1a2e;
+    --primary-light: rgba(230, 0, 18, 0.2);
+    
+    /* Accent colors */
+    --accent: #e60012;
+    --accent-hover: #ff1a2e;
+    --accent-light: rgba(230, 0, 18, 0.2);
+    
+    /* Status colors */
+    --success: #81c784;
+    --success-bg: #1a3a1a;
+    --success-text: #8fc78f;
+    --success-border: #2a5a2a;
+    --error: #ff6b6b;
+    --error-bg: #3a1a1a;
+    --error-text: #ff6b6b;
+    --error-border: #6a2020;
+    --warning: #fbbf24;
+    --warning-bg: rgba(251, 191, 36, 0.15);
+    --info: #60a5fa;
+    --info-bg: rgba(96, 165, 250, 0.15);
+    --info-border: #2a3a4a;
+    
+    /* Button colors */
+    --btn-secondary-bg: #444444;
+    --btn-secondary-hover: #555555;
+    
+    /* Component-specific */
+    --card-bg: #2a2a2a;
+    --card-shadow: rgba(0, 0, 0, 0.3);
+    --card-shadow-hover: rgba(0, 0, 0, 0.4);
+    --modal-overlay: rgba(0, 0, 0, 0.7);
+    --input-bg: #2a2a2a;
+    --input-border: #444444;
+    --input-border-focus: #e60012;
+    
+    /* Tag colors - Dark theme */
+    --tag-physical-bg: #1a3a1a;
+    --tag-physical-text: #8fc78f;
+    --tag-digital-bg: #1a2a3a;
+    --tag-digital-text: #8fa7c7;
+    --tag-switch-bg: #e60012;
+    --tag-switch2-bg: #444444;
+    
+    /* Apply base colors */
     color: var(--text-primary);
     background-color: var(--bg-primary);
   }

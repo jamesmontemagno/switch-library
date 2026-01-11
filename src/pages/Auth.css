@@ -4,13 +4,7 @@
   align-items: center;
   justify-content: center;
   padding: 2rem 1rem;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-}
-
-@media (prefers-color-scheme: dark) {
-  .auth-page {
-    background: linear-gradient(135deg, #1a1a1a 0%, #121212 100%);
-  }
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
 }
 
 .auth-container {
@@ -35,28 +29,15 @@
 
 .auth-subtitle {
   font-size: 1rem;
-  color: #666;
+  color: var(--text-secondary);
   margin: 0;
 }
 
-@media (prefers-color-scheme: dark) {
-  .auth-subtitle {
-    color: #aaa;
-  }
-}
-
 .auth-card {
-  background: white;
+  background: var(--card-bg);
   border-radius: 16px;
   padding: 2rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-@media (prefers-color-scheme: dark) {
-  .auth-card {
-    background: #2a2a2a;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  }
+  box-shadow: 0 4px 12px var(--card-shadow);
 }
 
 .auth-toggle {
@@ -64,15 +45,9 @@
   grid-template-columns: 1fr 1fr;
   gap: 0.5rem;
   margin-bottom: 1.5rem;
-  background: #f8f9fa;
+  background: var(--bg-secondary);
   padding: 0.25rem;
   border-radius: 8px;
-}
-
-@media (prefers-color-scheme: dark) {
-  .auth-toggle {
-    background: #1a1a1a;
-  }
 }
 
 .auth-toggle-btn {
@@ -83,18 +58,12 @@
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s, color 0.2s;
-  color: #666;
-}
-
-@media (prefers-color-scheme: dark) {
-  .auth-toggle-btn {
-    color: #aaa;
-  }
+  color: var(--text-secondary);
 }
 
 .auth-toggle-btn:hover {
-  background: rgba(230, 0, 18, 0.1);
-  color: #e60012;
+  background: var(--primary-light);
+  color: var(--primary);
 }
 
 .auth-toggle-btn.active {
@@ -114,14 +83,8 @@
 
 .auth-mode-header p {
   font-size: 0.875rem;
-  color: #666;
+  color: var(--text-secondary);
   margin: 0;
-}
-
-@media (prefers-color-scheme: dark) {
-  .auth-mode-header p {
-    color: #aaa;
-  }
 }
 
 .auth-github-btn {
@@ -168,14 +131,7 @@
   content: '';
   flex: 1;
   height: 1px;
-  background: #e0e0e0;
-}
-
-@media (prefers-color-scheme: dark) {
-  .auth-divider::before,
-  .auth-divider::after {
-    background: #404040;
-  }
+  background: var(--border-color);
 }
 
 .auth-divider span {
@@ -196,31 +152,15 @@
 }
 
 .auth-message.error {
-  background: #fee;
-  color: #c00;
-  border: 1px solid #fcc;
-}
-
-@media (prefers-color-scheme: dark) {
-  .auth-message.error {
-    background: #4a1a1a;
-    color: #ff6b6b;
-    border: 1px solid #6a2020;
-  }
+  background: var(--error-bg);
+  color: var(--error);
+  border: 1px solid var(--error-border);
 }
 
 .auth-message.success {
-  background: #efe;
-  color: #060;
-  border: 1px solid #cfc;
-}
-
-@media (prefers-color-scheme: dark) {
-  .auth-message.success {
-    background: #1a4a1a;
-    color: #6bff6b;
-    border: 1px solid #206a20;
-  }
+  background: var(--success-bg);
+  color: var(--success);
+  border: 1px solid var(--success-border);
 }
 
 .form-group {
@@ -232,38 +172,24 @@
 .form-label {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #333;
-}
-
-@media (prefers-color-scheme: dark) {
-  .form-label {
-    color: #ddd;
-  }
+  color: var(--text-primary);
 }
 
 .form-input {
   padding: 0.75rem 1rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   font-size: 1rem;
   font-family: inherit;
   transition: border-color 0.2s, box-shadow 0.2s;
-  background: white;
-  color: #333;
-}
-
-@media (prefers-color-scheme: dark) {
-  .form-input {
-    background: #1a1a1a;
-    border-color: #404040;
-    color: #ddd;
-  }
+  background: var(--input-bg);
+  color: var(--text-primary);
 }
 
 .form-input:focus {
   outline: none;
-  border-color: #e60012;
-  box-shadow: 0 0 0 3px rgba(230, 0, 18, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
 }
 
 .form-input:disabled {
@@ -307,7 +233,7 @@
 .auth-link {
   background: none;
   border: none;
-  color: #e60012;
+  color: var(--primary);
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -317,10 +243,4 @@
 
 .auth-link:hover {
   text-decoration: underline;
-}
-
-@media (prefers-color-scheme: dark) {
-  .auth-link {
-    color: #ff4757;
-  }
 }
