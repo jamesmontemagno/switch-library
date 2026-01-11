@@ -294,17 +294,69 @@
 .filter-item input {
   padding: 0.5rem 0.75rem;
   font-size: 0.9375rem;
-  border: 1px solid #e0e0e0;
+  border: 2px solid #d0d0d0;
   border-radius: 8px;
-  background: white;
+  background: #f8f9fa;
+  color: #1a1a1a;
+  font-weight: 500;
   min-height: 44px;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.filter-item select:hover,
+.filter-item input:hover {
+  border-color: #b0b0b0;
+  background: #ffffff;
+}
+
+.filter-item select:focus,
+.filter-item input:focus {
+  border-color: #e60012;
+  box-shadow: 0 0 0 3px rgba(230, 0, 18, 0.1);
+  background: #ffffff;
+  outline: none;
+}
+
+.filter-item select option {
+  background: white;
+  color: #1a1a1a;
+  padding: 0.5rem;
+  font-weight: 500;
+}
+
+.filter-item select option:checked {
+  background: #e60012;
+  color: white;
+  font-weight: 600;
 }
 
 @media (prefers-color-scheme: dark) {
   .filter-item select,
   .filter-item input {
     background: #2a2a2a;
-    border-color: #444;
+    border-color: #555;
+    color: #ffffff;
+  }
+  
+  .filter-item select:hover,
+  .filter-item input:hover {
+    background: #333;
+    border-color: #666;
+  }
+  
+  .filter-item select:focus,
+  .filter-item input:focus {
+    background: #333;
+  }
+  
+  .filter-item select option {
+    background: #2a2a2a;
+    color: #ffffff;
+  }
+  
+  .filter-item select option:checked {
+    background: #e60012;
     color: white;
   }
 }
@@ -1167,14 +1219,63 @@
   width: 100%;
   padding: 0.75rem;
   font-size: 1rem;
-  border: 2px solid #e0e0e0;
+  border: 2px solid #d0d0d0;
   border-radius: 8px;
+  background: #f8f9fa;
+  color: #1a1a1a;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.quick-add-options .form-group select:hover {
+  border-color: #b0b0b0;
+  background: #ffffff;
+}
+
+.quick-add-options .form-group select:focus {
+  border-color: #e60012;
+  box-shadow: 0 0 0 3px rgba(230, 0, 18, 0.1);
+  background: #ffffff;
+  outline: none;
+}
+
+.quick-add-options .form-group select option {
+  background: white;
+  color: #1a1a1a;
+  padding: 0.5rem;
+  font-weight: 500;
+}
+
+.quick-add-options .form-group select option:checked {
+  background: #e60012;
+  color: white;
+  font-weight: 600;
 }
 
 @media (prefers-color-scheme: dark) {
   .quick-add-options .form-group select {
+    background: #2a2a2a;
+    border-color: #555;
+    color: #ffffff;
+  }
+  
+  .quick-add-options .form-group select:hover {
     background: #333;
-    border-color: #444;
+    border-color: #666;
+  }
+  
+  .quick-add-options .form-group select:focus {
+    background: #333;
+  }
+  
+  .quick-add-options .form-group select option {
+    background: #2a2a2a;
+    color: #ffffff;
+  }
+  
+  .quick-add-options .form-group select option:checked {
+    background: #e60012;
     color: white;
   }
 }

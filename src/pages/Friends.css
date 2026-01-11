@@ -278,12 +278,66 @@
 
 .filter-select {
   padding: 0.75rem 1rem;
-  border: 2px solid var(--border-color);
+  border: 2px solid #d0d0d0;
   border-radius: 0.5rem;
   font-size: 1rem;
-  background: var(--bg-secondary);
-  color: var(--text-primary);
+  background: #f8f9fa;
+  color: #1a1a1a;
+  font-weight: 500;
   cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-select:hover {
+  border-color: #b0b0b0;
+  background: #ffffff;
+}
+
+.filter-select:focus {
+  border-color: #e60012;
+  box-shadow: 0 0 0 3px rgba(230, 0, 18, 0.1);
+  background: #ffffff;
+  outline: none;
+}
+
+.filter-select option {
+  background: white;
+  color: #1a1a1a;
+  padding: 0.5rem;
+  font-weight: 500;
+}
+
+.filter-select option:checked {
+  background: #e60012;
+  color: white;
+  font-weight: 600;
+}
+
+@media (prefers-color-scheme: dark) {
+  .filter-select {
+    background: #2a2a2a;
+    border-color: #555;
+    color: #ffffff;
+  }
+  
+  .filter-select:hover {
+    background: #333;
+    border-color: #666;
+  }
+  
+  .filter-select:focus {
+    background: #333;
+  }
+  
+  .filter-select option {
+    background: #2a2a2a;
+    color: #ffffff;
+  }
+  
+  .filter-select option:checked {
+    background: #e60012;
+    color: white;
+  }
 }
 
 .view-toggle {
@@ -597,6 +651,15 @@
   
   .friends-toolbar {
     flex-direction: column;
+  }
+  
+  .search-input {
+    width: 100%;
+    min-width: 100%;
+  }
+  
+  .filter-select {
+    width: 100%;
   }
   
   .view-toggle {

@@ -654,13 +654,21 @@
 .filter-select {
   padding: 0.5rem 0.75rem;
   font-size: 0.9375rem;
-  border: 1px solid #e0e0e0;
+  border: 2px solid #d0d0d0;
   border-radius: 8px;
-  background: white;
+  background: #f8f9fa;
+  color: #1a1a1a;
+  font-weight: 500;
   cursor: pointer;
   outline: none;
   min-width: 120px;
   min-height: 44px;
+  transition: all 0.2s;
+}
+
+.filter-select:hover {
+  border-color: #b0b0b0;
+  background: #ffffff;
 }
 
 @media (max-width: 768px) {
@@ -671,6 +679,21 @@
 
 .filter-select:focus {
   border-color: #e60012;
+  box-shadow: 0 0 0 3px rgba(230, 0, 18, 0.1);
+  background: #ffffff;
+}
+
+.filter-select option {
+  background: white;
+  color: #1a1a1a;
+  padding: 0.5rem;
+  font-weight: 500;
+}
+
+.filter-select option:checked {
+  background: #e60012;
+  color: white;
+  font-weight: 600;
 }
 
 .sort-select {
@@ -686,7 +709,26 @@
 @media (prefers-color-scheme: dark) {
   .filter-select {
     background: #2a2a2a;
-    border-color: #444;
+    border-color: #555;
+    color: #ffffff;
+  }
+  
+  .filter-select:hover {
+    background: #333;
+    border-color: #666;
+  }
+  
+  .filter-select:focus {
+    background: #333;
+  }
+  
+  .filter-select option {
+    background: #2a2a2a;
+    color: #ffffff;
+  }
+  
+  .filter-select option:checked {
+    background: #e60012;
     color: white;
   }
 }
