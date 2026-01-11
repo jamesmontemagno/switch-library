@@ -130,10 +130,7 @@ export function Search() {
   // Filters
   const [platform, setPlatform] = useState<'all' | Platform>('all');
   const [region, setRegion] = useState<'all' | number>('all');
-  const [yearFrom, setYearFrom] = useState('');
-  const [yearTo, setYearTo] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('relevance');
-  const [onlyWithBoxart, setOnlyWithBoxart] = useState(false);
   
   // View
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -220,26 +217,6 @@ export function Search() {
       filtered = filtered.filter(r => r.region_id === region);
     }
     
-    if (onlyWithBoxart) {
-      filtered = filtered.filter(r => !!r.boxartUrl);
-    }
-    
-    if (yearFrom) {
-      filtered = filtered.filter(r => {
-        if (!r.releaseDate) return false;
-        const year = parseInt(r.releaseDate.split('-')[0]);
-        return year >= parseInt(yearFrom);
-      });
-    }
-    
-    if (yearTo) {
-      filtered = filtered.filter(r => {
-        if (!r.releaseDate) return false;
-        const year = parseInt(r.releaseDate.split('-')[0]);
-        return year <= parseInt(yearTo);
-      });
-    }
-    
     // Apply sorting
     const parseDate = (d?: string) => (d ? new Date(d).getTime() : 0);
     filtered.sort((a, b) => {
@@ -258,7 +235,7 @@ export function Search() {
     });
     
     return filtered;
-  }, [rawResults, region, yearFrom, yearTo, sortBy, onlyWithBoxart]);
+  }, [rawResults, region, sortBy]);
 
   const handleSearch = useCallback(async (page: number = 1) => {
     if (!query.trim() || !hasTheGamesDB) return;
@@ -653,30 +630,6 @@ export function Search() {
         </div>
         
         <div className="filter-item">
-          <label>Year From</label>
-          <input
-            type="number"
-            min="2017"
-            max="2030"
-            placeholder="From"
-            value={yearFrom}
-            onChange={(e) => setYearFrom(e.target.value)}
-          />
-        </div>
-        
-        <div className="filter-item">
-          <label>Year To</label>
-          <input
-            type="number"
-            min="2017"
-            max="2030"
-            placeholder="To"
-            value={yearTo}
-            onChange={(e) => setYearTo(e.target.value)}
-          />
-        </div>
-        
-        <div className="filter-item">
           <label>Sort By</label>
           <select value={sortBy} onChange={(e) => setSortBy(e.target.value as SortOption)}>
             <option value="relevance">Relevance</option>
@@ -686,15 +639,6 @@ export function Search() {
             <option value="title_desc">Title (Z-A)</option>
           </select>
         </div>
-        
-        <label className="filter-checkbox-item">
-          <input
-            type="checkbox"
-            checked={onlyWithBoxart}
-            onChange={(e) => setOnlyWithBoxart(e.target.checked)}
-          />
-          <span>With Boxart Only</span>
-        </label>
         
         <div className="view-toggle-desktop">
           <SegmentedControl

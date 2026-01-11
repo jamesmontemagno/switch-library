@@ -87,6 +87,11 @@
   background: linear-gradient(135deg, #553c9a 0%, #44337a 100%);
 }
 
+/* Tabs Container */
+.friends-tabs-container {
+  margin-bottom: 1.5rem;
+}
+
 /* Tabs */
 .friends-tabs {
   display: flex;
