@@ -308,7 +308,6 @@ function mapSupabaseShareToProfile(row: Record<string, unknown>): ShareProfile {
     enabled: row.enabled as boolean,
     showDisplayName: row.show_display_name as boolean ?? true,
     showAvatar: row.show_avatar as boolean ?? true,
-    acceptFollowRequests: row.accept_follow_requests as boolean ?? true,
     createdAt: row.created_at as string,
     revokedAt: row.revoked_at as string | undefined,
   };
@@ -362,7 +361,7 @@ export async function enableSharing(userId: string): Promise<ShareProfile | null
       return mapSupabaseShareToProfile(data);
     }
 
-    // Create new share profile with acceptFollowRequests defaulting to true
+    // Create new share profile
     const { data, error } = await supabase
       .from('share_profiles')
       .insert({ user_id: userId, enabled: true, accept_follow_requests: true })
@@ -395,7 +394,6 @@ export async function enableSharing(userId: string): Promise<ShareProfile | null
       enabled: true,
       showDisplayName: true,
       showAvatar: true,
-      acceptFollowRequests: true,
       createdAt: new Date().toISOString(),
     };
     profiles.push(newProfile);
@@ -473,7 +471,6 @@ export async function regenerateShareId(userId: string): Promise<ShareProfile | 
       enabled: true,
       showDisplayName: true,
       showAvatar: true,
-      acceptFollowRequests: true,
       createdAt: new Date().toISOString(),
     };
     filtered.push(newProfile);
@@ -579,7 +576,7 @@ export async function getSharedUserProfile(shareId: string): Promise<{ displayNa
 // Update share profile privacy settings
 export async function updateSharePrivacy(
   userId: string, 
-  settings: { showDisplayName?: boolean; showAvatar?: boolean; acceptFollowRequests?: boolean }
+  settings: { showDisplayName?: boolean; showAvatar?: boolean }
 ): Promise<ShareProfile | null> {
   if (useSupabase) {
     const updateData: Record<string, boolean> = {};
@@ -588,9 +585,6 @@ export async function updateSharePrivacy(
     }
     if (settings.showAvatar !== undefined) {
       updateData.show_avatar = settings.showAvatar;
-    }
-    if (settings.acceptFollowRequests !== undefined) {
-      updateData.accept_follow_requests = settings.acceptFollowRequests;
     }
 
     const { data, error } = await supabase
@@ -619,9 +613,6 @@ export async function updateSharePrivacy(
         }
         if (settings.showAvatar !== undefined) {
           profile.showAvatar = settings.showAvatar;
-        }
-        if (settings.acceptFollowRequests !== undefined) {
-          profile.acceptFollowRequests = settings.acceptFollowRequests;
         }
         localStorage.setItem(SHARE_STORAGE_KEY, JSON.stringify(profiles));
         return profile;
@@ -684,9 +675,7 @@ function mapSupabaseFriendToEntry(row: Record<string, unknown>): FriendEntry {
     userId: row.user_id as string,
     friendShareId: row.friend_share_id as string,
     nickname: row.nickname as string,
-    followBackRequested: (row.follow_back_requested as boolean) || false,
     addedAt: row.added_at as string,
-    requestedAt: row.requested_at as string | undefined,
   };
 }
 
@@ -698,11 +687,7 @@ function loadFriendsFromLocalStorage(userId: string): FriendEntry[] {
       const allFriends = JSON.parse(stored) as FriendEntry[];
       // Migrate old entries
       return allFriends
-        .filter(friend => friend.userId === userId)
-        .map(friend => ({
-          ...friend,
-          followBackRequested: friend.followBackRequested || false,
-        }));
+        .filter(friend => friend.userId === userId);
     }
   } catch (error) {
     console.error('Failed to load friends from localStorage:', error);
@@ -758,27 +743,6 @@ export async function isFollowing(userId: string, shareId: string): Promise<bool
 }
 
 // Check if user accepts follow-back requests
-export async function checkAcceptsFollowRequests(shareId: string): Promise<boolean> {
-  if (useSupabase) {
-    const { data, error } = await supabase
-      .from('share_profiles')
-      .select('accept_follow_requests')
-      .eq('share_id', shareId)
-      .eq('enabled', true)
-      .single();
-
-    if (error || !data) {
-      return false;
-    }
-    const profileData = data as Record<string, unknown>;
-    // Default to true if not set
-    return profileData.accept_follow_requests !== false;
-  }
-
-  // localStorage fallback - always accept in demo mode
-  return true;
-}
-
 // Follow a user (instant, no approval needed)
 export async function followUser(userId: string, shareId: string, nickname?: string): Promise<FriendEntry | null> {
   console.log('[DEBUG followUser] Called with:', { userId, shareId, nickname });
@@ -822,7 +786,6 @@ export async function followUser(userId: string, shareId: string, nickname?: str
         friend_share_id: shareId,
         nickname: finalNickname,
         status: 'accepted',
-        follow_back_requested: false,
       })
       .select()
       .single();
@@ -847,7 +810,6 @@ export async function followUser(userId: string, shareId: string, nickname?: str
     userId,
     friendShareId: shareId,
     nickname: finalNickname,
-    followBackRequested: false,
     addedAt: now,
   };
 
@@ -856,92 +818,6 @@ export async function followUser(userId: string, shareId: string, nickname?: str
   saveFriendsToLocalStorage(friends);
 
   return newFollow;
-}
-
-// Request someone to follow you back (sets flag on your existing follow entry)
-export async function requestFollowBack(userId: string, theirShareId: string): Promise<boolean> {
-  // First check if we're following them
-  const isCurrentlyFollowing = await isFollowing(userId, theirShareId);
-  if (!isCurrentlyFollowing) {
-    console.log('Must be following someone before requesting follow back');
-    return false;
-  }
-
-  // Check if they accept follow requests
-  const acceptsRequests = await checkAcceptsFollowRequests(theirShareId);
-  if (!acceptsRequests) {
-    console.log('User is not accepting follow-back requests');
-    return false;
-  }
-
-  const now = new Date().toISOString();
-
-  if (useSupabase) {
-    const { error } = await supabase
-      .from('friend_lists')
-      .update({ follow_back_requested: true, requested_at: now })
-      .eq('user_id', userId)
-      .eq('friend_share_id', theirShareId);
-
-    if (error) {
-      console.error('Failed to request follow back:', error);
-      return false;
-    }
-    return true;
-  }
-
-  // localStorage fallback
-  try {
-    const stored = localStorage.getItem(FRIENDS_STORAGE_KEY);
-    if (stored) {
-      const allFriends = JSON.parse(stored) as FriendEntry[];
-      const idx = allFriends.findIndex(f => f.userId === userId && f.friendShareId === theirShareId);
-      if (idx !== -1) {
-        allFriends[idx].followBackRequested = true;
-        allFriends[idx].requestedAt = now;
-        localStorage.setItem(FRIENDS_STORAGE_KEY, JSON.stringify(allFriends));
-        return true;
-      }
-    }
-  } catch (error) {
-    console.error('Failed to request follow back in localStorage:', error);
-  }
-  return false;
-}
-
-// Cancel a follow-back request you sent
-export async function cancelFollowBackRequest(userId: string, theirShareId: string): Promise<boolean> {
-  if (useSupabase) {
-    const { error } = await supabase
-      .from('friend_lists')
-      .update({ follow_back_requested: false, requested_at: null })
-      .eq('user_id', userId)
-      .eq('friend_share_id', theirShareId);
-
-    if (error) {
-      console.error('Failed to cancel follow back request:', error);
-      return false;
-    }
-    return true;
-  }
-
-  // localStorage fallback
-  try {
-    const stored = localStorage.getItem(FRIENDS_STORAGE_KEY);
-    if (stored) {
-      const allFriends = JSON.parse(stored) as FriendEntry[];
-      const idx = allFriends.findIndex(f => f.userId === userId && f.friendShareId === theirShareId);
-      if (idx !== -1) {
-        allFriends[idx].followBackRequested = false;
-        allFriends[idx].requestedAt = undefined;
-        localStorage.setItem(FRIENDS_STORAGE_KEY, JSON.stringify(allFriends));
-        return true;
-      }
-    }
-  } catch (error) {
-    console.error('Failed to cancel follow back request in localStorage:', error);
-  }
-  return false;
 }
 
 // Unfollow a user
@@ -1180,9 +1056,7 @@ export async function getFollowers(userId: string): Promise<FollowerEntry[]> {
         followerUserId: follower.userId,
         followerShareId,
         nickname: follower.nickname,
-        followBackRequested: follower.followBackRequested,
         addedAt: follower.addedAt,
-        requestedAt: follower.requestedAt,
         profile,
         gameCount,
         youFollowThem,
@@ -1195,20 +1069,6 @@ export async function getFollowers(userId: string): Promise<FollowerEntry[]> {
 
   console.log('[DEBUG getFollowers] Final enriched followers:', enrichedFollowers);
   return enrichedFollowers;
-}
-
-// Get follow-back requests (people following you who want you to follow them back)
-export async function getFollowBackRequests(userId: string): Promise<FollowerEntry[]> {
-  const followers = await getFollowers(userId);
-  
-  // Filter to only those with follow_back_requested = true and not expired
-  const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
-  
-  return followers.filter(f => {
-    if (!f.followBackRequested) return false;
-    if (!f.requestedAt) return true; // No timestamp means it's valid
-    return new Date(f.requestedAt).getTime() > thirtyDaysAgo;
-  });
 }
 
 // Get share profile by user ID (helper)
@@ -1245,7 +1105,6 @@ export const addFriend = followUser;
 export const removeFriend = unfollowUser;
 export const updateFriendNickname = updateFollowNickname;
 export const getFriends = getFollowing;
-export const checkAcceptsFriendRequests = checkAcceptsFollowRequests;
 
 // Delete user account and all associated data
 export async function deleteUserAccount(userId: string): Promise<boolean> {

@@ -8,26 +8,23 @@ import {
   getFollowing, 
   getFollowers,
   getShareProfile, 
-  getFollowBackRequests,
-  followUser,
-  requestFollowBack,
-  cancelFollowBackRequest
+  followUser
 } from '../services/database';
 import { AddFriendModal } from '../components/AddFriendModal';
 import { RemoveFriendModal } from '../components/RemoveFriendModal';
 import { EditNicknameModal } from '../components/EditNicknameModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUserGroup, faMagnifyingGlass, faEye, faPenToSquare, faArrowsLeftRight, faUserPlus, faRotate, faCheck, faTimes, faEnvelope, faUserCheck, faTableCells, faList, faGripLines, faUsers, faUserMinus, faReply } from '@fortawesome/free-solid-svg-icons';
+import { faUserGroup, faMagnifyingGlass, faEye, faPenToSquare, faArrowsLeftRight, faUserPlus, faRotate, faUserCheck, faTableCells, faList, faGripLines, faUsers, faUserMinus } from '@fortawesome/free-solid-svg-icons';
 import './Friends.css';
 
 type SortOption = 'added_desc' | 'added_asc' | 'nickname_asc' | 'nickname_desc' | 'games_desc' | 'games_asc';
 type ViewMode = 'grid' | 'list' | 'compact';
-type TabType = 'following' | 'followers' | 'requests';
+type TabType = 'following' | 'followers';
 
 export function Friends() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { preferences, updatePreferences, shareSettings } = usePreferences();
+  const { preferences, updatePreferences } = usePreferences();
   
   useSEO({
     title: 'Following - My Switch Library',
@@ -38,7 +35,6 @@ export function Friends() {
   const [activeTab, setActiveTab] = useState<TabType>('following');
   const [following, setFollowing] = useState<FriendWithDetails[]>([]);
   const [followers, setFollowers] = useState<FollowerEntry[]>([]);
-  const [followBackRequests, setFollowBackRequests] = useState<FollowerEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>(preferences.friends?.sortBy || 'added_desc');
@@ -80,22 +76,20 @@ export function Friends() {
     if (!user) return;
     setIsLoading(true);
     try {
-      const [userFollowing, userFollowers, shareProfile, requests] = await Promise.all([
+      const [userFollowing, userFollowers, shareProfile] = await Promise.all([
         getFollowing(user.id),
         getFollowers(user.id),
         getShareProfile(user.id),
-        shareSettings.acceptFollowRequests ? getFollowBackRequests(user.id) : Promise.resolve([]),
       ]);
       setFollowing(userFollowing);
       setFollowers(userFollowers);
       setUserShareId(shareProfile?.shareId || null);
-      setFollowBackRequests(requests);
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [user, shareSettings.acceptFollowRequests]);
+  }, [user]);
 
   useEffect(() => {
     fetchData();
@@ -149,75 +143,6 @@ export function Friends() {
     
     // Navigate to compare page
     navigate(`/compare/${userShareId}/${friend.friendShareId}`);
-  };
-
-  // Handle follow-back request: user decides to follow them back
-  const handleFollowBack = async (request: FollowerEntry) => {
-    if (!user || !request.followerShareId) return;
-    setProcessingAction(request.followerUserId);
-    
-    try {
-      // Follow them back (they follow us, now we follow them)
-      const success = await followUser(user.id, request.followerShareId, request.profile?.displayName || 'User');
-      if (success) {
-        showToast(`Now following ${request.profile?.displayName || 'user'}`, 'success');
-        // Refresh data
-        await fetchData();
-      } else {
-        showToast('Failed to follow back', 'error');
-      }
-    } catch (error) {
-      console.error('Failed to follow back:', error);
-      showToast('Failed to follow back', 'error');
-    } finally {
-      setProcessingAction(null);
-    }
-  };
-
-  // Handle ignoring a follow-back request (just clears the request flag)
-  const handleIgnoreRequest = async (request: FollowerEntry) => {
-    if (!user) return;
-    setProcessingAction(request.followerUserId);
-    
-    try {
-      // Find the friend entry ID for this request
-      // The cancelFollowBackRequest needs the entry ID where we are the friend_user_id
-      // and they are the user_id with follow_back_requested = true
-      const success = await cancelFollowBackRequest(request.followerUserId, user.id);
-      if (success) {
-        showToast('Request ignored', 'success');
-        // Remove from local state
-        setFollowBackRequests(prev => prev.filter(r => r.followerUserId !== request.followerUserId));
-      } else {
-        showToast('Failed to ignore request', 'error');
-      }
-    } catch (error) {
-      console.error('Failed to ignore request:', error);
-      showToast('Failed to ignore request', 'error');
-    } finally {
-      setProcessingAction(null);
-    }
-  };
-
-  // Handle requesting follow-back from someone you follow who doesn't follow you
-  const handleRequestFollowBack = async (person: FriendWithDetails) => {
-    if (!user) return;
-    setProcessingAction(person.id);
-    
-    try {
-      const success = await requestFollowBack(user.id, person.friendShareId);
-      if (success) {
-        showToast(`Requested ${person.nickname} to follow you back`, 'success');
-        await fetchData();
-      } else {
-        showToast('Failed to send follow-back request', 'error');
-      }
-    } catch (error) {
-      console.error('Failed to request follow back:', error);
-      showToast('Failed to send follow-back request', 'error');
-    } finally {
-      setProcessingAction(null);
-    }
   };
 
   // Handle following a follower back
@@ -295,18 +220,6 @@ export function Friends() {
         >
           <FontAwesomeIcon icon={faUsers} />
           Followers ({followers.length})
-        </button>
-        <button
-          role="tab"
-          aria-selected={activeTab === 'requests'}
-          className={`tab-button ${activeTab === 'requests' ? 'active' : ''}`}
-          onClick={() => setActiveTab('requests')}
-        >
-          <FontAwesomeIcon icon={faEnvelope} />
-          Requests
-          {followBackRequests.length > 0 && (
-            <span className="tab-badge">{followBackRequests.length}</span>
-          )}
         </button>
       </div>
 
@@ -443,16 +356,6 @@ export function Friends() {
                         <FontAwesomeIcon icon={faArrowsLeftRight} /> Compare
                       </button>
                     )}
-                    {!person.theyFollowYou && (
-                      <button
-                        onClick={() => handleRequestFollowBack(person)}
-                        title="Request them to follow you back"
-                        disabled={processingAction === person.id || person.followBackRequested}
-                      >
-                        <FontAwesomeIcon icon={faReply} />
-                        {person.followBackRequested ? 'Requested' : 'Request Follow'}
-                      </button>
-                    )}
                     <button
                       onClick={() => setEditingFriend(person)}
                       title="Edit Nickname"
@@ -529,80 +432,6 @@ export function Friends() {
                         Follow Back
                       </button>
                     )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </>
-      )}
-
-      {/* Requests Tab */}
-      {activeTab === 'requests' && (
-        <>
-          {!shareSettings.acceptFollowRequests ? (
-            <div className="empty-state">
-              <div className="empty-icon">
-                <FontAwesomeIcon icon={faEnvelope} />
-              </div>
-              <h2>Follow-back requests are disabled</h2>
-              <p>
-                You've disabled follow-back requests in your privacy settings.<br />
-                Enable "Accept Follow-Back Requests" in Settings to receive requests.
-              </p>
-            </div>
-          ) : followBackRequests.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">
-                <FontAwesomeIcon icon={faEnvelope} />
-              </div>
-              <h2>No pending requests</h2>
-              <p>
-                You don't have any follow-back requests at the moment.<br />
-                When someone you follow requests you to follow them back, it'll appear here.
-              </p>
-            </div>
-          ) : (
-            <div className="requests-list">
-              {followBackRequests.map((request) => (
-                <div key={request.followerUserId} className="request-card">
-                  <div className="request-card-header">
-                    <img
-                      src={request.profile?.avatarUrl || '/switch.svg'}
-                      alt={request.profile?.displayName || 'User'}
-                      className="request-avatar"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = '/switch.svg';
-                      }}
-                    />
-                    <div className="request-info">
-                      <h3>{request.profile?.displayName || 'Unknown User'}</h3>
-                      <p className="request-meta">
-                        {(request.gameCount ?? 0) > 0 && `${request.gameCount} ${request.gameCount === 1 ? 'game' : 'games'} • `}
-                        Requested {request.requestedAt ? new Date(request.requestedAt).toLocaleDateString() : 'recently'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="request-actions">
-                    <button
-                      className="btn-accept"
-                      onClick={() => handleFollowBack(request)}
-                      disabled={processingAction === request.followerUserId}
-                      title="Follow them back"
-                    >
-                      <FontAwesomeIcon icon={faCheck} />
-                      Follow Back
-                    </button>
-                    <button
-                      className="btn-reject"
-                      onClick={() => handleIgnoreRequest(request)}
-                      disabled={processingAction === request.followerUserId}
-                      title="Ignore request"
-                    >
-                      <FontAwesomeIcon icon={faTimes} />
-                      Ignore
-                    </button>
                   </div>
                 </div>
               ))}

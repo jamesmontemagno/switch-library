@@ -39,22 +39,18 @@ export interface ShareProfile {
   enabled: boolean;
   showDisplayName: boolean;
   showAvatar: boolean;
-  acceptFollowRequests: boolean;  // Allow others to request you follow them back
   createdAt: string;
   revokedAt?: string;
 }
 
 // Follow entry (stored in friend_lists table for backwards compatibility)
 // status is always 'accepted' - following is instant
-// follow_back_requested: true when you want them to follow you back
 export interface FriendEntry {
   id: string;
   userId: string;
   friendShareId: string;
   nickname: string;
-  followBackRequested: boolean;
   addedAt: string;
-  requestedAt?: string;  // When follow-back was requested (null if not)
 }
 
 // Follow with user details (for Following tab)
@@ -63,9 +59,7 @@ export interface FriendWithDetails {
   userId: string;
   friendShareId: string;
   nickname: string;
-  followBackRequested: boolean;
   addedAt: string;
-  requestedAt?: string;
   profile: {
     displayName: string;
     avatarUrl: string;
@@ -80,9 +74,7 @@ export interface FollowerEntry {
   followerUserId: string;       // The user ID of the person following you
   followerShareId: string | null; // Their share ID (if they have one, so you can follow back)
   nickname: string;             // The nickname they gave you
-  followBackRequested: boolean; // Whether they want you to follow them back
   addedAt: string;
-  requestedAt?: string;
   profile: {
     displayName: string;
     avatarUrl: string;

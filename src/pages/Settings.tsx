@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { usePreferences } from '../hooks/usePreferences';
 import { useSEO } from '../hooks/useSEO';
-import { getShareProfile, enableSharing, disableSharing, deleteUserAccount, updateSharePrivacy } from '../services/database';
+import { getShareProfile, enableSharing, disableSharing, deleteUserAccount } from '../services/database';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSun, faMoon, faDesktop } from '@fortawesome/free-solid-svg-icons';
 import './Settings.css';
@@ -33,7 +33,6 @@ export function Settings() {
           enabled: profile.enabled,
           showGameCount: shareSettings.showGameCount,
           showProgress: shareSettings.showProgress,
-          acceptFollowRequests: profile.acceptFollowRequests,  // Sync from database
         });
         
         if (profile.enabled) {
@@ -62,13 +61,11 @@ export function Settings() {
     
     updateShareSettings({ enabled });
     
-    // Enable sharing in database (acceptFollowRequests defaults to true)
+    // Enable sharing in database
     const profile = await enableSharing(user.id);
     if (profile) {
       const fullUrl = `${window.location.origin}${import.meta.env.BASE_URL}shared/${profile.shareId}`;
       setShareLink(fullUrl);
-      // Sync acceptFollowRequests from database (will be true by default)
-      updateShareSettings({ acceptFollowRequests: profile.acceptFollowRequests });
     }
   };
 
@@ -81,16 +78,6 @@ export function Settings() {
     await disableSharing(user.id);
     setShareLink('');
     setShowDisableConfirm(false);
-  };
-
-  const handleToggleAcceptFollowRequests = async (enabled: boolean) => {
-    if (!user) return;
-    
-    // Update local preferences immediately for responsiveness
-    updateShareSettings({ acceptFollowRequests: enabled });
-    
-    // Update database
-    await updateSharePrivacy(user.id, { acceptFollowRequests: enabled });
   };
 
   const handleCopyShareLink = () => {
@@ -242,18 +229,6 @@ export function Settings() {
                     onClick={() => updateShareSettings({ showProgress: !shareSettings.showProgress })}
                   >
                     {shareSettings.showProgress ? 'ON' : 'OFF'}
-                  </button>
-                </div>
-                <div className="privacy-toggle-row">
-                  <div className="privacy-label-group">
-                    <span>Accept Follow-Back Requests</span>
-                    <small className="privacy-hint">When disabled, users you follow cannot request you to follow them back</small>
-                  </div>
-                  <button 
-                    className={`btn-toggle small ${shareSettings.acceptFollowRequests ? 'on' : 'off'}`}
-                    onClick={() => handleToggleAcceptFollowRequests(!shareSettings.acceptFollowRequests)}
-                  >
-                    {shareSettings.acceptFollowRequests ? 'ON' : 'OFF'}
                   </button>
                 </div>
               </div>

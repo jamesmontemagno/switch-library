@@ -1,13 +1,8 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMagnifyingGlass, faBookOpen, faUserGroup, faRotate } from '@fortawesome/free-solid-svg-icons';
+import { faMagnifyingGlass, faBookOpen, faUserGroup } from '@fortawesome/free-solid-svg-icons';
 import './Header.css';
-
-export interface HeaderProps {
-  pendingRequestCount?: number;
-  onRefreshRequests?: () => void;
-}
 
 // Simple MD5-like hash for Gravatar (Note: For production, use a proper MD5 library)
 async function getMD5Hash(text: string): Promise<string> {
@@ -30,7 +25,7 @@ async function getGravatarUrl(email: string | undefined): Promise<string> {
   }
 }
 
-export function Header({ pendingRequestCount = 0, onRefreshRequests }: HeaderProps) {
+export function Header() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -68,28 +63,8 @@ export function Header({ pendingRequestCount = 0, onRefreshRequests }: HeaderPro
                 <span>Library</span>
               </Link>
               <Link to="/friends" className={`nav-link ${isActive('/friends') ? 'active' : ''}`}>
-                <span className="nav-link-wrapper">
-                  <FontAwesomeIcon icon={faUserGroup} />
-                  {pendingRequestCount > 0 && (
-                    <span className="nav-badge" aria-label={`${pendingRequestCount} pending friend requests`}>
-                      {pendingRequestCount > 99 ? '99+' : pendingRequestCount}
-                    </span>
-                  )}
-                </span>
+                <FontAwesomeIcon icon={faUserGroup} />
                 <span>Following</span>
-                {onRefreshRequests && pendingRequestCount > 0 && (
-                  <button 
-                    className="nav-refresh-btn" 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onRefreshRequests();
-                    }}
-                    aria-label="Refresh friend requests"
-                  >
-                    <FontAwesomeIcon icon={faRotate} />
-                  </button>
-                )}
               </Link>
             </>
           )}
