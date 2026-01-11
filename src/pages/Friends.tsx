@@ -51,6 +51,7 @@ export function Friends() {
   
   // Compare functionality
   const [userShareId, setUserShareId] = useState<string | null>(null);
+  const [hasSharingEnabled, setHasSharingEnabled] = useState<boolean>(false);
   const [comparingFriend, setComparingFriend] = useState<string | null>(null);
   
   // Processing states
@@ -85,6 +86,7 @@ export function Friends() {
       setFollowing(userFollowing);
       setFollowers(userFollowers);
       setUserShareId(shareProfile?.shareId || null);
+      setHasSharingEnabled(shareProfile?.enabled || false);
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {
@@ -161,7 +163,9 @@ export function Friends() {
       }
     } catch (error) {
       console.error('Failed to follow:', error);
-      showToast('Failed to follow', 'error');
+      // Show specific error message if available
+      const errorMessage = error instanceof Error ? error.message : 'Failed to follow';
+      showToast(errorMessage, 'error');
     } finally {
       setProcessingAction(null);
     }
@@ -195,12 +199,57 @@ export function Friends() {
           <button onClick={fetchData} className="btn-refresh" title="Refresh">
             <FontAwesomeIcon icon={faRotate} />
           </button>
-          <button onClick={() => setShowAddModal(true)} className="btn-add-friend">
+          <button 
+            onClick={() => setShowAddModal(true)} 
+            className="btn-add-friend"
+            disabled={!hasSharingEnabled}
+            title={!hasSharingEnabled ? 'Enable sharing on your library first' : 'Follow a user'}
+            style={!hasSharingEnabled ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
+          >
             <FontAwesomeIcon icon={faUserPlus} />
             Follow User
           </button>
         </div>
       </header>
+
+      {/* Warning banner if sharing is not enabled */}
+      {!hasSharingEnabled && (
+        <div style={{
+          padding: '1rem',
+          margin: '0 0 1.5rem 0',
+          backgroundColor: 'rgba(251, 191, 36, 0.1)',
+          border: '1px solid rgba(251, 191, 36, 0.3)',
+          borderRadius: '0.5rem',
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: '0.75rem',
+        }}>
+          <span style={{ fontSize: '1.25rem', flexShrink: 0 }}>⚠️</span>
+          <div style={{ flex: 1 }}>
+            <strong style={{ display: 'block', marginBottom: '0.25rem' }}>Sharing Required to Follow Others</strong>
+            <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+              You must enable sharing on your library before you can follow other users. 
+              This ensures a reciprocal community where everyone shares their collections.
+            </p>
+            <button
+              onClick={() => navigate('/library')}
+              style={{
+                marginTop: '0.75rem',
+                padding: '0.5rem 1rem',
+                backgroundColor: 'var(--primary)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '0.375rem',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                fontWeight: '600',
+              }}
+            >
+              Go to Library Settings
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="friends-tabs" role="tablist">
@@ -426,8 +475,9 @@ export function Friends() {
                       <button
                         className="btn-accept"
                         onClick={() => handleFollowFollower(follower)}
-                        disabled={processingAction === follower.followerUserId}
-                        title="Follow back"
+                        disabled={processingAction === follower.followerUserId || !hasSharingEnabled}
+                        title={!hasSharingEnabled ? 'Enable sharing on your library first' : 'Follow back'}
+                        style={!hasSharingEnabled ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
                       >
                         <FontAwesomeIcon icon={faUserPlus} />
                         Follow Back

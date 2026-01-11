@@ -772,6 +772,13 @@ export async function isFollowing(userId: string, shareId: string): Promise<bool
 export async function followUser(userId: string, shareId: string, nickname?: string): Promise<FriendEntry | null> {
   logger.database('followUser', 'friend_lists', { userId, shareId, nickname });
   
+  // Check if the user has sharing enabled - they must share to follow others
+  const userShareProfile = await getShareProfile(userId);
+  if (!userShareProfile || !userShareProfile.enabled) {
+    logger.warn('User must enable sharing to follow others', { userId, hasProfile: !!userShareProfile, enabled: userShareProfile?.enabled });
+    throw new Error('You must enable sharing on your library before you can follow others. Go to Library > Settings to enable sharing.');
+  }
+  
   // Check if already following
   const alreadyFollowing = await isFollowing(userId, shareId);
   if (alreadyFollowing) {

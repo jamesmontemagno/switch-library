@@ -127,7 +127,9 @@ export function AddFriendModal({ onClose, onAdd, prefilledShareId, prefilledNick
       }
     } catch (err) {
       logger.error('Error following user', err, { userId: user.id, shareId: extractedShareId });
-      setError('Failed to follow user. Please try again.');
+      // Check if error message mentions sharing requirement
+      const errorMessage = err instanceof Error ? err.message : 'Failed to follow user. Please try again.';
+      setError(errorMessage);
       console.error('Error following user:', err);
     } finally {
       setIsLoading(false);
