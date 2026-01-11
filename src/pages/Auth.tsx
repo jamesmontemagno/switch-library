@@ -30,6 +30,7 @@ export function Auth() {
   const [mode, setMode] = useState<AuthMode>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [displayName, setDisplayName] = useState('');
   
   // Dynamic page title based on auth mode
   useSEO({
@@ -110,7 +111,7 @@ export function Auth() {
         }
 
         setIsLoading(true);
-        const { error: signupError, needsConfirmation } = await signUpWithEmail(email, password);
+        const { error: signupError, needsConfirmation } = await signUpWithEmail(email, password, displayName);
         if (signupError) {
           setError(signupError.message || 'Failed to create account');
         } else if (needsConfirmation) {
@@ -121,8 +122,10 @@ export function Auth() {
             'The email will be from "Supabase Auth <noreply@mail.app.supabase.io>" with the subject "Confirm your signup". ' +
             'You\'ll need to confirm your email address before you can sign in.'
           );
+          setEmail('');
           setPassword('');
           setConfirmPassword('');
+          setDisplayName('');
           // Switch to sign in mode after showing the message
           setTimeout(() => {
             setMode('signin');
@@ -254,6 +257,27 @@ export function Auth() {
                 disabled={isLoading}
               />
             </div>
+
+            {mode === 'signup' && (
+              <div className="form-group">
+                <label htmlFor="displayName" className="form-label">
+                  Display Name
+                </label>
+                <input
+                  type="text"
+                  id="displayName"
+                  className="form-input"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="How you want to be known"
+                  maxLength={50}
+                  disabled={isLoading}
+                />
+                <small style={{ color: 'var(--text-secondary, #6b7280)', fontSize: '0.75rem', marginTop: '0.25rem', display: 'block' }}>
+                  Optional - defaults to your email username if not provided
+                </small>
+              </div>
+            )}
 
             {mode !== 'reset' && (
               <div className="form-group">

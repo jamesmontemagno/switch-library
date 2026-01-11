@@ -215,16 +215,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const signUpWithEmail = async (email: string, password: string) => {
+  const signUpWithEmail = async (email: string, password: string, displayName?: string) => {
     if (useSupabase) {
       dispatch({ type: 'LOGIN_START' });
       const username = email.split('@')[0];
+      const finalDisplayName = displayName?.trim() || username;
       const { data, error } = await supabase.auth.signUp({ 
         email, 
         password,
         options: {
           data: {
-            display_name: username,
+            display_name: finalDisplayName,
           },
         },
       });
@@ -257,10 +258,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Demo mode
       console.warn('Supabase not configured. Using demo mode.');
       const username = email.split('@')[0];
+      const finalDisplayName = displayName?.trim() || username;
       const mockUser: User = {
         id: 'demo-user-' + Date.now(),
         login: username,
-        displayName: username,
+        displayName: finalDisplayName,
         avatarUrl: '',
         email,
         createdAt: new Date().toISOString(),

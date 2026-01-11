@@ -4,7 +4,7 @@ import type { AuthState } from '../types';
 export interface AuthContextType extends AuthState {
   login: () => void | Promise<void>;
   loginWithEmail: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUpWithEmail: (email: string, password: string) => Promise<{ error: Error | null; needsConfirmation?: boolean }>;
+  signUpWithEmail: (email: string, password: string, displayName?: string) => Promise<{ error: Error | null; needsConfirmation?: boolean }>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
   logout: () => void | Promise<void>;
 }
