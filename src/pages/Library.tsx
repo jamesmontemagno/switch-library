@@ -7,11 +7,14 @@ import type { GameEntry, Platform, ShareProfile } from '../types';
 import { loadGames, saveGame, deleteGame as deleteGameFromDb, getShareProfile } from '../services/database';
 import { EditGameModal } from '../components/EditGameModal';
 import { ShareLibraryModal } from '../components/ShareLibraryModal';
+import { SharePromptBanner } from '../components/SharePromptBanner';
 import { SegmentedControl } from '../components/SegmentedControl';
 import { logger } from '../services/logger';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faPenToSquare, faGamepad, faTrash, faCartShopping, faTrophy, faLink, faMagnifyingGlass, faTableCells, faList, faGripLines } from '@fortawesome/free-solid-svg-icons';
 import './Library.css';
+
+const DISMISSED_SHARE_PROMPT_KEY = 'dismissedSharePrompt';
 
 type SortOption = 'title_asc' | 'title_desc' | 'added_newest' | 'added_oldest' | 'purchase_newest' | 'purchase_oldest' | 'platform' | 'format' | 'completed_first' | 'not_completed_first';
 type ViewMode = 'grid' | 'list' | 'compact';
@@ -47,6 +50,13 @@ export function Library() {
   // Share state
   const [shareProfile, setShareProfile] = useState<ShareProfile | null>(null);
   const [showSharePanel, setShowSharePanel] = useState(false);
+  const [dismissedSharePrompt, setDismissedSharePrompt] = useState(() => {
+    try {
+      return localStorage.getItem(DISMISSED_SHARE_PROMPT_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  });
 
   // Save preferences when filters/sort/view change
   useEffect(() => {
@@ -166,6 +176,25 @@ export function Library() {
       console.error('Failed to refresh share profile:', error);
     }
   };
+
+  const handleDismissSharePrompt = () => {
+    setDismissedSharePrompt(true);
+    try {
+      localStorage.setItem(DISMISSED_SHARE_PROMPT_KEY, 'true');
+    } catch (error) {
+      console.error('Failed to save dismissal preference:', error);
+    }
+  };
+
+  const handleSharePromptClick = () => {
+    setShowSharePanel(true);
+  };
+
+  // Show share prompt if:
+  // 1. User has at least one game
+  // 2. Sharing is not enabled
+  // 3. User hasn't dismissed the prompt
+  const shouldShowSharePrompt = games.length > 0 && !shareProfile?.enabled && !dismissedSharePrompt;
 
   const stats = {
     total: games.length,
@@ -318,6 +347,14 @@ export function Library() {
           />
         </div>
       </div>
+
+      {/* Share Prompt Banner */}
+      {shouldShowSharePrompt && (
+        <SharePromptBanner 
+          onShareClick={handleSharePromptClick}
+          onDismiss={handleDismissSharePrompt}
+        />
+      )}
 
       {filteredGames.length === 0 ? (
         <div className="empty-state">

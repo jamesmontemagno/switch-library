@@ -15,8 +15,12 @@ import {
 import { saveGame, loadGames, getMonthlySearchCount, logSearchUsage, deleteGame as deleteGameFromDb, getTrendingGames } from '../services/database';
 import { UsageLimitModal } from '../components/UsageLimitModal';
 import { ManualAddGameModal } from '../components/ManualAddGameModal';
+import { FirstGameCelebrationModal } from '../components/FirstGameCelebrationModal';
+import { ShareLibraryModal } from '../components/ShareLibraryModal';
 import { SegmentedControl } from '../components/SegmentedControl';
 import './Search.css';
+
+const FIRST_GAME_CELEBRATION_KEY = 'hasSeenFirstGameCelebration';
 
 type SortOption = 'relevance' | 'release_desc' | 'release_asc' | 'title_asc' | 'title_desc';
 type ViewMode = 'grid' | 'list';
@@ -165,6 +169,20 @@ export function Search() {
   
   // Manual add modal
   const [showManualAddModal, setShowManualAddModal] = useState(false);
+  
+  // First game celebration modal
+  const [showCelebrationModal, setShowCelebrationModal] = useState(false);
+  const [firstGameTitle, setFirstGameTitle] = useState('');
+  const [hasSeenCelebration, setHasSeenCelebration] = useState(() => {
+    try {
+      return localStorage.getItem(FIRST_GAME_CELEBRATION_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  });
+  
+  // Share modal (for celebration flow)
+  const [showShareModal, setShowShareModal] = useState(false);
   
   const searchRequestIdRef = useRef(0);
   const hasTheGamesDB = isTheGamesDBConfigured();
@@ -448,10 +466,19 @@ export function Search() {
         updatedAt: new Date().toISOString(),
       };
       
+      // Check if this is the first game
+      const isFirstGame = userGames.length === 0 && !hasSeenCelebration;
+      
       // Update UI immediately for instant feedback
       setUserGames(prev => [...prev, newGame]);
       setQuickAddGame(null);
       setAddingGameId(null);
+      
+      // Show celebration modal if first game
+      if (isFirstGame) {
+        setFirstGameTitle(quickAddGame.title);
+        setShowCelebrationModal(true);
+      }
       
       // Save to database in background (fire and forget) - mark as new game for trending
       saveGame(newGame, userGames, true).catch(err => {
@@ -501,9 +528,18 @@ export function Search() {
       updatedAt: new Date().toISOString(),
     };
     
+    // Check if this is the first game
+    const isFirstGame = userGames.length === 0 && !hasSeenCelebration;
+    
     // Update UI immediately for instant feedback
     setUserGames(prev => [...prev, newGame]);
     setShowManualAddModal(false);
+    
+    // Show celebration modal if first game
+    if (isFirstGame) {
+      setFirstGameTitle(game.title);
+      setShowCelebrationModal(true);
+    }
     
     // Save to database in background (fire and forget)
     saveGame(newGame, userGames).catch(err => {
@@ -511,6 +547,31 @@ export function Search() {
       // Optionally: show a toast notification to user about the failure
       // and revert the optimistic update
     });
+  };
+
+  const handleCelebrationEnableSharing = () => {
+    setShowCelebrationModal(false);
+    setShowShareModal(true);
+    try {
+      localStorage.setItem(FIRST_GAME_CELEBRATION_KEY, 'true');
+      setHasSeenCelebration(true);
+    } catch (error) {
+      console.error('Failed to save celebration preference:', error);
+    }
+  };
+
+  const handleCelebrationDismiss = () => {
+    setShowCelebrationModal(false);
+    try {
+      localStorage.setItem(FIRST_GAME_CELEBRATION_KEY, 'true');
+      setHasSeenCelebration(true);
+    } catch (error) {
+      console.error('Failed to save celebration preference:', error);
+    }
+  };
+
+  const handleSharingEnabled = async () => {
+    // Refresh happens automatically in the modal
   };
 
   const formatDate = (dateStr?: string) => {
@@ -1053,6 +1114,24 @@ export function Search() {
         <ManualAddGameModal
           onClose={() => setShowManualAddModal(false)}
           onAdd={handleManualAdd}
+        />
+      )}
+
+      {/* First Game Celebration Modal */}
+      {showCelebrationModal && (
+        <FirstGameCelebrationModal
+          gameTitle={firstGameTitle}
+          onEnableSharing={handleCelebrationEnableSharing}
+          onDismiss={handleCelebrationDismiss}
+        />
+      )}
+
+      {/* Share Library Modal (from celebration flow) */}
+      {showShareModal && user && (
+        <ShareLibraryModal
+          userId={user.id}
+          onClose={() => setShowShareModal(false)}
+          onSharingEnabled={handleSharingEnabled}
         />
       )}
     </div>
