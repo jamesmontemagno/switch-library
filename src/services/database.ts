@@ -1,5 +1,5 @@
 import { supabase, isSupabaseConfigured } from './supabase';
-import type { GameEntry, ShareProfile, FriendEntry, FriendWithDetails, FollowerEntry } from '../types';
+import type { GameEntry, ShareProfile, FriendEntry, FriendWithDetails, FollowerEntry, TrendingGameAggregate, TrendingGame, TrendingResponse } from '../types';
 import { logger } from './logger';
 
 const LOCAL_STORAGE_KEY = 'switch-library-games';
@@ -148,13 +148,17 @@ export async function loadGames(userId: string): Promise<GameEntry[]> {
   return games;
 }
 
-export async function saveGame(game: GameEntry, allGames?: GameEntry[]): Promise<GameEntry | null> {
+export async function saveGame(game: GameEntry, allGames?: GameEntry[], isNewGame?: boolean): Promise<GameEntry | null> {
   logger.database('saveGame', 'games', { gameId: game.id, title: game.title, mode: useSupabase ? 'supabase' : 'localStorage' });
   
   if (useSupabase) {
     const result = await saveGameToSupabase(game);
     if (result) {
       logger.info('Game saved to Supabase', { gameId: result.id, title: result.title });
+      // Record game addition for trending (fire-and-forget) - only for new games
+      if (isNewGame && game.thegamesdbId) {
+        recordGameAddition(game.thegamesdbId).catch(() => {});
+      }
     } else {
       logger.error('Failed to save game to Supabase', undefined, { gameId: game.id, title: game.title });
     }
@@ -169,6 +173,10 @@ export async function saveGame(game: GameEntry, allGames?: GameEntry[]): Promise
       : [...allGames, game];
     saveGamesToLocalStorage(updatedGames.filter(g => g.userId === game.userId));
     logger.info('Game saved to localStorage', { gameId: game.id, title: game.title, isUpdate: !!existing });
+    // Record game addition for trending (fire-and-forget) - only for new games
+    if (!existing && game.thegamesdbId) {
+      recordGameAddition(game.thegamesdbId).catch(() => {});
+    }
   }
   return game;
 }
@@ -1217,3 +1225,235 @@ export async function deleteUserAccount(userId: string): Promise<boolean> {
 }
 
 export { useSupabase };
+
+// ===== Trending Games Functions =====
+
+const TRENDING_CACHE_KEY = 'switch-library-trending';
+const TRENDING_CACHE_TTL_MS = 60 * 60 * 1000; // 60 minutes
+
+interface TrendingCache {
+  data: TrendingResponse;
+  timestamp: number;
+}
+
+// Record a game addition for trending tracking (fire-and-forget)
+export async function recordGameAddition(thegamesdbId: number): Promise<void> {
+  if (!useSupabase || !thegamesdbId) {
+    logger.debug('Skipping game addition recording', { useSupabase, thegamesdbId });
+    return;
+  }
+
+  try {
+    logger.database('recordGameAddition', 'game_additions', { thegamesdbId });
+    
+    const { error } = await supabase
+      .from('game_additions')
+      .insert({ thegamesdb_id: thegamesdbId });
+
+    if (error) {
+      logger.error('Failed to record game addition', error, { thegamesdbId });
+    } else {
+      logger.info('Game addition recorded for trending', { thegamesdbId });
+    }
+  } catch (error) {
+    // Fire-and-forget - don't let this block the main operation
+    logger.error('Error recording game addition', error, { thegamesdbId });
+  }
+}
+
+// Get cached trending data
+function getCachedTrending(): TrendingResponse | null {
+  try {
+    const cached = localStorage.getItem(TRENDING_CACHE_KEY);
+    if (cached) {
+      const parsed: TrendingCache = JSON.parse(cached);
+      if (Date.now() - parsed.timestamp < TRENDING_CACHE_TTL_MS) {
+        logger.cache('hit', 'trending', { age: Date.now() - parsed.timestamp });
+        return parsed.data;
+      }
+    }
+  } catch (error) {
+    logger.error('Failed to get cached trending data', error);
+  }
+  return null;
+}
+
+// Cache trending data
+function setCachedTrending(data: TrendingResponse): void {
+  try {
+    const cache: TrendingCache = { data, timestamp: Date.now() };
+    localStorage.setItem(TRENDING_CACHE_KEY, JSON.stringify(cache));
+    logger.cache('set', 'trending', { topGamesCount: data.topGames.length, recentCount: data.recentlyAdded.length });
+  } catch (error) {
+    logger.error('Failed to cache trending data', error);
+  }
+}
+
+// Get trending games from Supabase and enrich with game details
+export async function getTrendingGames(userId?: string): Promise<TrendingResponse> {
+  logger.database('getTrendingGames', 'game_additions', { userId, mode: useSupabase ? 'supabase' : 'localStorage' });
+
+  // Check cache first
+  const cached = getCachedTrending();
+  if (cached) {
+    return cached;
+  }
+
+  // If not using Supabase, return user's own games as "trending"
+  if (!useSupabase) {
+    return getTrendingFromLocalStorage(userId);
+  }
+
+  try {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    // Query for game additions
+    const { data: allAdditions, error: allError } = await supabase
+      .from('game_additions')
+      .select('thegamesdb_id, added_at')
+      .order('added_at', { ascending: false })
+      .limit(1000);
+
+    if (allError) {
+      logger.error('Failed to fetch game additions', allError);
+      return getEmptyTrendingResponse();
+    }
+
+    // Aggregate the data
+    const aggregateMap = new Map<number, { count: number; recentCount: number; lastAddedAt: string }>();
+    
+    // Type guard: allAdditions should be an array
+    const additions = Array.isArray(allAdditions) ? allAdditions : [];
+    
+    for (const addition of additions) {
+      const id = addition.thegamesdb_id;
+      const addedAt = addition.added_at;
+      const isRecent = new Date(addedAt) >= thirtyDaysAgo;
+      
+      const existing = aggregateMap.get(id);
+      if (existing) {
+        existing.count++;
+        if (isRecent) existing.recentCount++;
+        if (new Date(addedAt) > new Date(existing.lastAddedAt)) {
+          existing.lastAddedAt = addedAt;
+        }
+      } else {
+        aggregateMap.set(id, {
+          count: 1,
+          recentCount: isRecent ? 1 : 0,
+          lastAddedAt: addedAt,
+        });
+      }
+    }
+
+    // Convert to array
+    const aggregatedGames: TrendingGameAggregate[] = Array.from(aggregateMap.entries())
+      .map(([thegamesdbId, stats]) => ({
+        thegamesdbId,
+        addCount: stats.count,
+        recentAddCount: stats.recentCount,
+        lastAddedAt: stats.lastAddedAt,
+      }));
+
+    // Top games by total count
+    const topByCount = [...aggregatedGames]
+      .sort((a, b) => b.addCount - a.addCount)
+      .slice(0, 30);
+
+    // Recently added (by recent count)
+    const topByRecent = [...aggregatedGames]
+      .filter(g => g.recentAddCount > 0)
+      .sort((a, b) => b.recentAddCount - a.recentAddCount || 
+        new Date(b.lastAddedAt).getTime() - new Date(a.lastAddedAt).getTime())
+      .slice(0, 30);
+
+    // Get unique game IDs to fetch details
+    const allIds = [...new Set([
+      ...topByCount.map(g => g.thegamesdbId),
+      ...topByRecent.map(g => g.thegamesdbId),
+    ])];
+
+    // Fetch game details from backend (blob storage only)
+    const { getGamesByIds } = await import('./thegamesdb');
+    const { found: gameDetails } = await getGamesByIds(allIds, false);
+
+    // Create lookup map for game details
+    const detailsMap = new Map(gameDetails.map(g => [g.id, g]));
+
+    // Enrich trending data with game details
+    const enrichGame = (aggregate: TrendingGameAggregate): TrendingGame => {
+      const details = detailsMap.get(aggregate.thegamesdbId);
+      return {
+        ...aggregate,
+        title: details?.title,
+        coverUrl: details?.coverUrl,
+        releaseDate: details?.releaseDate,
+        platform: details?.platform,
+        platformId: details?.platformId,
+      };
+    };
+
+    const response: TrendingResponse = {
+      topGames: topByCount.map(enrichGame),
+      recentlyAdded: topByRecent.map(enrichGame),
+      updatedAt: new Date().toISOString(),
+    };
+
+    setCachedTrending(response);
+    logger.info('Trending games loaded', {
+      topGamesCount: response.topGames.length,
+      recentCount: response.recentlyAdded.length,
+      gamesWithDetails: gameDetails.length,
+    });
+
+    return response;
+  } catch (error) {
+    logger.error('Error getting trending games', error);
+    return getEmptyTrendingResponse();
+  }
+}
+
+// Fallback for localStorage mode - show user's own recently added games
+function getTrendingFromLocalStorage(userId?: string): TrendingResponse {
+  if (!userId) return getEmptyTrendingResponse();
+
+  try {
+    const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (stored) {
+      const allGames = JSON.parse(stored) as GameEntry[];
+      const userGames = allGames
+        .filter(game => game.userId === userId && game.thegamesdbId)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 30);
+
+      const trendingGames: TrendingGame[] = userGames.map(game => ({
+        thegamesdbId: game.thegamesdbId!,
+        addCount: 1,
+        recentAddCount: 1,
+        lastAddedAt: game.createdAt,
+        title: game.title,
+        coverUrl: game.coverUrl,
+        platform: game.platform,
+      }));
+
+      return {
+        topGames: trendingGames,
+        recentlyAdded: trendingGames,
+        updatedAt: new Date().toISOString(),
+      };
+    }
+  } catch (error) {
+    logger.error('Failed to get trending from localStorage', error);
+  }
+  return getEmptyTrendingResponse();
+}
+
+function getEmptyTrendingResponse(): TrendingResponse {
+  return { topGames: [], recentlyAdded: [], updatedAt: new Date().toISOString() };
+}
+
+export function clearTrendingCache(): void {
+  localStorage.removeItem(TRENDING_CACHE_KEY);
+  logger.info('Trending cache cleared');
+}

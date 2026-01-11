@@ -590,6 +590,116 @@ export function mapIdsToNames(ids: number[] | undefined, lookup: Record<number, 
   return ids.map(id => lookup[id] || `Unknown (${id})`);
 }
 
+// Bulk game fetch for trending feature
+export interface BulkGameResult {
+  id: number;
+  title: string;
+  releaseDate?: string;
+  platform: string;
+  platformId: number;
+  coverUrl?: string;
+  overview?: string;
+}
+
+export async function getGamesByIds(
+  ids: number[], 
+  includeUncached: boolean = false
+): Promise<{ found: BulkGameResult[]; notFound: number[] }> {
+  if (ids.length === 0) {
+    return { found: [], notFound: [] };
+  }
+
+  logger.apiUsage('TheGamesDB.getGamesByIds', { count: ids.length, includeUncached });
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/games/bulk`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ ids, includeUncached }),
+    });
+
+    if (!response.ok) {
+      logger.error('Bulk games fetch error', new Error(`Status ${response.status}`), { ids });
+      throw new Error(`Bulk games API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    logger.info('Bulk games loaded', { 
+      foundCount: data.foundCount, 
+      notFoundCount: data.notFoundCount 
+    });
+
+    // Parse the found games into a consistent format
+    const foundGames: BulkGameResult[] = [];
+    
+    for (const gameData of data.found || []) {
+      try {
+        // The API returns the full TheGamesDB response structure
+        const games = gameData.data?.games;
+        const baseUrl = gameData.include?.boxart?.base_url;
+        const boxartData = gameData.include?.boxart?.data || {};
+
+        if (Array.isArray(games)) {
+          for (const game of games) {
+            const gameBoxart = boxartData[game.id];
+            let coverUrl: string | undefined;
+
+            if (baseUrl && gameBoxart && gameBoxart.length > 0) {
+              const frontBoxart = gameBoxart.find(
+                (img: { type: string; side?: string; filename: string }) => 
+                  img.type === 'boxart' && img.side === 'front'
+              );
+              if (frontBoxart?.filename) {
+                coverUrl = `${baseUrl.thumb || baseUrl.small || baseUrl.medium}${frontBoxart.filename}`;
+              }
+            }
+
+            const platformName = game.platform === PLATFORM_IDS.NINTENDO_SWITCH_2
+              ? 'Nintendo Switch 2'
+              : 'Nintendo Switch';
+
+            foundGames.push({
+              id: game.id,
+              title: game.game_title,
+              releaseDate: game.release_date,
+              platform: platformName,
+              platformId: game.platform,
+              coverUrl,
+              overview: game.overview,
+            });
+
+            // Cache the game for future single lookups
+            setGameCache(game.id, {
+              ...game,
+              boxart: coverUrl ? {
+                filename: '',
+                original: coverUrl,
+                small: coverUrl,
+                thumb: coverUrl,
+                cropped_center_thumb: coverUrl,
+                medium: coverUrl,
+                large: coverUrl,
+              } : undefined,
+            });
+          }
+        }
+      } catch (parseError) {
+        logger.error('Error parsing bulk game result', parseError, { gameData });
+      }
+    }
+
+    return {
+      found: foundGames,
+      notFound: data.notFound || [],
+    };
+  } catch (error) {
+    logger.error('Failed to get games by IDs', error, { ids });
+    return { found: [], notFound: ids };
+  }
+}
+
 // Region mappings (based on TheGamesDB region IDs)
 export const REGIONS: Record<number, string> = {
   0: 'Global',

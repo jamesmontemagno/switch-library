@@ -246,3 +246,26 @@ create index if not exists api_usage_user_id_idx on public.api_usage(user_id);
 create index if not exists api_usage_timestamp_idx on public.api_usage(timestamp);
 create index if not exists friend_lists_user_id_idx on public.friend_lists(user_id);
 create index if not exists friend_lists_friend_share_id_idx on public.friend_lists(friend_share_id);
+
+-- =============================================
+-- Game Additions Table (for Trending feature)
+-- =============================================
+-- Anonymous table tracking when games are added to the community
+-- No user_id column = no RLS needed, fully anonymous aggregate data
+-- Duplicates are allowed (same game can be added multiple times by different users)
+
+create table if not exists public.game_additions (
+  id uuid primary key default gen_random_uuid(),
+  thegamesdb_id integer not null,
+  added_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Indexes for trending queries
+create index if not exists game_additions_thegamesdb_id_idx on public.game_additions(thegamesdb_id);
+create index if not exists game_additions_added_at_idx on public.game_additions(added_at);
+
+-- No RLS on game_additions - it's fully anonymous public data
+-- Anyone can read/write to track community trends
+
+-- Manual data pruning (run periodically if needed):
+-- DELETE FROM public.game_additions WHERE added_at < NOW() - INTERVAL '1 year';

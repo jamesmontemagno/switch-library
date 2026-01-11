@@ -2,8 +2,8 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useSEO } from '../hooks/useSEO';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMagnifyingGlass, faWrench, faGamepad, faCalendar, faUsers, faStar, faBox, faCloud, faTriangleExclamation, faXmark, faHourglassHalf, faTableCells, faList } from '@fortawesome/free-solid-svg-icons';
-import type { GameEntry, Platform, Format } from '../types';
+import { faMagnifyingGlass, faWrench, faGamepad, faCalendar, faUsers, faStar, faBox, faCloud, faTriangleExclamation, faXmark, faHourglassHalf, faTableCells, faList, faFire, faArrowTrendUp } from '@fortawesome/free-solid-svg-icons';
+import type { GameEntry, Platform, Format, TrendingGame, TrendingResponse } from '../types';
 import { 
   searchGames, 
   PLATFORM_IDS,
@@ -12,13 +12,14 @@ import {
   isAllowanceExhausted,
   getRegionName,
 } from '../services/thegamesdb';
-import { saveGame, loadGames, getMonthlySearchCount, logSearchUsage, deleteGame as deleteGameFromDb } from '../services/database';
+import { saveGame, loadGames, getMonthlySearchCount, logSearchUsage, deleteGame as deleteGameFromDb, getTrendingGames } from '../services/database';
 import { UsageLimitModal } from '../components/UsageLimitModal';
 import { ManualAddGameModal } from '../components/ManualAddGameModal';
 import './Search.css';
 
 type SortOption = 'relevance' | 'release_desc' | 'release_asc' | 'title_asc' | 'title_desc';
 type ViewMode = 'grid' | 'list';
+type SearchMode = 'search' | 'trending';
 
 interface SearchResult {
   id: number;
@@ -33,6 +34,67 @@ interface SearchResult {
   region_id?: number;
 }
 
+// TrendingGameCard component for displaying games in the Trending section
+interface TrendingGameCardProps {
+  game: TrendingGame;
+  userGames: GameEntry[];
+  isAuthenticated: boolean;
+  onQuickAdd: (game: { thegamesdbId: number; title?: string; coverUrl?: string; platformId?: number }) => void;
+  addingGameId: number | null;
+}
+
+function TrendingGameCard({ game, userGames, isAuthenticated, onQuickAdd, addingGameId }: TrendingGameCardProps) {
+  const isInLibrary = userGames.some(g => g.thegamesdbId === game.thegamesdbId);
+  const isAdding = addingGameId === game.thegamesdbId;
+  
+  return (
+    <article className="trending-game-card">
+      <div className="trending-game-cover">
+        {game.coverUrl ? (
+          <img src={game.coverUrl} alt={game.title || 'Game cover'} loading="lazy" />
+        ) : (
+          <div className="cover-placeholder">
+            <span><FontAwesomeIcon icon={faGamepad} /></span>
+          </div>
+        )}
+        {isInLibrary && (
+          <div className="added-badge">✓ In Library</div>
+        )}
+        {game.addCount && game.addCount > 1 && (
+          <div className="add-count-badge">
+            <FontAwesomeIcon icon={faUsers} /> {game.addCount}
+          </div>
+        )}
+      </div>
+      <div className="trending-game-info">
+        <h3 className="trending-game-title">{game.title || `Game #${game.thegamesdbId}`}</h3>
+        {game.platformId && (
+          <span className={`platform-badge ${game.platformId === PLATFORM_IDS.NINTENDO_SWITCH_2 ? 'switch2' : 'switch'}`}>
+            {game.platformId === PLATFORM_IDS.NINTENDO_SWITCH_2 ? 'Switch 2' : 'Switch'}
+          </span>
+        )}
+        <div className="trending-game-actions">
+          {isAuthenticated ? (
+            isInLibrary ? (
+              <span className="in-library-text">In your library</span>
+            ) : (
+              <button
+                className="btn-add-trending"
+                onClick={() => onQuickAdd(game)}
+                disabled={isAdding}
+              >
+                {isAdding ? <><FontAwesomeIcon icon={faHourglassHalf} /> Adding...</> : '+ Add'}
+              </button>
+            )
+          ) : (
+            <span className="login-hint-small">Sign in to add</span>
+          )}
+        </div>
+      </div>
+    </article>
+  );
+}
+
 export function Search() {
   const { user, isAuthenticated } = useAuth();
   
@@ -42,11 +104,19 @@ export function Search() {
     url: 'https://myswitchlibrary.com/search',
   });
   
+  // Search mode - search is default, trending loads on demand
+  const [mode, setMode] = useState<SearchMode>('search');
+  
   const [query, setQuery] = useState('');
   const [rawResults, setRawResults] = useState<SearchResult[]>([]); // Store unfiltered results
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Trending state
+  const [trendingData, setTrendingData] = useState<TrendingResponse | null>(null);
+  const [isTrendingLoading, setIsTrendingLoading] = useState(false);
+  const [hasTrendingLoaded, setHasTrendingLoaded] = useState(false);
   
   // User's existing games (for demo mode support)
   const [userGames, setUserGames] = useState<GameEntry[]>([]);
@@ -112,6 +182,29 @@ export function Search() {
       }
     }
   }, [user]);
+
+  // Load trending data when switching to trending mode (on demand)
+  const loadTrendingData = useCallback(async () => {
+    if (hasTrendingLoaded || isTrendingLoading) return;
+    
+    setIsTrendingLoading(true);
+    try {
+      const data = await getTrendingGames(user?.id);
+      setTrendingData(data);
+      setHasTrendingLoaded(true);
+    } catch (err) {
+      console.error('Failed to load trending data:', err);
+    } finally {
+      setIsTrendingLoading(false);
+    }
+  }, [user?.id, hasTrendingLoaded, isTrendingLoading]);
+
+  // Load trending when mode changes to trending
+  useEffect(() => {
+    if (mode === 'trending' && !hasTrendingLoaded) {
+      loadTrendingData();
+    }
+  }, [mode, hasTrendingLoaded, loadTrendingData]);
 
   // Apply filters and sorting reactively whenever rawResults or filter states change
   const results = useMemo(() => {
@@ -321,13 +414,28 @@ export function Search() {
   };
 
   // Open quick add modal with smart platform detection
-  const openQuickAdd = (game: SearchResult) => {
+  // Works with both SearchResult and TrendingGame
+  type TrendingGameInput = { thegamesdbId: number; title?: string; coverUrl?: string; platformId?: number };
+  const openQuickAdd = (game: SearchResult | TrendingGameInput) => {
+    // Normalize the game object - handle both SearchResult (id, boxartUrl) and TrendingGame (thegamesdbId, coverUrl)
+    const isSearchResult = 'id' in game && 'boxartUrl' in game;
+    const gameId = isSearchResult ? (game as SearchResult).id : (game as TrendingGameInput).thegamesdbId;
+    const gameTitle = game.title || 'Unknown Game';
+    const gamePlatformId = game.platformId;
+    const gameCoverUrl = isSearchResult ? (game as SearchResult).boxartUrl : (game as TrendingGameInput).coverUrl;
+    
     // Auto-detect platform based on the game's platform ID from TheGamesDB
-    const detectedPlatform = game.platformId === PLATFORM_IDS.NINTENDO_SWITCH_2 
+    const detectedPlatform = gamePlatformId === PLATFORM_IDS.NINTENDO_SWITCH_2 
       ? 'Nintendo Switch 2' 
       : 'Nintendo Switch';
     setQuickAddPlatform(detectedPlatform);
-    setQuickAddGame(game);
+    setQuickAddGame({
+      id: gameId,
+      title: gameTitle,
+      platformId: gamePlatformId || PLATFORM_IDS.NINTENDO_SWITCH,
+      platform: detectedPlatform,
+      boxartUrl: gameCoverUrl,
+    });
   };
 
   const handleQuickAdd = async () => {
@@ -354,8 +462,8 @@ export function Search() {
       setQuickAddGame(null);
       setAddingGameId(null);
       
-      // Save to database in background (fire and forget)
-      saveGame(newGame, userGames).catch(err => {
+      // Save to database in background (fire and forget) - mark as new game for trending
+      saveGame(newGame, userGames, true).catch(err => {
         console.error('Failed to save game in background:', err);
         // Optionally: show a toast notification to user about the failure
         // and revert the optimistic update
@@ -446,27 +554,52 @@ export function Search() {
         )}
       </header>
 
-      {/* Search Bar */}
-      <div className="search-bar-container">
-        <div className="search-input-wrapper">
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Search for games..."
-            className="search-input-main"
-            autoFocus
-          />
+      {/* Mode Toggle - Search / Trending */}
+      <div className="mode-toggle-container">
+        <div className="mode-toggle" role="tablist" aria-label="Search mode">
           <button
-            onClick={() => handleSearch(1)}
-            disabled={!query.trim() || isSearching}
-            className="search-btn-main"
+            role="tab"
+            aria-selected={mode === 'search'}
+            className={`mode-btn ${mode === 'search' ? 'active' : ''}`}
+            onClick={() => setMode('search')}
           >
-            {isSearching ? <FontAwesomeIcon icon={faHourglassHalf} /> : <FontAwesomeIcon icon={faMagnifyingGlass} />}
+            <FontAwesomeIcon icon={faMagnifyingGlass} /> Search
+          </button>
+          <button
+            role="tab"
+            aria-selected={mode === 'trending'}
+            className={`mode-btn ${mode === 'trending' ? 'active' : ''}`}
+            onClick={() => setMode('trending')}
+          >
+            <FontAwesomeIcon icon={faFire} /> Trending
           </button>
         </div>
       </div>
+
+      {/* Search Mode Content */}
+      {mode === 'search' && (
+        <>
+          {/* Search Bar */}
+          <div className="search-bar-container">
+            <div className="search-input-wrapper">
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Search for games..."
+                className="search-input-main"
+                autoFocus
+              />
+              <button
+                onClick={() => handleSearch(1)}
+                disabled={!query.trim() || isSearching}
+                className="search-btn-main"
+              >
+                {isSearching ? <FontAwesomeIcon icon={faHourglassHalf} /> : <FontAwesomeIcon icon={faMagnifyingGlass} />}
+              </button>
+            </div>
+          </div>
 
       {/* Filters - Mobile Toggle Button */}
       <div className="filters-mobile-header">
@@ -760,6 +893,84 @@ export function Search() {
           </div>
         )}
       </div>
+        </>
+      )}
+
+      {/* Trending Mode Content */}
+      {mode === 'trending' && (
+        <div className="trending-container">
+          {isTrendingLoading && (
+            <div className="search-loading">
+              <div className="loading-spinner" />
+              <p>Loading trending games...</p>
+            </div>
+          )}
+
+          {!isTrendingLoading && trendingData && (
+            <>
+              {/* Recently Added Section */}
+              <section className="trending-section">
+                <h2 className="trending-section-title">
+                  <FontAwesomeIcon icon={faArrowTrendUp} /> Recently Added by Community
+                </h2>
+                <p className="trending-section-subtitle">Games added by users in the last 30 days</p>
+                {trendingData.recentlyAdded.length === 0 ? (
+                  <p className="trending-empty">No recent additions yet. Be the first to add a game!</p>
+                ) : (
+                  <div className="trending-scroll-container">
+                    <div className="trending-games-row">
+                      {trendingData.recentlyAdded.map((game) => (
+                        <TrendingGameCard 
+                          key={game.thegamesdbId} 
+                          game={game} 
+                          userGames={userGames}
+                          isAuthenticated={isAuthenticated}
+                          onQuickAdd={openQuickAdd}
+                          addingGameId={addingGameId}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </section>
+
+              {/* Top Games Section */}
+              <section className="trending-section">
+                <h2 className="trending-section-title">
+                  <FontAwesomeIcon icon={faFire} /> Top Games
+                </h2>
+                <p className="trending-section-subtitle">Most popular games in the community</p>
+                {trendingData.topGames.length === 0 ? (
+                  <p className="trending-empty">No data yet. Start adding games to see what's popular!</p>
+                ) : (
+                  <div className="trending-scroll-container">
+                    <div className="trending-games-row">
+                      {trendingData.topGames.map((game) => (
+                        <TrendingGameCard 
+                          key={game.thegamesdbId} 
+                          game={game} 
+                          userGames={userGames}
+                          isAuthenticated={isAuthenticated}
+                          onQuickAdd={openQuickAdd}
+                          addingGameId={addingGameId}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </section>
+            </>
+          )}
+
+          {!isTrendingLoading && !trendingData && (
+            <div className="search-no-results">
+              <div className="no-results-icon"><FontAwesomeIcon icon={faFire} /></div>
+              <h3>Unable to load trending data</h3>
+              <p>Please try again later</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* API Allowance Warning Modal */}
       {showAllowanceWarning && allowanceInfo && (

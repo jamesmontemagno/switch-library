@@ -88,3 +88,33 @@ export interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
 }
+
+// Trending Games Types
+export interface TrendingGameAggregate {
+  thegamesdbId: number;
+  addCount: number;
+  recentAddCount: number; // Added in last 30 days
+  lastAddedAt: string;
+}
+
+export interface TrendingGame extends TrendingGameAggregate {
+  title?: string;
+  coverUrl?: string;
+  releaseDate?: string;
+  platform?: string;
+  platformId?: number;
+}
+
+export interface TrendingResponse {
+  topGames: TrendingGame[];
+  recentlyAdded: TrendingGame[];
+  updatedAt: string;
+}
+
+export interface BulkGameResponse {
+  found: unknown[];
+  notFound: number[];
+  totalRequested: number;
+  foundCount: number;
+  notFoundCount: number;
+}
