@@ -24,7 +24,19 @@ export function UpdateAvailableBanner() {
     return null;
   }
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
+    // Clear runtime caches before updating to ensure fresh content
+    if ('caches' in window) {
+      const cacheNames = await caches.keys();
+      await Promise.all(
+        cacheNames.map(cacheName => {
+          // Keep precache for app shell, delete runtime caches
+          if (!cacheName.includes('precache')) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    }
     updateServiceWorker(true);
   };
 
