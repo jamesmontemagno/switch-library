@@ -71,112 +71,98 @@ alter table public.share_profiles enable row level security;
 alter table public.api_usage enable row level security;
 alter table public.friend_lists enable row level security;
 
--- Profiles policies
-create policy "Users can view their own profile"
+-- Profiles policies (optimized: using (select auth.uid()) for better performance)
+-- Combined SELECT policy handles both own profile and shared profiles
+create policy "Select own or shared profiles"
   on public.profiles for select
-  using (auth.uid() = id);
+  using (
+    id = (select auth.uid())
+    OR id IN (
+      SELECT user_id FROM public.share_profiles WHERE enabled = true
+    )
+  );
 
 create policy "Users can update their own profile"
   on public.profiles for update
-  using (auth.uid() = id);
+  using ((select auth.uid()) = id);
 
 create policy "Users can insert their own profile"
   on public.profiles for insert
-  with check (auth.uid() = id);
+  with check ((select auth.uid()) = id);
 
--- Public can view profiles of users with enabled share profiles (for sharing feature)
-create policy "Anyone can view profiles of shared users"
-  on public.profiles for select
+-- Games policies (optimized: using (select auth.uid()) for better performance)
+-- Combined SELECT policy handles both own games and shared games
+create policy "Select own or shared games"
+  on public.games for select
   using (
-    exists (
-      select 1 from public.share_profiles
-      where share_profiles.user_id = profiles.id
-      and share_profiles.enabled = true
+    user_id = (select auth.uid())
+    OR user_id IN (
+      SELECT user_id FROM public.share_profiles WHERE enabled = true
     )
   );
-
--- Games policies
-create policy "Users can view their own games"
-  on public.games for select
-  using (auth.uid() = user_id);
 
 create policy "Users can insert their own games"
   on public.games for insert
-  with check (auth.uid() = user_id);
+  with check ((select auth.uid()) = user_id);
 
 create policy "Users can update their own games"
   on public.games for update
-  using (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id);
 
 create policy "Users can delete their own games"
   on public.games for delete
-  using (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id);
 
--- Share profiles policies
-create policy "Users can view their own share profile"
+-- Share profiles policies (optimized: using (select auth.uid()) for better performance)
+-- Combined SELECT policy handles both own share profile and public enabled profiles
+create policy "Select own or enabled share profiles"
   on public.share_profiles for select
-  using (auth.uid() = user_id);
+  using (
+    user_id = (select auth.uid())
+    OR enabled = true
+  );
 
 create policy "Users can insert their own share profile"
   on public.share_profiles for insert
-  with check (auth.uid() = user_id);
+  with check ((select auth.uid()) = user_id);
 
 create policy "Users can update their own share profile"
   on public.share_profiles for update
-  using (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id);
 
--- Public can view enabled share profiles (for sharing feature)
-create policy "Anyone can view enabled share profiles"
-  on public.share_profiles for select
-  using (enabled = true);
-
--- Public can view games of users with enabled share profiles (for sharing feature)
-create policy "Anyone can view games of shared profiles"
-  on public.games for select
-  using (
-    exists (
-      select 1 from public.share_profiles
-      where share_profiles.user_id = games.user_id
-      and share_profiles.enabled = true
-    )
-  );
-
--- API usage policies
+-- API usage policies (optimized: using (select auth.uid()) for better performance)
 create policy "Users can view their own API usage"
   on public.api_usage for select
-  using (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id);
 
 create policy "Users can insert their own API usage"
   on public.api_usage for insert
-  with check (auth.uid() = user_id);
+  with check ((select auth.uid()) = user_id);
 
--- Friend lists policies
-create policy "Users can view their own following list"
-  on public.friend_lists for select
-  using (auth.uid() = user_id);
-
--- Users can view who is following them (for Followers tab)
-create policy "Users can view their followers"
+-- Friend lists policies (optimized: using (select auth.uid()) for better performance)
+-- Combined SELECT policy handles both own following list and followers
+create policy "Select own friends or followers"
   on public.friend_lists for select
   using (
-    exists (
-      select 1 from public.share_profiles
-      where share_profiles.share_id = friend_lists.friend_share_id
-      and share_profiles.user_id = auth.uid()
+    user_id = (select auth.uid())
+    OR EXISTS (
+      SELECT 1 FROM public.share_profiles
+      WHERE share_profiles.share_id = friend_lists.friend_share_id
+        AND share_profiles.user_id = (select auth.uid())
     )
   );
 
 create policy "Users can add to their following list"
   on public.friend_lists for insert
-  with check (auth.uid() = user_id);
+  with check ((select auth.uid()) = user_id);
 
 create policy "Users can update their own following"
   on public.friend_lists for update
-  using (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id);
 
 create policy "Users can unfollow"
   on public.friend_lists for delete
-  using (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id);
 
 -- Function to automatically update updated_at
 create or replace function public.handle_updated_at()
@@ -261,8 +247,12 @@ create table if not exists public.game_additions (
 );
 
 -- Indexes for trending queries
-create index if not exists game_additions_thegamesdb_id_idx on public.game_additions(thegamesdb_id);
-create index if not exists game_additions_added_at_idx on public.game_additions(added_at);
+create index if not exists idx_game_additions_thegamesdb_id on public.game_additions(thegamesdb_id);
+create index if not exists idx_game_additions_added_at on public.game_additions(added_at desc);
+create index if not exists idx_game_additions_composite on public.game_additions(thegamesdb_id, added_at desc);
+
+-- Comment for documentation
+comment on table public.game_additions is 'Anonymous tracking of game additions for trending feature. No user data stored.';
 
 -- No RLS on game_additions - it's fully anonymous public data
 -- Anyone can read/write to track community trends
