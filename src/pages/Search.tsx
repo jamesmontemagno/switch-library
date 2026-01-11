@@ -230,7 +230,13 @@ export function Search() {
         case 'release_desc':
           return parseDate(b.releaseDate) - parseDate(a.releaseDate);
         default:
-          return 0; // Keep original order for relevance
+          // For relevance (default), prioritize North American releases
+          // region_id 1 = North America
+          const aIsNA = a.region_id === 1;
+          const bIsNA = b.region_id === 1;
+          if (aIsNA && !bIsNA) return -1;
+          if (!aIsNA && bIsNA) return 1;
+          return 0; // Keep original order for same region
       }
     });
     
