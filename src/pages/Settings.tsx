@@ -42,7 +42,12 @@ export function Settings() {
   };
 
   const handleSharingEnabled = async () => {
-    setSharingEnabled(true);
+    // Reload share profile to get updated status
+    if (!user) return;
+    const profile = await getShareProfile(user.id);
+    if (profile) {
+      setSharingEnabled(profile.enabled);
+    }
   };
 
   const handleSaveDisplayName = () => {

@@ -599,11 +599,6 @@ export function Search() {
           <h1><FontAwesomeIcon icon={faMagnifyingGlass} /> Game Search</h1>
           <p>Search TheGamesDB to find and add games to your collection</p>
         </div>
-        {isAuthenticated && (
-          <button onClick={() => setShowManualAddModal(true)} className="btn-add-manual">
-            + Add Manually
-          </button>
-        )}
       </header>
 
       {/* Mode Toggle - Search / Trending */}
@@ -896,6 +891,27 @@ export function Search() {
           </div>
         )}
       </div>
+
+      {/* Add Manually Button - Bottom of Search Results */}
+      {isAuthenticated && (
+        <div style={{ 
+          textAlign: 'center', 
+          marginTop: '2rem',
+          paddingTop: '2rem',
+          borderTop: '1px solid var(--border-color)'
+        }}>
+          <p style={{ 
+            marginBottom: '1rem', 
+            color: 'var(--text-secondary)', 
+            fontSize: '0.9375rem' 
+          }}>
+            Can't find what you're looking for?
+          </p>
+          <button onClick={() => setShowManualAddModal(true)} className="btn-add-manual">
+            + Add Manually
+          </button>
+        </div>
+      )}
         </>
       )}
 
