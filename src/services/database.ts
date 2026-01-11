@@ -397,7 +397,7 @@ export async function enableSharing(userId: string): Promise<ShareProfile | null
     // Create new share profile
     const { data, error } = await supabase
       .from('share_profiles')
-      .insert({ user_id: userId, enabled: true, accept_follow_requests: true })
+      .insert({ user_id: userId, enabled: true })
       .select()
       .single();
 
