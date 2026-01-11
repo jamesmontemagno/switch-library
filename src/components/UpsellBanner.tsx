@@ -12,7 +12,7 @@ export function UpsellBanner() {
         </div>
         <div className="upsell-text">
           <h3>Start Your Own Game Collection</h3>
-          <p>Sign up to create your library, add friends, and compare your game collections!</p>
+          <p>Sign up to create your library, follow friends, and compare your game collections!</p>
         </div>
         <div className="upsell-features">
           <div className="feature-item">
@@ -21,7 +21,7 @@ export function UpsellBanner() {
           </div>
           <div className="feature-item">
             <FontAwesomeIcon icon={faUsers} />
-            <span>Add Friends</span>
+            <span>Follow Friends</span>
           </div>
           <div className="feature-item">
             <FontAwesomeIcon icon={faArrowsLeftRight} />

@@ -14,7 +14,8 @@ My Switch Library is a web app that lets you track your Nintendo Switch (and the
 - ✍️ Manual entry for those obscure indie titles
 - 📊 Multiple view modes (grid, list, compact)
 - 🔗 Share your collection and compare with friends
-- 💾 Dual-mode operation: full Supabase cloud sync OR localStorage fallback
+- � Twitter-like follow/follower system with follow-back requests
+- �💾 Dual-mode operation: full Supabase cloud sync OR localStorage fallback
 - 🔐 GitHub OAuth authentication (or email/password, or demo mode)
 
 You can check it out live at [https://jamesmontemagno.github.io/switch-library/](https://jamesmontemagno.github.io/switch-library/) or explore the code at [https://github.com/jamesmontemagno/switch-library](https://github.com/jamesmontemagno/switch-library).
@@ -361,15 +362,94 @@ Let's talk numbers:
 
 The app is snappy. No heavy frameworks, aggressive caching, code splitting for routes. The entire production bundle is under 200KB gzipped.
 
+## The Social Layer: Twitter-Style Follows
+
+One of the most interesting features I built is the social system. Instead of traditional "friend requests" that require approval, I implemented a Twitter/X-style follow model.
+
+### How It Works
+
+**Following is instant** - When you visit someone's shared library, click "Follow" and boom, you're following them. No waiting for approval, no pending requests. Just instant connection.
+
+**Three-tab interface:**
+1. **Following** - People you follow (with "Follows you" badges if mutual)
+2. **Followers** - People who follow you
+3. **Requests** - Follow-back requests (when someone you follow asks you to follow them back)
+
+**Follow-back requests** - This is the clever bit. If someone follows you but you haven't followed them back, they can send a "follow-back request". You can accept (follow them back) or ignore it. If you ignore or don't respond within 30 days, the request flag is cleared but they still follow you.
+
+### The Database Design
+
+The schema is elegantly simple:
+
+```sql
+create table public.friend_lists (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users,
+  friend_share_id uuid references share_profiles(share_id),
+  nickname text check (length(nickname) <= 50),
+  status text default 'accepted' check (status in ('accepted')),
+  follow_back_requested boolean default false,
+  requested_at timestamp with time zone,
+  added_at timestamp with time zone default now(),
+  unique(user_id, friend_share_id)
+);
+```
+
+Key points:
+- **status** is always 'accepted' (following is instant)
+- **follow_back_requested** tracks optional requests
+- **requested_at** enables automatic 30-day expiration
+- **nickname** lets you label people however you want
+
+### Privacy Controls
+
+Users have granular control:
+- **Share toggle** - Enable/disable library sharing entirely
+- **Accept follow-back requests** - Allow/block follow-back requests (doesn't affect initial follows)
+
+Even when follow-back requests are disabled, people can still follow you. The toggle only controls whether they can request you to follow them back.
+
+### Automatic Cleanup
+
+A scheduled function clears follow-back requests older than 30 days:
+
+```sql
+CREATE FUNCTION cleanup_expired_follow_requests()
+RETURNS integer AS $$
+BEGIN
+  UPDATE friend_lists
+  SET follow_back_requested = false, requested_at = null
+  WHERE follow_back_requested = true
+  AND requested_at < now() - interval '30 days';
+  
+  RETURN ROW_COUNT;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+This keeps the database clean without breaking follow relationships. The person still follows you, just no nagging request.
+
+### Why This Model?
+
+Traditional friend requests create friction. You find someone's cool library, send a request, wait for approval, maybe they never check... frustrating.
+
+The Twitter model removes friction:
+- **Instant gratification** - Follow someone, see their library in your Following tab immediately
+- **No rejection anxiety** - Nobody has to "accept" or "reject" you
+- **Mutual follows emerge naturally** - If both people find each other interesting, they both follow
+- **Follow-back requests are optional** - Only use them if you want someone to follow you back
+
+And the entire thing works in both Supabase mode and localStorage mode. The dual-mode pattern strikes again.
+
 ## What's Next?
 
 A few features I'm planning:
 
 1. **Barcode scanning** - Use device camera to scan game barcodes
-2. **Friends list** (already planned - see the prompt file!)
-3. **Advanced comparison** - See games in common, unique to each collection
-4. **Collection stats** - Charts, graphs, spending analysis
-5. **Import/Export** - CSV export, bulk import from other trackers
+2. **Advanced comparison** - See games in common, unique to each collection, mutual follows who own specific games
+3. **Collection stats** - Charts, graphs, spending analysis
+4. **Import/Export** - CSV export, bulk import from other trackers
+5. **Activity feed** - See what games your follows are adding/completing
 
 And I'll build all of these with Copilot. The architecture is solid, the patterns are established, and the custom instructions ensure consistency.
 

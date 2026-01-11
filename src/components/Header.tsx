@@ -76,7 +76,7 @@ export function Header({ pendingRequestCount = 0, onRefreshRequests }: HeaderPro
                     </span>
                   )}
                 </span>
-                <span>Friends</span>
+                <span>Following</span>
                 {onRefreshRequests && pendingRequestCount > 0 && (
                   <button 
                     className="nav-refresh-btn" 
