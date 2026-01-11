@@ -5,6 +5,7 @@ import { useSEO } from '../hooks/useSEO';
 import type { GameEntry, Format, Platform } from '../types';
 import { loadSharedGames, getSharedUserProfile, getShareProfile, isFollowing, loadGames, saveGame, getFollowers } from '../services/database';
 import { AddFriendModal } from '../components/AddFriendModal';
+import { ShareLibraryModal } from '../components/ShareLibraryModal';
 import { UpsellBanner } from '../components/UpsellBanner';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowsLeftRight, faPlus, faCheck, faUserCheck } from '@fortawesome/free-solid-svg-icons';
@@ -51,6 +52,7 @@ export function SharedLibrary() {
     theyFollowYou: false
   });
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   // For "Add to Collection" functionality
@@ -92,6 +94,20 @@ export function SharedLibrary() {
     
     setFollowRelationship({ youFollowThem, theyFollowYou });
   }, [user, shareId]);
+
+  // Handler for when sharing is enabled
+  const handleSharingEnabled = useCallback(async () => {
+    if (!user) return;
+    try {
+      const myProfile = await getShareProfile(user.id);
+      if (myProfile?.enabled) {
+        setMyShareId(myProfile.shareId);
+        setToast({ message: 'Sharing enabled successfully! You can now follow others and compare libraries.', type: 'success' });
+      }
+    } catch (error) {
+      console.error('Failed to refresh share profile:', error);
+    }
+  }, [user]);
 
   useEffect(() => {
     async function loadData() {
@@ -307,6 +323,43 @@ export function SharedLibrary() {
         </div>
       )}
 
+      {/* CTA for authenticated users to enable sharing */}
+      {user && !myShareId && (
+        <div style={{
+          padding: '1rem',
+          margin: '0 0 1.5rem 0',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          border: '1px solid rgba(59, 130, 246, 0.3)',
+          borderRadius: '0.5rem',
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: '0.75rem',
+        }}>
+          <span style={{ fontSize: '1.25rem', flexShrink: 0 }}>✨</span>
+          <div style={{ flex: 1 }}>
+            <strong style={{ display: 'block', marginBottom: '0.25rem' }}>Share Your Library Too!</strong>
+            <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
+              Enable sharing on your library to follow other users, compare collections, and join the community.
+            </p>
+            <button
+              onClick={() => setShowShareModal(true)}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: 'var(--primary)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '0.375rem',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                fontWeight: '600',
+              }}
+            >
+              Enable Sharing
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Mobile Toolbar Header */}
       <div className="toolbar-mobile-header">
         <button 
@@ -468,6 +521,14 @@ export function SharedLibrary() {
           }}
           prefilledShareId={shareId}
           prefilledNickname={userInfo.displayName}
+        />
+      )}
+
+      {showShareModal && user && (
+        <ShareLibraryModal
+          userId={user.id}
+          onClose={() => setShowShareModal(false)}
+          onSharingEnabled={handleSharingEnabled}
         />
       )}
 

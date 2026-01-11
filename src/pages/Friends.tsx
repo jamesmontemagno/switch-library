@@ -14,6 +14,7 @@ import {
 import { AddFriendModal } from '../components/AddFriendModal';
 import { RemoveFriendModal } from '../components/RemoveFriendModal';
 import { EditNicknameModal } from '../components/EditNicknameModal';
+import { ShareLibraryModal } from '../components/ShareLibraryModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserGroup, faMagnifyingGlass, faEye, faPenToSquare, faArrowsLeftRight, faUserPlus, faRotate, faUserCheck, faTableCells, faList, faGripLines, faUsers, faUserMinus } from '@fortawesome/free-solid-svg-icons';
 import './Friends.css';
@@ -46,6 +47,7 @@ export function Friends() {
   
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [editingFriend, setEditingFriend] = useState<FriendWithDetails | null>(null);
   const [removingFriend, setRemovingFriend] = useState<FriendWithDetails | null>(null);
   
@@ -97,6 +99,19 @@ export function Friends() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Handler for when sharing is enabled
+  const handleSharingEnabled = useCallback(async () => {
+    if (!user) return;
+    try {
+      const shareProfile = await getShareProfile(user.id);
+      setUserShareId(shareProfile?.shareId || null);
+      setHasSharingEnabled(shareProfile?.enabled || false);
+      showToast('Sharing enabled successfully!', 'success');
+    } catch (error) {
+      console.error('Failed to refresh share profile:', error);
+    }
+  }, [user, showToast]);
 
   // Log the current logged-in user for debugging
   useEffect(() => {
@@ -232,7 +247,7 @@ export function Friends() {
               This ensures a reciprocal community where everyone shares their collections.
             </p>
             <button
-              onClick={() => navigate('/library')}
+              onClick={() => setShowShareModal(true)}
               style={{
                 marginTop: '0.75rem',
                 padding: '0.5rem 1rem',
@@ -245,7 +260,7 @@ export function Friends() {
                 fontWeight: '600',
               }}
             >
-              Go to Library Settings
+              Enable Sharing
             </button>
           </div>
         </div>
@@ -513,6 +528,14 @@ export function Friends() {
           friendNickname={removingFriend.nickname}
           onClose={() => setRemovingFriend(null)}
           onRemove={fetchData}
+        />
+      )}
+
+      {showShareModal && user && (
+        <ShareLibraryModal
+          userId={user.id}
+          onClose={() => setShowShareModal(false)}
+          onSharingEnabled={handleSharingEnabled}
         />
       )}
     </div>

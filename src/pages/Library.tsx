@@ -4,11 +4,12 @@ import { useAuth } from '../hooks/useAuth';
 import { usePreferences } from '../hooks/usePreferences';
 import { useSEO } from '../hooks/useSEO';
 import type { GameEntry, Platform, ShareProfile } from '../types';
-import { loadGames, saveGame, deleteGame as deleteGameFromDb, getShareProfile, enableSharing, disableSharing, updateSharePrivacy, updateDisplayName, getUserProfile } from '../services/database';
+import { loadGames, saveGame, deleteGame as deleteGameFromDb, getShareProfile } from '../services/database';
 import { EditGameModal } from '../components/EditGameModal';
+import { ShareLibraryModal } from '../components/ShareLibraryModal';
 import { logger } from '../services/logger';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faPenToSquare, faGear, faClipboard, faEye, faGamepad, faTrash, faCartShopping, faTrophy, faLink, faUser, faLock, faXmark, faMagnifyingGlass, faTableCells, faList, faGripLines } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faPenToSquare, faGamepad, faTrash, faCartShopping, faTrophy, faLink, faMagnifyingGlass, faTableCells, faList, faGripLines } from '@fortawesome/free-solid-svg-icons';
 import './Library.css';
 
 type SortOption = 'title_asc' | 'title_desc' | 'added_newest' | 'added_oldest' | 'purchase_newest' | 'purchase_oldest' | 'platform' | 'format' | 'completed_first' | 'not_completed_first';
@@ -44,14 +45,7 @@ export function Library() {
   
   // Share state
   const [shareProfile, setShareProfile] = useState<ShareProfile | null>(null);
-  const [isLoadingShare, setIsLoadingShare] = useState(false);
   const [showSharePanel, setShowSharePanel] = useState(false);
-  const [copySuccess, setCopySuccess] = useState(false);
-  
-  // Profile editing state
-  const [displayName, setDisplayName] = useState('');
-  const [editingDisplayName, setEditingDisplayName] = useState(false);
-  const [savingDisplayName, setSavingDisplayName] = useState(false);
 
   // Save preferences when filters/sort/view change
   useEffect(() => {
@@ -72,16 +66,12 @@ export function Library() {
     logger.info('Fetching library games', { userId: user.id });
     setIsLoading(true);
     try {
-      const [userGames, userShareProfile, userProfile] = await Promise.all([
+      const [userGames, userShareProfile] = await Promise.all([
         loadGames(user.id),
-        getShareProfile(user.id),
-        getUserProfile(user.id)
+        getShareProfile(user.id)
       ]);
       setGames(userGames);
       setShareProfile(userShareProfile);
-      if (userProfile) {
-        setDisplayName(userProfile.displayName);
-      }
       logger.info('Library data loaded', { 
         gamesCount: userGames.length, 
         hasShareProfile: !!userShareProfile 
@@ -165,94 +155,14 @@ export function Library() {
     setEditingGame(null);
   };
 
-  // Share handlers
-  const handleToggleSharing = async () => {
+  const handleSharingEnabled = async () => {
+    // Refresh share profile after enabling sharing in modal
     if (!user) return;
-    setIsLoadingShare(true);
     try {
-      if (shareProfile?.enabled) {
-        const success = await disableSharing(user.id);
-        if (success) {
-          setShareProfile(prev => prev ? { ...prev, enabled: false } : null);
-        }
-      } else {
-        const newProfile = await enableSharing(user.id);
-        if (newProfile) {
-          setShareProfile(newProfile);
-        }
-      }
+      const updatedProfile = await getShareProfile(user.id);
+      setShareProfile(updatedProfile);
     } catch (error) {
-      console.error('Failed to toggle sharing:', error);
-    } finally {
-      setIsLoadingShare(false);
-    }
-  };
-
-  const getShareUrl = () => {
-    if (!shareProfile) return '';
-    const baseUrl = window.location.origin + import.meta.env.BASE_URL;
-    return `${baseUrl}shared/${shareProfile.shareId}`;
-  };
-
-  const handleCopyLink = async () => {
-    const url = getShareUrl();
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopySuccess(true);
-      setTimeout(() => setCopySuccess(false), 2000);
-    } catch (error) {
-      console.error('Failed to copy link:', error);
-    }
-  };
-
-  // Display name handler
-  const handleSaveDisplayName = async () => {
-    if (!user || !displayName.trim()) return;
-    setSavingDisplayName(true);
-    try {
-      const success = await updateDisplayName(user.id, displayName.trim());
-      if (success) {
-        setEditingDisplayName(false);
-      }
-    } catch (error) {
-      console.error('Failed to update display name:', error);
-    } finally {
-      setSavingDisplayName(false);
-    }
-  };
-
-  // Privacy toggle handlers
-  const handleToggleShowName = async () => {
-    if (!user || !shareProfile) return;
-    setIsLoadingShare(true);
-    try {
-      const updated = await updateSharePrivacy(user.id, { 
-        showDisplayName: !shareProfile.showDisplayName 
-      });
-      if (updated) {
-        setShareProfile(updated);
-      }
-    } catch (error) {
-      console.error('Failed to toggle show name:', error);
-    } finally {
-      setIsLoadingShare(false);
-    }
-  };
-
-  const handleToggleShowAvatar = async () => {
-    if (!user || !shareProfile) return;
-    setIsLoadingShare(true);
-    try {
-      const updated = await updateSharePrivacy(user.id, { 
-        showAvatar: !shareProfile.showAvatar 
-      });
-      if (updated) {
-        setShareProfile(updated);
-      }
-    } catch (error) {
-      console.error('Failed to toggle show avatar:', error);
-    } finally {
-      setIsLoadingShare(false);
+      console.error('Failed to refresh share profile:', error);
     }
   };
 
@@ -298,121 +208,13 @@ export function Library() {
         </div>
       </header>
 
-      {/* Share Panel */}
-      {showSharePanel && (
-        <div className="share-panel">
-          <div className="share-panel-header">
-            <h3><FontAwesomeIcon icon={faLink} /> Share Your Library</h3>
-            <p>Share your collection with friends or compare libraries</p>
-          </div>
-          
-          {/* Profile Settings */}
-          <div className="share-section">
-            <h4><FontAwesomeIcon icon={faUser} /> Display Name</h4>
-            <div className="profile-edit-row">
-              {editingDisplayName ? (
-                <>
-                  <input
-                    type="text"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    className="profile-input"
-                    placeholder="Your display name"
-                  />
-                  <button 
-                    onClick={handleSaveDisplayName} 
-                    disabled={savingDisplayName || !displayName.trim()}
-                    className="btn-save-profile"
-                  >
-                    {savingDisplayName ? '...' : <><FontAwesomeIcon icon={faCheck} /> Save</>}
-                  </button>
-                  <button 
-                    onClick={() => setEditingDisplayName(false)}
-                    className="btn-cancel-profile"
-                  >
-                    <FontAwesomeIcon icon={faXmark} />
-                  </button>
-                </>
-              ) : (
-                <>
-                  <span className="current-name">{displayName || 'Not set'}</span>
-                  <button 
-                    onClick={() => setEditingDisplayName(true)}
-                    className="btn-edit-profile"
-                  >
-                    <FontAwesomeIcon icon={faPenToSquare} /> Edit
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-          
-          <div className="share-section">
-            <h4><FontAwesomeIcon icon={faGear} /> Sharing Settings</h4>
-            <div className="share-panel-content">
-              <div className="share-toggle-row">
-                <span>Sharing is {shareProfile?.enabled ? 'enabled' : 'disabled'}</span>
-                <button
-                  onClick={handleToggleSharing}
-                  disabled={isLoadingShare}
-                  className={`btn-toggle ${shareProfile?.enabled ? 'on' : 'off'}`}
-                >
-                  {isLoadingShare ? '...' : shareProfile?.enabled ? 'ON' : 'OFF'}
-                </button>
-              </div>
-              
-              {shareProfile?.enabled && (
-                <>
-                  <div className="share-link-row">
-                    <input
-                      type="text"
-                      value={getShareUrl()}
-                      readOnly
-                      className="share-url-input"
-                    />
-                    <button onClick={handleCopyLink} className="btn-copy">
-                      {copySuccess ? <><FontAwesomeIcon icon={faCheck} /> Copied!</> : <><FontAwesomeIcon icon={faClipboard} /> Copy</>}
-                    </button>
-                  </div>
-                  
-                  {/* Privacy Settings */}
-                  <div className="privacy-settings">
-                    <h5><FontAwesomeIcon icon={faLock} /> Privacy</h5>
-                    <div className="privacy-toggle-row">
-                      <span>Show my display name</span>
-                      <button
-                        onClick={handleToggleShowName}
-                        disabled={isLoadingShare}
-                        className={`btn-toggle small ${shareProfile?.showDisplayName ? 'on' : 'off'}`}
-                      >
-                        {shareProfile?.showDisplayName ? 'ON' : 'OFF'}
-                      </button>
-                    </div>
-                    <div className="privacy-toggle-row">
-                      <span>Show my avatar</span>
-                      <button
-                        onClick={handleToggleShowAvatar}
-                        disabled={isLoadingShare}
-                        className={`btn-toggle small ${shareProfile?.showAvatar ? 'on' : 'off'}`}
-                      >
-                        {shareProfile?.showAvatar ? 'ON' : 'OFF'}
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div className="share-actions-row">
-                    <button 
-                      onClick={() => navigate(`/shared/${shareProfile.shareId}`)}
-                      className="btn-preview"
-                    >
-                      <FontAwesomeIcon icon={faEye} /> Preview
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
+      {/* Share Library Modal */}
+      {showSharePanel && user && (
+        <ShareLibraryModal 
+          userId={user.id} 
+          onClose={() => setShowSharePanel(false)}
+          onSharingEnabled={handleSharingEnabled}
+        />
       )}
 
       {/* Mobile Toolbar Header */}

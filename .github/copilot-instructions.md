@@ -90,6 +90,11 @@ npm run dev  # Runs on http://localhost:5173
 
 - **Pages** ([src/pages/](src/pages/)): Top-level routes, handle data fetching
 - **Components** ([src/components/](src/components/)): Presentational, receive props
+  - **ShareLibraryModal** ([src/components/ShareLibraryModal.tsx](src/components/ShareLibraryModal.tsx)): Reusable modal for managing share library settings
+    - Used across Library, Friends, and SharedLibrary pages
+    - Handles display name editing, sharing toggle, privacy settings (show name/avatar)
+    - Auto-loads user profile and share settings on mount
+    - Triggers `onSharingEnabled` callback when sharing is enabled for parent refresh
 - **Hooks** ([src/hooks/](src/hooks/)): Reusable logic (useAuth, usePreferences, useSEO)
 - **Services** ([src/services/](src/services/)): External API/database interfaces
 
@@ -296,6 +301,7 @@ func azure functionapp publish <function-app-name>
 | File | Purpose |
 |------|---------|
 | [src/contexts/AuthContext.tsx](src/contexts/AuthContext.tsx) | Dual-mode auth with GitHub OAuth/email/demo |
+| [src/components/ShareLibraryModal.tsx](src/components/ShareLibraryModal.tsx) | Reusable share settings modal across pages |
 | [src/services/database.ts](src/services/database.ts) | Supabase ↔ localStorage abstraction layer |
 | [src/services/thegamesdb.ts](src/services/thegamesdb.ts) | Frontend API client with multi-tier caching |
 | [src/services/logger.ts](src/services/logger.ts) | Universal conditional logger for debugging |
