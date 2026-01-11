@@ -290,67 +290,66 @@ export function Friends() {
       </div>
 
       {/* Following Tab */}
-      {activeTab === 'following' && (
-        <>
-          {following.length > 0 && (
-            <div className="friends-toolbar">
-              <input
-                type="search"
-                placeholder="Search following..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="search-input"
-                aria-label="Search following"
-              />
-              
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="filter-select"
-                aria-label="Sort following"
-              >
-                <option value="added_desc">Date Added ↓</option>
-                <option value="added_asc">Date Added ↑</option>
-                <option value="nickname_asc">Nickname A-Z</option>
-                <option value="nickname_desc">Nickname Z-A</option>
-                <option value="games_desc">Game Count ↓</option>
-                <option value="games_asc">Game Count ↑</option>
-              </select>
-            </div>
-          )}
+      <div style={{ display: activeTab === 'following' ? 'block' : 'none' }}>
+        {following.length > 0 && (
+          <div className="friends-toolbar">
+            <input
+              type="search"
+              placeholder="Search following..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="search-input"
+              aria-label="Search following"
+            />
+            
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortOption)}
+              className="filter-select"
+              aria-label="Sort following"
+            >
+              <option value="added_desc">Date Added ↓</option>
+              <option value="added_asc">Date Added ↑</option>
+              <option value="nickname_asc">Nickname A-Z</option>
+              <option value="nickname_desc">Nickname Z-A</option>
+              <option value="games_desc">Game Count ↓</option>
+              <option value="games_asc">Game Count ↑</option>
+            </select>
+          </div>
+        )}
 
-          {filteredFollowing.length === 0 ? (
-            <div className="empty-state">
-              {following.length === 0 ? (
-                <>
-                  <div className="empty-icon">
-                    <FontAwesomeIcon icon={faUserGroup} />
-                  </div>
-                  <h2>Not following anyone yet</h2>
-                  <p>
-                    Visit a shared library and click "Follow" to add them here.<br />
-                    You can also follow users directly by entering their share URL.
-                  </p>
-                  <button onClick={() => setShowAddModal(true)} className="btn-add-friend">
-                    <FontAwesomeIcon icon={faUserPlus} />
-                    Follow Your First User
-                  </button>
-                  <div className="example-url">
-                    Example: https://myswitchlibrary.com/shared/abc-123-xyz
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="empty-icon">
-                    <FontAwesomeIcon icon={faMagnifyingGlass} />
-                  </div>
-                  <h2>No matches found</h2>
-                  <p>Try adjusting your search.</p>
-                </>
-              )}
-            </div>
-          ) : (
-            <div className="friends-grid">
+        {filteredFollowing.length === 0 ? (
+          <div className="empty-state">
+            {following.length === 0 ? (
+              <>
+                <div className="empty-icon">
+                  <FontAwesomeIcon icon={faUserGroup} />
+                </div>
+                <h2>Not following anyone yet</h2>
+                <p>
+                  Visit a shared library and click "Follow" to add them here.<br />
+                  You can also follow users directly by entering their share URL.
+                </p>
+                <button onClick={() => setShowAddModal(true)} className="btn-add-friend">
+                  <FontAwesomeIcon icon={faUserPlus} />
+                  Follow Your First User
+                </button>
+                <div className="example-url">
+                  Example: https://myswitchlibrary.com/shared/abc-123-xyz
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="empty-icon">
+                  <FontAwesomeIcon icon={faMagnifyingGlass} />
+                </div>
+                <h2>No matches found</h2>
+                <p>Try adjusting your search.</p>
+              </>
+            )}
+          </div>
+        ) : (
+          <div className="friends-grid">
               {filteredFollowing.map((person) => (
                 <div key={person.id} className="friend-card">
                   <div className="friend-card-header">
@@ -412,25 +411,23 @@ export function Friends() {
               ))}
             </div>
           )}
-        </>
-      )}
+      </div>
 
       {/* Followers Tab */}
-      {activeTab === 'followers' && (
-        <>
-          {followers.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">
-                <FontAwesomeIcon icon={faUsers} />
-              </div>
-              <h2>No followers yet</h2>
-              <p>
-                Share your library link to let others follow you!<br />
-                When someone follows you, they'll appear here.
-              </p>
+      <div style={{ display: activeTab === 'followers' ? 'block' : 'none' }}>
+        {followers.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon">
+              <FontAwesomeIcon icon={faUsers} />
             </div>
-          ) : (
-            <div className="requests-list">
+            <h2>No followers yet</h2>
+            <p>
+              Share your library link to let others follow you!<br />
+              When someone follows you, they'll appear here.
+            </p>
+          </div>
+        ) : (
+          <div className="requests-list">
               {followers.map((follower) => (
                 <div key={follower.followerUserId} className="request-card">
                   <div className="request-card-header">
@@ -475,10 +472,9 @@ export function Friends() {
                   </div>
                 </div>
               ))}
-            </div>
-          )}
-        </>
-      )}
+          </div>
+        )}
+      </div>
 
       {showAddModal && (
         <AddFriendModal
