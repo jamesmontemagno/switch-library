@@ -1228,7 +1228,7 @@ export { useSupabase };
 
 // ===== Trending Games Functions =====
 
-const TRENDING_CACHE_KEY = 'switch-library-trending';
+const TRENDING_CACHE_KEY = 'switch-library-trending-v2'; // v2: Updated limits (15 recent, 10 top)
 const TRENDING_CACHE_TTL_MS = 60 * 60 * 1000; // 60 minutes
 
 interface TrendingCache {
@@ -1359,14 +1359,14 @@ export async function getTrendingGames(userId?: string): Promise<TrendingRespons
     // Top games by total count
     const topByCount = [...aggregatedGames]
       .sort((a, b) => b.addCount - a.addCount)
-      .slice(0, 30);
+      .slice(0, 10);
 
     // Recently added (by recent count)
     const topByRecent = [...aggregatedGames]
       .filter(g => g.recentAddCount > 0)
       .sort((a, b) => b.recentAddCount - a.recentAddCount || 
         new Date(b.lastAddedAt).getTime() - new Date(a.lastAddedAt).getTime())
-      .slice(0, 30);
+      .slice(0, 15);
 
     // Get unique game IDs to fetch details
     const allIds = [...new Set([
@@ -1425,7 +1425,7 @@ function getTrendingFromLocalStorage(userId?: string): TrendingResponse {
       const userGames = allGames
         .filter(game => game.userId === userId && game.thegamesdbId)
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, 30);
+        .slice(0, 15);
 
       const trendingGames: TrendingGame[] = userGames.map(game => ({
         thegamesdbId: game.thegamesdbId!,
