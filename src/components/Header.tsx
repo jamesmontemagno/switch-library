@@ -1,7 +1,8 @@
+import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMagnifyingGlass, faBookOpen, faUserGroup } from '@fortawesome/free-solid-svg-icons';
+import { faMagnifyingGlass, faBookOpen, faUserGroup, faUser } from '@fortawesome/free-solid-svg-icons';
 import './Header.css';
 
 // Simple MD5-like hash for Gravatar (Note: For production, use a proper MD5 library)
@@ -29,6 +30,7 @@ export function Header() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const [avatarError, setAvatarError] = useState(false);
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -40,9 +42,9 @@ export function Header() {
     navigate('/settings');
   };
 
-  // Use user avatar or fallback to logo
+  // Use user avatar or fallback to person icon
   const avatarUrl = user?.avatarUrl || '';
-  const showLogo = !avatarUrl;
+  const showPersonIcon = !avatarUrl || avatarError;
 
   return (
     <header className="header">
@@ -75,12 +77,10 @@ export function Header() {
             <span className="auth-loading">Loading...</span>
           ) : isAuthenticated && user ? (
             <button onClick={handleSettingsClick} className="user-avatar-button" aria-label="Settings">
-              {showLogo ? (
-                <img 
-                  src={`${import.meta.env.BASE_URL}android-chrome-192x192.png`} 
-                  alt="Settings" 
-                  className="user-avatar" 
-                />
+              {showPersonIcon ? (
+                <span className="user-avatar user-avatar-icon" aria-hidden="true">
+                  <FontAwesomeIcon icon={faUser} />
+                </span>
               ) : (
                 <img 
                   src={avatarUrl} 
@@ -92,8 +92,8 @@ export function Header() {
                     if (gravatarUrl && e.currentTarget.src !== gravatarUrl) {
                       e.currentTarget.src = gravatarUrl;
                     } else {
-                      // If Gravatar also fails, show the logo
-                      e.currentTarget.src = `${import.meta.env.BASE_URL}android-chrome-192x192.png`;
+                      // If Gravatar also fails, show the person icon
+                      setAvatarError(true);
                     }
                   }}
                 />
