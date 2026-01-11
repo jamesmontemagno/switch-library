@@ -15,6 +15,7 @@ import {
 import { saveGame, loadGames, getMonthlySearchCount, logSearchUsage, deleteGame as deleteGameFromDb, getTrendingGames } from '../services/database';
 import { UsageLimitModal } from '../components/UsageLimitModal';
 import { ManualAddGameModal } from '../components/ManualAddGameModal';
+import { SegmentedControl } from '../components/SegmentedControl';
 import './Search.css';
 
 type SortOption = 'relevance' | 'release_desc' | 'release_asc' | 'title_asc' | 'title_desc';
@@ -129,10 +130,7 @@ export function Search() {
   // Filters
   const [platform, setPlatform] = useState<'all' | Platform>('all');
   const [region, setRegion] = useState<'all' | number>('all');
-  const [yearFrom, setYearFrom] = useState('');
-  const [yearTo, setYearTo] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('relevance');
-  const [onlyWithBoxart, setOnlyWithBoxart] = useState(false);
   
   // View
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -219,26 +217,6 @@ export function Search() {
       filtered = filtered.filter(r => r.region_id === region);
     }
     
-    if (onlyWithBoxart) {
-      filtered = filtered.filter(r => !!r.boxartUrl);
-    }
-    
-    if (yearFrom) {
-      filtered = filtered.filter(r => {
-        if (!r.releaseDate) return false;
-        const year = parseInt(r.releaseDate.split('-')[0]);
-        return year >= parseInt(yearFrom);
-      });
-    }
-    
-    if (yearTo) {
-      filtered = filtered.filter(r => {
-        if (!r.releaseDate) return false;
-        const year = parseInt(r.releaseDate.split('-')[0]);
-        return year <= parseInt(yearTo);
-      });
-    }
-    
     // Apply sorting
     const parseDate = (d?: string) => (d ? new Date(d).getTime() : 0);
     filtered.sort((a, b) => {
@@ -257,7 +235,7 @@ export function Search() {
     });
     
     return filtered;
-  }, [rawResults, region, yearFrom, yearTo, sortBy, onlyWithBoxart]);
+  }, [rawResults, region, sortBy]);
 
   const handleSearch = useCallback(async (page: number = 1) => {
     if (!query.trim() || !hasTheGamesDB) return;
@@ -561,24 +539,16 @@ export function Search() {
 
       {/* Mode Toggle - Search / Trending */}
       <div className="mode-toggle-container">
-        <div className="mode-toggle" role="tablist" aria-label="Search mode">
-          <button
-            role="tab"
-            aria-selected={mode === 'search'}
-            className={`mode-btn ${mode === 'search' ? 'active' : ''}`}
-            onClick={() => setMode('search')}
-          >
-            <FontAwesomeIcon icon={faMagnifyingGlass} /> Search
-          </button>
-          <button
-            role="tab"
-            aria-selected={mode === 'trending'}
-            className={`mode-btn ${mode === 'trending' ? 'active' : ''}`}
-            onClick={() => setMode('trending')}
-          >
-            <FontAwesomeIcon icon={faFire} /> Trending
-          </button>
-        </div>
+        <SegmentedControl
+          options={[
+            { value: 'search', label: 'Search', icon: <FontAwesomeIcon icon={faMagnifyingGlass} /> },
+            { value: 'trending', label: 'Trending', icon: <FontAwesomeIcon icon={faFire} /> },
+          ]}
+          value={mode}
+          onChange={(value) => setMode(value as 'search' | 'trending')}
+          ariaLabel="Search mode"
+          variant="default"
+        />
       </div>
 
       {/* Search Mode Content */}
@@ -617,23 +587,19 @@ export function Search() {
           <span><FontAwesomeIcon icon={faWrench} /> Filters & Sort</span>
           <span className="toggle-icon">{showFilters ? '▲' : '▼'}</span>
         </button>
-        <div className="view-toggle view-toggle-mobile">
-          <button
-            className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
-            onClick={() => setViewMode('grid')}
-            title="Grid View"
-            aria-label="Grid View"
-          >
-            <FontAwesomeIcon icon={faTableCells} />
-          </button>
-          <button
-            className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
-            onClick={() => setViewMode('list')}
-            title="List View"
-            aria-label="List View"
-          >
-            <FontAwesomeIcon icon={faList} />
-          </button>
+        <div className="view-toggle-mobile">
+          <SegmentedControl
+            options={[
+              { value: 'grid', label: 'Grid View', icon: <FontAwesomeIcon icon={faTableCells} /> },
+              { value: 'list', label: 'List View', icon: <FontAwesomeIcon icon={faList} /> },
+            ]}
+            value={viewMode}
+            onChange={setViewMode}
+            ariaLabel="View mode"
+            variant="buttons"
+            size="sm"
+            iconOnly
+          />
         </div>
       </div>
 
@@ -664,30 +630,6 @@ export function Search() {
         </div>
         
         <div className="filter-item">
-          <label>Year From</label>
-          <input
-            type="number"
-            min="2017"
-            max="2030"
-            placeholder="From"
-            value={yearFrom}
-            onChange={(e) => setYearFrom(e.target.value)}
-          />
-        </div>
-        
-        <div className="filter-item">
-          <label>Year To</label>
-          <input
-            type="number"
-            min="2017"
-            max="2030"
-            placeholder="To"
-            value={yearTo}
-            onChange={(e) => setYearTo(e.target.value)}
-          />
-        </div>
-        
-        <div className="filter-item">
           <label>Sort By</label>
           <select value={sortBy} onChange={(e) => setSortBy(e.target.value as SortOption)}>
             <option value="relevance">Relevance</option>
@@ -698,32 +640,19 @@ export function Search() {
           </select>
         </div>
         
-        <label className="filter-checkbox-item">
-          <input
-            type="checkbox"
-            checked={onlyWithBoxart}
-            onChange={(e) => setOnlyWithBoxart(e.target.checked)}
+        <div className="view-toggle-desktop">
+          <SegmentedControl
+            options={[
+              { value: 'grid', label: 'Grid View', icon: <FontAwesomeIcon icon={faTableCells} /> },
+              { value: 'list', label: 'List View', icon: <FontAwesomeIcon icon={faList} /> },
+            ]}
+            value={viewMode}
+            onChange={setViewMode}
+            ariaLabel="View mode"
+            variant="buttons"
+            size="sm"
+            iconOnly
           />
-          <span>With Boxart Only</span>
-        </label>
-        
-        <div className="view-toggle view-toggle-desktop">
-          <button
-            className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
-            onClick={() => setViewMode('grid')}
-            title="Grid View"
-            aria-label="Grid View"
-          >
-            <FontAwesomeIcon icon={faTableCells} />
-          </button>
-          <button
-            className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
-            onClick={() => setViewMode('list')}
-            title="List View"
-            aria-label="List View"
-          >
-            <FontAwesomeIcon icon={faList} />
-          </button>
         </div>
       </div>
 
@@ -1039,41 +968,31 @@ export function Search() {
               <div className="quick-add-options">
                 <div className="form-group">
                   <label>Platform</label>
-                  <div className="format-segmented-control">
-                    <button
-                      type="button"
-                      className={`segment ${quickAddPlatform === 'Nintendo Switch' ? 'active' : ''}`}
-                      onClick={() => setQuickAddPlatform('Nintendo Switch')}
-                    >
-                      <FontAwesomeIcon icon={faGamepad} /> Switch
-                    </button>
-                    <button
-                      type="button"
-                      className={`segment ${quickAddPlatform === 'Nintendo Switch 2' ? 'active' : ''}`}
-                      onClick={() => setQuickAddPlatform('Nintendo Switch 2')}
-                    >
-                      <FontAwesomeIcon icon={faGamepad} /> Switch 2
-                    </button>
-                  </div>
+                  <SegmentedControl
+                    options={[
+                      { value: 'Nintendo Switch', label: 'Switch', icon: <FontAwesomeIcon icon={faGamepad} /> },
+                      { value: 'Nintendo Switch 2', label: 'Switch 2', icon: <FontAwesomeIcon icon={faGamepad} /> },
+                    ]}
+                    value={quickAddPlatform}
+                    onChange={(value) => setQuickAddPlatform(value as Platform)}
+                    ariaLabel="Platform"
+                    variant="buttons"
+                    fullWidth
+                  />
                 </div>
                 <div className="form-group">
                   <label>Format</label>
-                  <div className="format-segmented-control">
-                    <button
-                      type="button"
-                      className={`segment ${quickAddFormat === 'Physical' ? 'active' : ''}`}
-                      onClick={() => setQuickAddFormat('Physical')}
-                    >
-                      <FontAwesomeIcon icon={faBox} /> Physical
-                    </button>
-                    <button
-                      type="button"
-                      className={`segment ${quickAddFormat === 'Digital' ? 'active' : ''}`}
-                      onClick={() => setQuickAddFormat('Digital')}
-                    >
-                      <FontAwesomeIcon icon={faCloud} /> Digital
-                    </button>
-                  </div>
+                  <SegmentedControl
+                    options={[
+                      { value: 'Physical', label: 'Physical', icon: <FontAwesomeIcon icon={faBox} /> },
+                      { value: 'Digital', label: 'Digital', icon: <FontAwesomeIcon icon={faCloud} /> },
+                    ]}
+                    value={quickAddFormat}
+                    onChange={(value) => setQuickAddFormat(value as Format)}
+                    ariaLabel="Game format"
+                    variant="buttons"
+                    fullWidth
+                  />
                 </div>
               </div>
               <div className="quick-add-actions">

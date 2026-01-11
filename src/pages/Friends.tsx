@@ -15,12 +15,12 @@ import { AddFriendModal } from '../components/AddFriendModal';
 import { RemoveFriendModal } from '../components/RemoveFriendModal';
 import { EditNicknameModal } from '../components/EditNicknameModal';
 import { ShareLibraryModal } from '../components/ShareLibraryModal';
+import { SegmentedControl } from '../components/SegmentedControl';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUserGroup, faMagnifyingGlass, faEye, faPenToSquare, faArrowsLeftRight, faUserPlus, faRotate, faUserCheck, faTableCells, faList, faGripLines, faUsers, faUserMinus, faLink, faGear } from '@fortawesome/free-solid-svg-icons';
+import { faUserGroup, faMagnifyingGlass, faEye, faPenToSquare, faArrowsLeftRight, faUserPlus, faRotate, faUserCheck, faUsers, faUserMinus, faLink, faGear } from '@fortawesome/free-solid-svg-icons';
 import './Friends.css';
 
 type SortOption = 'added_desc' | 'added_asc' | 'nickname_asc' | 'nickname_desc' | 'games_desc' | 'games_asc';
-type ViewMode = 'grid' | 'list' | 'compact';
 type TabType = 'following' | 'followers';
 
 export function Friends() {
@@ -40,7 +40,6 @@ export function Friends() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>(preferences.friends?.sortBy || 'added_desc');
-  const [viewMode, setViewMode] = useState<ViewMode>(preferences.friends?.viewMode || 'grid');
   
   // Toast state
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -65,15 +64,14 @@ export function Friends() {
     setTimeout(() => setToast(null), 3000);
   }, []);
 
-  // Save preferences when sort/view change
+  // Save preferences when sort changes
   useEffect(() => {
     updatePreferences({
       friends: {
         sortBy,
-        viewMode,
       },
     });
-  }, [sortBy, viewMode, updatePreferences]);
+  }, [sortBy, updatePreferences]);
 
   // Load following, followers, and requests on mount
   const fetchData = useCallback(async () => {
@@ -278,25 +276,17 @@ export function Friends() {
       )}
 
       {/* Tabs */}
-      <div className="friends-tabs" role="tablist">
-        <button
-          role="tab"
-          aria-selected={activeTab === 'following'}
-          className={`tab-button ${activeTab === 'following' ? 'active' : ''}`}
-          onClick={() => setActiveTab('following')}
-        >
-          <FontAwesomeIcon icon={faUserCheck} />
-          Following ({following.length})
-        </button>
-        <button
-          role="tab"
-          aria-selected={activeTab === 'followers'}
-          className={`tab-button ${activeTab === 'followers' ? 'active' : ''}`}
-          onClick={() => setActiveTab('followers')}
-        >
-          <FontAwesomeIcon icon={faUsers} />
-          Followers ({followers.length})
-        </button>
+      <div className="friends-tabs-container">
+        <SegmentedControl
+          options={[
+            { value: 'following', label: 'Following', icon: <FontAwesomeIcon icon={faUserCheck} />, count: following.length },
+            { value: 'followers', label: 'Followers', icon: <FontAwesomeIcon icon={faUsers} />, count: followers.length },
+          ]}
+          value={activeTab}
+          onChange={(value) => setActiveTab(value as TabType)}
+          ariaLabel="Friends tabs"
+          variant="default"
+        />
       </div>
 
       {/* Following Tab */}
@@ -326,33 +316,6 @@ export function Friends() {
                 <option value="games_desc">Game Count ↓</option>
                 <option value="games_asc">Game Count ↑</option>
               </select>
-              
-              <div className="view-toggle">
-                <button
-                  className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
-                  onClick={() => setViewMode('grid')}
-                  aria-label="Grid view"
-                  title="Grid view"
-                >
-                  <FontAwesomeIcon icon={faTableCells} />
-                </button>
-                <button
-                  className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
-                  onClick={() => setViewMode('list')}
-                  aria-label="List view"
-                  title="List view"
-                >
-                  <FontAwesomeIcon icon={faList} />
-                </button>
-                <button
-                  className={`view-btn ${viewMode === 'compact' ? 'active' : ''}`}
-                  onClick={() => setViewMode('compact')}
-                  aria-label="Compact view"
-                  title="Compact view"
-                >
-                  <FontAwesomeIcon icon={faGripLines} />
-                </button>
-              </div>
             </div>
           )}
 
@@ -387,7 +350,7 @@ export function Friends() {
               )}
             </div>
           ) : (
-            <div className={`friends-${viewMode}`}>
+            <div className="friends-grid">
               {filteredFollowing.map((person) => (
                 <div key={person.id} className="friend-card">
                   <div className="friend-card-header">

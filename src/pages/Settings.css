@@ -150,12 +150,12 @@
 }
 
 .btn-toggle.off {
-  background: #e0e0e0;
-  color: #666;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
 }
 
 .btn-toggle.on {
-  background: #4caf50;
+  background: var(--success);
   color: white;
 }
 
@@ -166,13 +166,6 @@
 .btn-toggle:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-}
-
-@media (prefers-color-scheme: dark) {
-  .btn-toggle.off {
-    background: #444;
-    color: #aaa;
-  }
 }
 
 .btn-toggle.small {
@@ -191,44 +184,24 @@
   flex: 1;
   padding: 0.75rem 1rem;
   font-size: 0.875rem;
-  border: 2px solid #e0e0e0;
+  border: 2px solid var(--border-color);
   border-radius: 8px;
-  background: white;
-  color: #333;
-}
-
-@media (prefers-color-scheme: dark) {
-  .share-url-input {
-    background: #2a2a2a;
-    border-color: #444;
-    color: white;
-  }
+  background: var(--input-bg);
+  color: var(--text-primary);
 }
 
 .privacy-settings {
   margin-top: 1rem;
   padding: 0.75rem;
-  background: #f8f9fa;
+  background: var(--bg-secondary);
   border-radius: 8px;
-}
-
-@media (prefers-color-scheme: dark) {
-  .privacy-settings {
-    background: #1a1a1a;
-  }
 }
 
 .privacy-settings h5 {
   margin: 0 0 0.5rem;
   font-size: 0.8125rem;
-  color: #666;
+  color: var(--text-secondary);
   font-weight: 600;
-}
-
-@media (prefers-color-scheme: dark) {
-  .privacy-settings h5 {
-    color: #aaa;
-  }
 }
 
 .privacy-toggle-row {
@@ -240,7 +213,7 @@
 
 .privacy-toggle-row span {
   font-size: 0.875rem;
-  color: #555;
+  color: var(--text-secondary);
 }
 
 .privacy-label-group {
@@ -252,27 +225,13 @@
 
 .privacy-label-group span {
   font-size: 0.875rem;
-  color: #555;
+  color: var(--text-secondary);
 }
 
 .privacy-hint {
   font-size: 0.75rem !important;
-  color: #888 !important;
+  color: var(--text-muted) !important;
   font-weight: normal;
-}
-
-@media (prefers-color-scheme: dark) {
-  .privacy-toggle-row span {
-    color: #bbb;
-  }
-  
-  .privacy-label-group span {
-    color: #bbb;
-  }
-  
-  .privacy-hint {
-    color: #999 !important;
-  }
 }
 
 .share-actions-row {
@@ -290,27 +249,17 @@
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
-  background: #f0f0f0;
-  color: #333;
+  background: var(--btn-secondary-bg);
+  color: var(--text-primary);
 }
 
 .btn-regenerate:hover:not(:disabled) {
-  background: #e0e0e0;
+  background: var(--btn-secondary-hover);
 }
 
 .btn-regenerate:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-}
-
-@media (prefers-color-scheme: dark) {
-  .btn-regenerate {
-    background: #444;
-    color: #e0e0e0;
-  }
-  .btn-regenerate:hover:not(:disabled) {
-    background: #555;
-  }
 }
 
 .btn-copy {

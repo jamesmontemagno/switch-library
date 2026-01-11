@@ -7,8 +7,9 @@ import { loadSharedGames, getSharedUserProfile, getShareProfile, isFollowing, lo
 import { AddFriendModal } from '../components/AddFriendModal';
 import { ShareLibraryModal } from '../components/ShareLibraryModal';
 import { UpsellBanner } from '../components/UpsellBanner';
+import { SegmentedControl } from '../components/SegmentedControl';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowsLeftRight, faPlus, faCheck, faUserCheck } from '@fortawesome/free-solid-svg-icons';
+import { faArrowsLeftRight, faPlus, faCheck, faUserCheck, faTableCells, faList } from '@fortawesome/free-solid-svg-icons';
 import './SharedLibrary.css';
 
 type SortOption = 'title_asc' | 'title_desc' | 'added_newest' | 'platform' | 'format';
@@ -371,23 +372,19 @@ export function SharedLibrary() {
           <span>🔧 Filters & Sort</span>
           <span className="toggle-icon">{showFilters ? '▲' : '▼'}</span>
         </button>
-        <div className="view-toggle view-toggle-mobile">
-          <button
-            className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
-            onClick={() => setViewMode('grid')}
-            title="Grid View"
-            aria-label="Grid View"
-          >
-            ▦
-          </button>
-          <button
-            className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
-            onClick={() => setViewMode('list')}
-            title="List View"
-            aria-label="List View"
-          >
-            ☰
-          </button>
+        <div className="view-toggle-mobile">
+          <SegmentedControl
+            options={[
+              { value: 'grid', label: 'Grid View', icon: <FontAwesomeIcon icon={faTableCells} /> },
+              { value: 'list', label: 'List View', icon: <FontAwesomeIcon icon={faList} /> },
+            ]}
+            value={viewMode}
+            onChange={setViewMode}
+            ariaLabel="View mode"
+            variant="buttons"
+            size="sm"
+            iconOnly
+          />
         </div>
       </div>
 
@@ -419,23 +416,19 @@ export function SharedLibrary() {
           <option value="platform">Platform</option>
           <option value="format">Format</option>
         </select>
-        <div className="view-toggle view-toggle-desktop">
-          <button
-            className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
-            onClick={() => setViewMode('grid')}
-            title="Grid View"
-            aria-label="Grid View"
-          >
-            ▦
-          </button>
-          <button
-            className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
-            onClick={() => setViewMode('list')}
-            title="List View"
-            aria-label="List View"
-          >
-            ☰
-          </button>
+        <div className="view-toggle-desktop">
+          <SegmentedControl
+            options={[
+              { value: 'grid', label: 'Grid View', icon: <FontAwesomeIcon icon={faTableCells} /> },
+              { value: 'list', label: 'List View', icon: <FontAwesomeIcon icon={faList} /> },
+            ]}
+            value={viewMode}
+            onChange={setViewMode}
+            ariaLabel="View mode"
+            variant="buttons"
+            size="sm"
+            iconOnly
+          />
         </div>
       </div>
 

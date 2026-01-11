@@ -25,7 +25,7 @@ export interface UserPreferences {
   };
   friends?: {
     sortBy: 'added_desc' | 'added_asc' | 'nickname_asc' | 'nickname_desc' | 'games_desc' | 'games_asc';
-    viewMode: ViewMode;
+    viewMode?: ViewMode;
   };
 }
 
@@ -48,7 +48,6 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   },
   friends: {
     sortBy: 'added_desc',
-    viewMode: 'grid',
   },
 };
 

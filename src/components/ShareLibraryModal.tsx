@@ -8,6 +8,7 @@ import {
   getShareProfile,
   getUserProfile
 } from '../services/database';
+import { SegmentedControl } from './SegmentedControl';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faLink, 
@@ -35,7 +36,6 @@ export function ShareLibraryModal({ userId, onClose, onSharingEnabled }: ShareLi
   const [displayName, setDisplayName] = useState('');
   const [editingDisplayName, setEditingDisplayName] = useState(false);
   const [savingDisplayName, setSavingDisplayName] = useState(false);
-  const [isLoadingShare, setIsLoadingShare] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -62,7 +62,6 @@ export function ShareLibraryModal({ userId, onClose, onSharingEnabled }: ShareLi
   }, [userId]);
 
   const handleToggleSharing = async () => {
-    setIsLoadingShare(true);
     try {
       if (shareProfile?.enabled) {
         const success = await disableSharing(userId);
@@ -78,8 +77,6 @@ export function ShareLibraryModal({ userId, onClose, onSharingEnabled }: ShareLi
       }
     } catch (error) {
       console.error('Failed to toggle sharing:', error);
-    } finally {
-      setIsLoadingShare(false);
     }
   };
 
@@ -117,7 +114,6 @@ export function ShareLibraryModal({ userId, onClose, onSharingEnabled }: ShareLi
 
   const handleToggleShowName = async () => {
     if (!shareProfile) return;
-    setIsLoadingShare(true);
     try {
       const updated = await updateSharePrivacy(userId, { 
         showDisplayName: !shareProfile.showDisplayName 
@@ -127,14 +123,11 @@ export function ShareLibraryModal({ userId, onClose, onSharingEnabled }: ShareLi
       }
     } catch (error) {
       console.error('Failed to toggle show name:', error);
-    } finally {
-      setIsLoadingShare(false);
     }
   };
 
   const handleToggleShowAvatar = async () => {
     if (!shareProfile) return;
-    setIsLoadingShare(true);
     try {
       const updated = await updateSharePrivacy(userId, { 
         showAvatar: !shareProfile.showAvatar 
@@ -144,8 +137,6 @@ export function ShareLibraryModal({ userId, onClose, onSharingEnabled }: ShareLi
       }
     } catch (error) {
       console.error('Failed to toggle show avatar:', error);
-    } finally {
-      setIsLoadingShare(false);
     }
   };
 
@@ -235,34 +226,24 @@ export function ShareLibraryModal({ userId, onClose, onSharingEnabled }: ShareLi
           
           {/* Sharing Settings */}
           <div className="form-group">
-            <label><FontAwesomeIcon icon={faGear} /> Sharing Settings</label>
-            <div style={{ 
-              padding: '1rem', 
-              backgroundColor: 'var(--surface-alt)', 
-              borderRadius: '0.5rem',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '1rem'
-            }}>
-              <span>Sharing is {shareProfile?.enabled ? 'enabled' : 'disabled'}</span>
-              <button
-                onClick={handleToggleSharing}
-                disabled={isLoadingShare}
-                className="btn-submit"
-                style={{
-                  backgroundColor: shareProfile?.enabled ? '#22c55e' : 'var(--text-secondary)',
-                  minWidth: '60px',
-                  borderRadius: '20px',
-                  padding: '0.4rem 1rem',
-                  fontWeight: '600',
-                  fontSize: '0.875rem',
-                  border: 'none',
-                  boxShadow: shareProfile?.enabled ? '0 2px 8px rgba(34, 197, 94, 0.4)' : 'none'
+            <label><FontAwesomeIcon icon={faGear} /> Library Sharing</label>
+            <div style={{ marginBottom: '1rem' }}>
+              <SegmentedControl
+                options={[
+                  { value: 'off', label: 'OFF' },
+                  { value: 'on', label: 'ON' },
+                ]}
+                value={shareProfile?.enabled ? 'on' : 'off'}
+                onChange={(value) => {
+                  if ((value === 'on' && !shareProfile?.enabled) || (value === 'off' && shareProfile?.enabled)) {
+                    handleToggleSharing();
+                  }
                 }}
-              >
-                {isLoadingShare ? '...' : shareProfile?.enabled ? 'ON' : 'OFF'}
-              </button>
+                ariaLabel="Library sharing toggle"
+                variant="buttons"
+                fullWidth
+                size="lg"
+              />
             </div>
             
             {shareProfile?.enabled && (
@@ -295,61 +276,54 @@ export function ShareLibraryModal({ userId, onClose, onSharingEnabled }: ShareLi
                   <h4 style={{ 
                     fontSize: '0.875rem', 
                     fontWeight: '600', 
-                    marginBottom: '0.75rem',
+                    marginBottom: '1rem',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem'
                   }}>
-                    <FontAwesomeIcon icon={faLock} /> Privacy
+                    <FontAwesomeIcon icon={faLock} /> Privacy Settings
                   </h4>
-                  <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center',
-                    marginBottom: '0.5rem'
-                  }}>
-                    <span style={{ fontSize: '0.875rem' }}>Show my display name</span>
-                    <button
-                      onClick={handleToggleShowName}
-                      disabled={isLoadingShare}
-                      className="btn-submit"
-                      style={{
-                        backgroundColor: shareProfile?.showDisplayName ? '#22c55e' : 'var(--text-secondary)',
-                        minWidth: '50px',
-                        padding: '0.25rem 0.75rem',
-                        fontSize: '0.75rem',
-                        borderRadius: '16px',
-                        fontWeight: '600',
-                        border: 'none',
-                        boxShadow: shareProfile?.showDisplayName ? '0 2px 6px rgba(34, 197, 94, 0.3)' : 'none'
+                  
+                  <div style={{ marginBottom: '0.75rem' }}>
+                    <label style={{ fontSize: '0.875rem', marginBottom: '0.5rem', display: 'block', fontWeight: '500' }}>
+                      Show my display name
+                    </label>
+                    <SegmentedControl
+                      options={[
+                        { value: 'off', label: 'OFF' },
+                        { value: 'on', label: 'ON' },
+                      ]}
+                      value={shareProfile?.showDisplayName ? 'on' : 'off'}
+                      onChange={(value) => {
+                        if ((value === 'on' && !shareProfile?.showDisplayName) || (value === 'off' && shareProfile?.showDisplayName)) {
+                          handleToggleShowName();
+                        }
                       }}
-                    >
-                      {shareProfile?.showDisplayName ? 'ON' : 'OFF'}
-                    </button>
+                      ariaLabel="Show display name toggle"
+                      variant="buttons"
+                      fullWidth
+                    />
                   </div>
-                  <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center'
-                  }}>
-                    <span style={{ fontSize: '0.875rem' }}>Show my avatar</span>
-                    <button
-                      onClick={handleToggleShowAvatar}
-                      disabled={isLoadingShare}
-                      className="btn-submit"
-                      style={{
-                        backgroundColor: shareProfile?.showAvatar ? '#22c55e' : 'var(--text-secondary)',
-                        minWidth: '50px',
-                        padding: '0.25rem 0.75rem',
-                        fontSize: '0.75rem',
-                        borderRadius: '16px',
-                        fontWeight: '600',
-                        border: 'none',
-                        boxShadow: shareProfile?.showAvatar ? '0 2px 6px rgba(34, 197, 94, 0.3)' : 'none'
+                  
+                  <div>
+                    <label style={{ fontSize: '0.875rem', marginBottom: '0.5rem', display: 'block', fontWeight: '500' }}>
+                      Show my avatar
+                    </label>
+                    <SegmentedControl
+                      options={[
+                        { value: 'off', label: 'OFF' },
+                        { value: 'on', label: 'ON' },
+                      ]}
+                      value={shareProfile?.showAvatar ? 'on' : 'off'}
+                      onChange={(value) => {
+                        if ((value === 'on' && !shareProfile?.showAvatar) || (value === 'off' && shareProfile?.showAvatar)) {
+                          handleToggleShowAvatar();
+                        }
                       }}
-                    >
-                      {shareProfile?.showAvatar ? 'ON' : 'OFF'}
-                    </button>
+                      ariaLabel="Show avatar toggle"
+                      variant="buttons"
+                      fullWidth
+                    />
                   </div>
                 </div>
                 

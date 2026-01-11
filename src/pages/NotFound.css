@@ -30,14 +30,8 @@
 }
 
 .not-found p {
-  color: #666;
+  color: var(--text-secondary);
   margin: 0 0 2rem;
-}
-
-@media (prefers-color-scheme: dark) {
-  .not-found p {
-    color: #aaa;
-  }
 }
 
 .back-home {

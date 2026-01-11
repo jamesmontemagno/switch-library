@@ -17,6 +17,33 @@
   flex-wrap: wrap;
 }
 
+/* Mobile: Logo + user icon on top row, nav on second row */
+@media (max-width: 600px) {
+  .header-content {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "logo auth"
+      "nav nav";
+    gap: 0.75rem;
+  }
+  
+  .header-content .logo {
+    grid-area: logo;
+  }
+  
+  .header-content .auth-section {
+    grid-area: auth;
+  }
+  
+  .header-content .nav {
+    grid-area: nav;
+    margin-left: 0;
+    justify-content: center;
+    width: 100%;
+  }
+}
+
 .logo {
   display: flex;
   align-items: center;

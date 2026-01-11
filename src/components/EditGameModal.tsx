@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import type { GameEntry, Platform, Format, GameStatus, GameCondition } from '../types';
+import { SegmentedControl } from './SegmentedControl';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faGamepad, faBox, faCloud } from '@fortawesome/free-solid-svg-icons';
 import './AddGameModal.css';
 
 interface EditGameModalProps {
@@ -68,27 +71,33 @@ export function EditGameModal({ game, onClose, onSave }: EditGameModalProps) {
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="platform">Platform</label>
-              <select
-                id="platform"
+              <label>Platform</label>
+              <SegmentedControl
+                options={[
+                  { value: 'Nintendo Switch', label: 'Switch', icon: <FontAwesomeIcon icon={faGamepad} /> },
+                  { value: 'Nintendo Switch 2', label: 'Switch 2', icon: <FontAwesomeIcon icon={faGamepad} /> },
+                ]}
                 value={platform}
-                onChange={(e) => setPlatform(e.target.value as Platform)}
-              >
-                <option value="Nintendo Switch">Nintendo Switch</option>
-                <option value="Nintendo Switch 2">Nintendo Switch 2</option>
-              </select>
+                onChange={(value) => setPlatform(value as Platform)}
+                ariaLabel="Platform"
+                variant="buttons"
+                fullWidth
+              />
             </div>
 
             <div className="form-group">
-              <label htmlFor="format">Format</label>
-              <select
-                id="format"
+              <label>Format</label>
+              <SegmentedControl
+                options={[
+                  { value: 'Physical', label: 'Physical', icon: <FontAwesomeIcon icon={faBox} /> },
+                  { value: 'Digital', label: 'Digital', icon: <FontAwesomeIcon icon={faCloud} /> },
+                ]}
                 value={format}
-                onChange={(e) => setFormat(e.target.value as Format)}
-              >
-                <option value="Physical">Physical</option>
-                <option value="Digital">Digital</option>
-              </select>
+                onChange={(value) => setFormat(value as Format)}
+                ariaLabel="Game format"
+                variant="buttons"
+                fullWidth
+              />
             </div>
           </div>
 

@@ -1,0 +1,240 @@
+/* ===================================
+   Segmented Control Component
+   Reusable toggle/tab/button group
+=================================== */
+
+.segmented-control {
+  display: inline-flex;
+  gap: 4px;
+  --control-bg: var(--bg-tertiary);
+  --control-active-bg: linear-gradient(135deg, #e60012 0%, #b8000e 100%);
+  --control-active-color: white;
+  --control-hover-bg: var(--primary-light);
+  --control-hover-color: var(--primary);
+  --control-inactive-color: var(--text-secondary);
+  --control-border-color: var(--border-color);
+}
+
+/* Base button styles */
+.segmented-control__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: var(--control-inactive-color);
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  font-family: inherit;
+}
+
+.segmented-control__button:hover:not(.segmented-control__button--active) {
+  color: var(--control-hover-color);
+  background: var(--control-hover-bg);
+}
+
+.segmented-control__button--active {
+  color: var(--control-active-color);
+  background: var(--control-active-bg);
+  box-shadow: 0 2px 8px rgba(230, 0, 18, 0.3);
+}
+
+.segmented-control__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.segmented-control__label {
+  display: flex;
+  align-items: center;
+}
+
+.segmented-control__count {
+  font-weight: inherit;
+}
+
+/* ===================================
+   Variants
+=================================== */
+
+/* Default variant - pill-style with inset background */
+.segmented-control--default {
+  background: var(--control-bg);
+  border-radius: 12px;
+  padding: 4px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+:root[data-theme="dark"] .segmented-control--default {
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Tabs variant - underlined tabs style */
+.segmented-control--tabs {
+  background: transparent;
+  border-bottom: 2px solid var(--control-border-color);
+  gap: 0;
+  border-radius: 0;
+}
+
+.segmented-control--tabs .segmented-control__button {
+  border-radius: 0;
+  position: relative;
+  padding-bottom: 0.875rem;
+}
+
+.segmented-control--tabs .segmented-control__button::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: transparent;
+  transition: background 0.2s ease;
+}
+
+.segmented-control--tabs .segmented-control__button--active::after {
+  background: var(--control-active-color);
+}
+
+.segmented-control--tabs .segmented-control__button--active {
+  background: transparent;
+  color: var(--control-active-color);
+  box-shadow: none;
+}
+
+.segmented-control--tabs .segmented-control__button:hover:not(.segmented-control__button--active) {
+  background: transparent;
+}
+
+/* Buttons variant - bordered buttons with hover effects */
+.segmented-control--buttons {
+  background: transparent;
+  border: 2px solid var(--control-border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  padding: 0;
+  gap: 0;
+}
+
+.segmented-control--buttons .segmented-control__button {
+  flex: 1;
+  border-radius: 0;
+  background: var(--control-bg);
+  border-right: 1px solid var(--control-border-color);
+}
+
+.segmented-control--buttons .segmented-control__button:last-child {
+  border-right: none;
+}
+
+.segmented-control--buttons .segmented-control__button:hover:not(.segmented-control__button--active) {
+  background: var(--control-hover-bg);
+}
+
+.segmented-control--buttons .segmented-control__button--active {
+  background: var(--control-active-bg);
+  border-color: transparent;
+}
+
+/* ===================================
+   Sizes
+=================================== */
+
+.segmented-control--sm .segmented-control__button {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.segmented-control--sm .segmented-control__icon {
+  font-size: 0.875rem;
+}
+
+.segmented-control--md .segmented-control__button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+}
+
+.segmented-control--md .segmented-control__icon {
+  font-size: 0.9rem;
+}
+
+.segmented-control--lg .segmented-control__button {
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+}
+
+.segmented-control--lg .segmented-control__icon {
+  font-size: 1rem;
+}
+
+/* ===================================
+   Modifiers
+=================================== */
+
+/* Full width - buttons stretch to fill container */
+.segmented-control--full-width {
+  width: 100%;
+}
+
+.segmented-control--full-width .segmented-control__button {
+  flex: 1;
+}
+
+/* ===================================
+   Responsive
+=================================== */
+
+@media (max-width: 768px) {
+  .segmented-control--default {
+    width: 100%;
+  }
+  
+  .segmented-control--default .segmented-control__button {
+    flex: 1;
+    justify-content: center;
+    padding: 0.625rem 1rem;
+    font-size: 0.9375rem;
+  }
+  
+  .segmented-control--md .segmented-control__button {
+    padding: 0.625rem 1rem;
+    font-size: 0.9375rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .segmented-control--default .segmented-control__button,
+  .segmented-control--md .segmented-control__button {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+  
+  .segmented-control--sm .segmented-control__button {
+    padding: 0.375rem 0.5rem;
+    font-size: 0.8125rem;
+  }
+}
+
+/* ===================================
+   Accessibility
+=================================== */
+
+.segmented-control__button:focus-visible {
+  outline: 2px solid var(--control-hover-color);
+  outline-offset: 2px;
+  z-index: 1;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .segmented-control__button {
+    transition: none;
+  }
+}
