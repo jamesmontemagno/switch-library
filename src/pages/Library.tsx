@@ -408,7 +408,8 @@ function GameCard({ game, viewMode, onDelete, onEdit }: GameCardProps) {
 
   const handleCardClick = (e: React.MouseEvent) => {
     // Don't navigate if clicking on action buttons
-    if ((e.target as HTMLElement).closest('.game-actions')) {
+    const target = e.target as HTMLElement;
+    if (target.closest('.game-actions') || target.closest('.list-actions') || target.closest('.compact-actions')) {
       return;
     }
     navigate(`/game/${game.id}`);
