@@ -12,6 +12,23 @@ A web app for tracking your Nintendo Switch and Nintendo Switch 2 game collectio
 - 🔗 **Share & Compare** - Share your library with friends (coming soon)
 - 🔐 **GitHub Authentication** - Sign in with your GitHub account via Supabase
 - 💾 **Cloud Storage** - Data persisted with Supabase
+- 📱 **Progressive Web App** - Install on mobile/desktop, works offline with service worker caching
+- 🔄 **Auto-Updates** - Get notified when new versions are available
+
+## Progressive Web App (PWA)
+
+This app is a full Progressive Web App with:
+- ✅ **Offline Support** - Service worker caches static assets and API responses
+- ✅ **Installable** - Add to home screen on mobile and desktop
+- ✅ **Auto-Update Prompts** - Get notified when new versions are available
+- ✅ **Network Status Detection** - Visual indicators for online/offline state
+- ✅ **Shortcuts** - Quick actions for Add Game, Library, and Search
+
+See [PWA-GUIDE.md](PWA-GUIDE.md) for complete documentation on:
+- PWA architecture and caching strategies
+- Testing checklist
+- Browser compatibility
+- Troubleshooting
 
 ## Tech Stack
 
@@ -21,6 +38,7 @@ A web app for tracking your Nintendo Switch and Nintendo Switch 2 game collectio
 - **Database**: Supabase (PostgreSQL)
 - **Auth**: Supabase Auth with GitHub OAuth
 - **Game API**: TheGamesDB
+- **PWA**: vite-plugin-pwa with Workbox
 - **Styling**: CSS with dark mode support
 
 ## Getting Started

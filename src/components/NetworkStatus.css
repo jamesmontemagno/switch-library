@@ -1,0 +1,56 @@
+.network-status {
+  position: fixed;
+  top: 60px; /* Below header */
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 999;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.network-status-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.network-status-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.network-status-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .network-status {
+    padding: 0.625rem 0.875rem;
+  }
+
+  .network-status-icon {
+    font-size: 1rem;
+  }
+
+  .network-status-text {
+    font-size: 0.8125rem;
+  }
+}

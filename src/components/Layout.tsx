@@ -1,12 +1,15 @@
 import { Outlet } from 'react-router-dom';
 import { Header } from './Header';
 import { ApiAllowanceIndicator } from './ApiAllowanceFooter';
+import { UpdateAvailableBanner } from './UpdateAvailableBanner';
+import { NetworkStatus } from './NetworkStatus';
 import './Layout.css';
 
 export function Layout() {
   return (
     <div className="layout">
       <Header />
+      <NetworkStatus />
       <main className="main">
         <Outlet />
       </main>
@@ -27,6 +30,7 @@ export function Layout() {
         </div>
         <ApiAllowanceIndicator />
       </footer>
+      <UpdateAvailableBanner />
     </div>
   );
 }
