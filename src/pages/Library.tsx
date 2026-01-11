@@ -248,6 +248,23 @@ export function Library() {
     }
   };
 
+  const handleToggleAcceptFollowRequests = async () => {
+    if (!user || !shareProfile) return;
+    setIsLoadingShare(true);
+    try {
+      const updated = await updateSharePrivacy(user.id, { 
+        acceptFollowRequests: !shareProfile.acceptFollowRequests 
+      });
+      if (updated) {
+        setShareProfile(updated);
+      }
+    } catch (error) {
+      console.error('Failed to toggle accept follow requests:', error);
+    } finally {
+      setIsLoadingShare(false);
+    }
+  };
+
   const stats = {
     total: games.length,
     switch: games.filter(g => g.platform === 'Nintendo Switch').length,
@@ -388,6 +405,19 @@ export function Library() {
                         className={`btn-toggle small ${shareProfile?.showAvatar ? 'on' : 'off'}`}
                       >
                         {shareProfile?.showAvatar ? 'ON' : 'OFF'}
+                      </button>
+                    </div>
+                    <div className="privacy-toggle-row">
+                      <div className="privacy-label-group">
+                        <span>Accept Follow-Back Requests</span>
+                        <small className="privacy-hint">When disabled, users you follow cannot request you to follow them back</small>
+                      </div>
+                      <button
+                        onClick={handleToggleAcceptFollowRequests}
+                        disabled={isLoadingShare}
+                        className={`btn-toggle small ${shareProfile?.acceptFollowRequests ? 'on' : 'off'}`}
+                      >
+                        {shareProfile?.acceptFollowRequests ? 'ON' : 'OFF'}
                       </button>
                     </div>
                   </div>

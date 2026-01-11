@@ -308,6 +308,7 @@ function mapSupabaseShareToProfile(row: Record<string, unknown>): ShareProfile {
     enabled: row.enabled as boolean,
     showDisplayName: row.show_display_name as boolean ?? true,
     showAvatar: row.show_avatar as boolean ?? true,
+    acceptFollowRequests: row.accept_follow_requests as boolean ?? true,
     createdAt: row.created_at as string,
     revokedAt: row.revoked_at as string | undefined,
   };
@@ -361,10 +362,10 @@ export async function enableSharing(userId: string): Promise<ShareProfile | null
       return mapSupabaseShareToProfile(data);
     }
 
-    // Create new share profile
+    // Create new share profile with acceptFollowRequests defaulting to true
     const { data, error } = await supabase
       .from('share_profiles')
-      .insert({ user_id: userId, enabled: true })
+      .insert({ user_id: userId, enabled: true, accept_follow_requests: true })
       .select()
       .single();
 
@@ -394,6 +395,7 @@ export async function enableSharing(userId: string): Promise<ShareProfile | null
       enabled: true,
       showDisplayName: true,
       showAvatar: true,
+      acceptFollowRequests: true,
       createdAt: new Date().toISOString(),
     };
     profiles.push(newProfile);
@@ -471,6 +473,7 @@ export async function regenerateShareId(userId: string): Promise<ShareProfile | 
       enabled: true,
       showDisplayName: true,
       showAvatar: true,
+      acceptFollowRequests: true,
       createdAt: new Date().toISOString(),
     };
     filtered.push(newProfile);
@@ -576,7 +579,7 @@ export async function getSharedUserProfile(shareId: string): Promise<{ displayNa
 // Update share profile privacy settings
 export async function updateSharePrivacy(
   userId: string, 
-  settings: { showDisplayName?: boolean; showAvatar?: boolean }
+  settings: { showDisplayName?: boolean; showAvatar?: boolean; acceptFollowRequests?: boolean }
 ): Promise<ShareProfile | null> {
   if (useSupabase) {
     const updateData: Record<string, boolean> = {};
@@ -585,6 +588,9 @@ export async function updateSharePrivacy(
     }
     if (settings.showAvatar !== undefined) {
       updateData.show_avatar = settings.showAvatar;
+    }
+    if (settings.acceptFollowRequests !== undefined) {
+      updateData.accept_follow_requests = settings.acceptFollowRequests;
     }
 
     const { data, error } = await supabase
@@ -613,6 +619,9 @@ export async function updateSharePrivacy(
         }
         if (settings.showAvatar !== undefined) {
           profile.showAvatar = settings.showAvatar;
+        }
+        if (settings.acceptFollowRequests !== undefined) {
+          profile.acceptFollowRequests = settings.acceptFollowRequests;
         }
         localStorage.setItem(SHARE_STORAGE_KEY, JSON.stringify(profiles));
         return profile;

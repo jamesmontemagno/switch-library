@@ -39,6 +39,7 @@ export interface ShareProfile {
   enabled: boolean;
   showDisplayName: boolean;
   showAvatar: boolean;
+  acceptFollowRequests: boolean;  // Allow others to request you follow them back
   createdAt: string;
   revokedAt?: string;
 }
