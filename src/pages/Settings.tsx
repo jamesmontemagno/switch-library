@@ -146,13 +146,13 @@ export function Settings() {
               {sharingEnabled && (
                 <span style={{ 
                   padding: '0.4rem 1rem',
-                  backgroundColor: 'var(--success)',
+                  backgroundColor: '#22c55e',
                   color: 'white',
                   borderRadius: '20px',
                   fontSize: '0.875rem',
                   fontWeight: '600',
-                  border: '2px solid var(--success)',
-                  boxShadow: '0 2px 8px rgba(34, 197, 94, 0.3)'
+                  border: 'none',
+                  boxShadow: '0 2px 8px rgba(34, 197, 94, 0.4)'
                 }}>
                   ON
                 </span>

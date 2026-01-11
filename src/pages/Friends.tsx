@@ -16,7 +16,7 @@ import { RemoveFriendModal } from '../components/RemoveFriendModal';
 import { EditNicknameModal } from '../components/EditNicknameModal';
 import { ShareLibraryModal } from '../components/ShareLibraryModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUserGroup, faMagnifyingGlass, faEye, faPenToSquare, faArrowsLeftRight, faUserPlus, faRotate, faUserCheck, faTableCells, faList, faGripLines, faUsers, faUserMinus, faGear } from '@fortawesome/free-solid-svg-icons';
+import { faUserGroup, faMagnifyingGlass, faEye, faPenToSquare, faArrowsLeftRight, faUserPlus, faRotate, faUserCheck, faTableCells, faList, faGripLines, faUsers, faUserMinus, faLink, faGear } from '@fortawesome/free-solid-svg-icons';
 import './Friends.css';
 
 type SortOption = 'added_desc' | 'added_asc' | 'nickname_asc' | 'nickname_desc' | 'games_desc' | 'games_asc';
@@ -216,25 +216,10 @@ export function Friends() {
           </button>
           <button 
             onClick={() => setShowShareModal(true)} 
-            className="btn-refresh"
+            className={`btn-share ${hasSharingEnabled ? 'active' : ''}`}
             title="Manage Sharing Settings"
-            style={{ padding: '0.5rem 1rem', gap: '0.5rem' }}
           >
-            <FontAwesomeIcon icon={faGear} />
-            {hasSharingEnabled && (
-              <span style={{ 
-                padding: '0.25rem 0.75rem',
-                backgroundColor: 'var(--success)',
-                color: 'white',
-                borderRadius: '16px',
-                fontSize: '0.75rem',
-                fontWeight: '600',
-                border: '2px solid var(--success)',
-                boxShadow: '0 2px 6px rgba(34, 197, 94, 0.25)'
-              }}>
-                ON
-              </span>
-            )}
+            <FontAwesomeIcon icon={faLink} /> {showShareModal ? 'Hide Sharing' : 'Share'}
           </button>
           <button 
             onClick={() => setShowAddModal(true)} 
@@ -407,12 +392,12 @@ export function Friends() {
                 <div key={person.id} className="friend-card">
                   <div className="friend-card-header">
                     <img
-                      src={person.profile?.avatarUrl || '/switch.svg'}
+                      src={person.profile?.avatarUrl || '/android-chrome-192x192.png'}
                       alt={person.nickname}
                       className="friend-avatar"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
-                        target.src = '/switch.svg';
+                        target.src = '/android-chrome-192x192.png';
                       }}
                     />
                     <div className="friend-info">
@@ -487,12 +472,12 @@ export function Friends() {
                 <div key={follower.followerUserId} className="request-card">
                   <div className="request-card-header">
                     <img
-                      src={follower.profile?.avatarUrl || '/switch.svg'}
+                      src={follower.profile?.avatarUrl || '/android-chrome-192x192.png'}
                       alt={follower.profile?.displayName || 'User'}
                       className="request-avatar"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
-                        target.src = '/switch.svg';
+                        target.src = '/android-chrome-192x192.png';
                       }}
                     />
                     <div className="request-info">

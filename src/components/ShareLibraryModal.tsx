@@ -251,14 +251,14 @@ export function ShareLibraryModal({ userId, onClose, onSharingEnabled }: ShareLi
                 disabled={isLoadingShare}
                 className="btn-submit"
                 style={{
-                  backgroundColor: shareProfile?.enabled ? 'var(--success)' : 'var(--text-secondary)',
+                  backgroundColor: shareProfile?.enabled ? '#22c55e' : 'var(--text-secondary)',
                   minWidth: '60px',
                   borderRadius: '20px',
                   padding: '0.4rem 1rem',
                   fontWeight: '600',
                   fontSize: '0.875rem',
-                  border: shareProfile?.enabled ? '2px solid var(--success)' : 'none',
-                  boxShadow: shareProfile?.enabled ? '0 2px 8px rgba(34, 197, 94, 0.3)' : 'none'
+                  border: 'none',
+                  boxShadow: shareProfile?.enabled ? '0 2px 8px rgba(34, 197, 94, 0.4)' : 'none'
                 }}
               >
                 {isLoadingShare ? '...' : shareProfile?.enabled ? 'ON' : 'OFF'}
@@ -314,14 +314,14 @@ export function ShareLibraryModal({ userId, onClose, onSharingEnabled }: ShareLi
                       disabled={isLoadingShare}
                       className="btn-submit"
                       style={{
-                        backgroundColor: shareProfile?.showDisplayName ? 'var(--success)' : 'var(--text-secondary)',
+                        backgroundColor: shareProfile?.showDisplayName ? '#22c55e' : 'var(--text-secondary)',
                         minWidth: '50px',
                         padding: '0.25rem 0.75rem',
                         fontSize: '0.75rem',
                         borderRadius: '16px',
                         fontWeight: '600',
-                        border: shareProfile?.showDisplayName ? '2px solid var(--success)' : 'none',
-                        boxShadow: shareProfile?.showDisplayName ? '0 2px 6px rgba(34, 197, 94, 0.25)' : 'none'
+                        border: 'none',
+                        boxShadow: shareProfile?.showDisplayName ? '0 2px 6px rgba(34, 197, 94, 0.3)' : 'none'
                       }}
                     >
                       {shareProfile?.showDisplayName ? 'ON' : 'OFF'}
@@ -338,14 +338,14 @@ export function ShareLibraryModal({ userId, onClose, onSharingEnabled }: ShareLi
                       disabled={isLoadingShare}
                       className="btn-submit"
                       style={{
-                        backgroundColor: shareProfile?.showAvatar ? 'var(--success)' : 'var(--text-secondary)',
+                        backgroundColor: shareProfile?.showAvatar ? '#22c55e' : 'var(--text-secondary)',
                         minWidth: '50px',
                         padding: '0.25rem 0.75rem',
                         fontSize: '0.75rem',
                         borderRadius: '16px',
                         fontWeight: '600',
-                        border: shareProfile?.showAvatar ? '2px solid var(--success)' : 'none',
-                        boxShadow: shareProfile?.showAvatar ? '0 2px 6px rgba(34, 197, 94, 0.25)' : 'none'
+                        border: 'none',
+                        boxShadow: shareProfile?.showAvatar ? '0 2px 6px rgba(34, 197, 94, 0.3)' : 'none'
                       }}
                     >
                       {shareProfile?.showAvatar ? 'ON' : 'OFF'}

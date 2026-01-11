@@ -48,8 +48,8 @@ function TrendingGameCard({ game, userGames, isAuthenticated, onQuickAdd, adding
   const isAdding = addingGameId === game.thegamesdbId;
   
   return (
-    <article className="trending-game-card">
-      <div className="trending-game-cover">
+    <article className="result-card grid trending">
+      <div className="result-cover">
         {game.coverUrl ? (
           <img src={game.coverUrl} alt={game.title || 'Game cover'} loading="lazy" />
         ) : (
@@ -66,28 +66,33 @@ function TrendingGameCard({ game, userGames, isAuthenticated, onQuickAdd, adding
           </div>
         )}
       </div>
-      <div className="trending-game-info">
-        <h3 className="trending-game-title">{game.title || `Game #${game.thegamesdbId}`}</h3>
-        {game.platformId && (
-          <span className={`platform-badge ${game.platformId === PLATFORM_IDS.NINTENDO_SWITCH_2 ? 'switch2' : 'switch'}`}>
-            {game.platformId === PLATFORM_IDS.NINTENDO_SWITCH_2 ? 'Switch 2' : 'Switch'}
-          </span>
-        )}
-        <div className="trending-game-actions">
+      <div className="result-info">
+        <h3 className="result-title">{game.title || `Game #${game.thegamesdbId}`}</h3>
+        <div className="result-meta">
+          {game.platformId && (
+            <span className={`platform-badge ${game.platformId === PLATFORM_IDS.NINTENDO_SWITCH_2 ? 'switch2' : 'switch'}`}>
+              {game.platformId === PLATFORM_IDS.NINTENDO_SWITCH_2 ? 'Switch 2' : 'Switch'}
+            </span>
+          )}
+          {game.releaseDate && (
+            <span className="release-date"><FontAwesomeIcon icon={faCalendar} /> {game.releaseDate.split('-')[0]}</span>
+          )}
+        </div>
+        <div className="result-actions">
           {isAuthenticated ? (
             isInLibrary ? (
               <span className="in-library-text">In your library</span>
             ) : (
               <button
-                className="btn-add-trending"
+                className="btn-add-to-collection"
                 onClick={() => onQuickAdd(game)}
                 disabled={isAdding}
               >
-                {isAdding ? <><FontAwesomeIcon icon={faHourglassHalf} /> Adding...</> : '+ Add'}
+                {isAdding ? <><FontAwesomeIcon icon={faHourglassHalf} /> Adding...</> : '+ Add to Collection'}
               </button>
             )
           ) : (
-            <span className="login-hint-small">Sign in to add</span>
+            <span className="login-hint">Sign in to add games</span>
           )}
         </div>
       </div>
@@ -917,19 +922,17 @@ export function Search() {
                 {trendingData.recentlyAdded.length === 0 ? (
                   <p className="trending-empty">No recent additions yet. Be the first to add a game!</p>
                 ) : (
-                  <div className="trending-scroll-container">
-                    <div className="trending-games-row">
-                      {trendingData.recentlyAdded.map((game) => (
-                        <TrendingGameCard 
-                          key={game.thegamesdbId} 
-                          game={game} 
-                          userGames={userGames}
-                          isAuthenticated={isAuthenticated}
-                          onQuickAdd={openQuickAdd}
-                          addingGameId={addingGameId}
-                        />
-                      ))}
-                    </div>
+                  <div className="results-grid">
+                    {trendingData.recentlyAdded.map((game) => (
+                      <TrendingGameCard 
+                        key={game.thegamesdbId} 
+                        game={game} 
+                        userGames={userGames}
+                        isAuthenticated={isAuthenticated}
+                        onQuickAdd={openQuickAdd}
+                        addingGameId={addingGameId}
+                      />
+                    ))}
                   </div>
                 )}
               </section>
@@ -943,19 +946,17 @@ export function Search() {
                 {trendingData.topGames.length === 0 ? (
                   <p className="trending-empty">No data yet. Start adding games to see what's popular!</p>
                 ) : (
-                  <div className="trending-scroll-container">
-                    <div className="trending-games-row">
-                      {trendingData.topGames.map((game) => (
-                        <TrendingGameCard 
-                          key={game.thegamesdbId} 
-                          game={game} 
-                          userGames={userGames}
-                          isAuthenticated={isAuthenticated}
-                          onQuickAdd={openQuickAdd}
-                          addingGameId={addingGameId}
-                        />
-                      ))}
-                    </div>
+                  <div className="results-grid">
+                    {trendingData.topGames.map((game) => (
+                      <TrendingGameCard 
+                        key={game.thegamesdbId} 
+                        game={game} 
+                        userGames={userGames}
+                        isAuthenticated={isAuthenticated}
+                        onQuickAdd={openQuickAdd}
+                        addingGameId={addingGameId}
+                      />
+                    ))}
                   </div>
                 )}
               </section>

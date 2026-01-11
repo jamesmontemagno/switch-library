@@ -182,7 +182,7 @@ export function AddFriendModal({ onClose, onAdd, prefilledShareId, prefilledNick
           {profileData && (
             <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <img
-                src={profileData.avatarUrl || '/switch.svg'}
+                src={profileData.avatarUrl || '/android-chrome-192x192.png'}
                 alt={profileData.displayName}
                 style={{
                   width: '64px',
@@ -192,7 +192,7 @@ export function AddFriendModal({ onClose, onAdd, prefilledShareId, prefilledNick
                 }}
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
-                  target.src = '/switch.svg';
+                  target.src = '/android-chrome-192x192.png';
                 }}
               />
               <div>

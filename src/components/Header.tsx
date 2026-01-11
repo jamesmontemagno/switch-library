@@ -48,7 +48,7 @@ export function Header() {
     <header className="header">
       <div className="header-content">
         <Link to="/" className="logo">
-          <img src={`${import.meta.env.BASE_URL}switch.svg`} alt="Switch" className="logo-icon" />
+          <img src={`${import.meta.env.BASE_URL}android-chrome-192x192.png`} alt="Switch" className="logo-icon" />
           <span className="logo-text">My Switch Library</span>
         </Link>
 
@@ -77,7 +77,7 @@ export function Header() {
             <button onClick={handleSettingsClick} className="user-avatar-button" aria-label="Settings">
               {showLogo ? (
                 <img 
-                  src={`${import.meta.env.BASE_URL}switch.svg`} 
+                  src={`${import.meta.env.BASE_URL}android-chrome-192x192.png`} 
                   alt="Settings" 
                   className="user-avatar" 
                 />
@@ -93,7 +93,7 @@ export function Header() {
                       e.currentTarget.src = gravatarUrl;
                     } else {
                       // If Gravatar also fails, show the logo
-                      e.currentTarget.src = `${import.meta.env.BASE_URL}switch.svg`;
+                      e.currentTarget.src = `${import.meta.env.BASE_URL}android-chrome-192x192.png`;
                     }
                   }}
                 />

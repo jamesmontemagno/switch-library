@@ -60,7 +60,31 @@
 .btn-refresh:hover {
   background: var(--bg-hover);
   border-color: var(--primary-color);
-  transform: rotate(90deg);
+}
+
+.btn-share {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #6b46c1 0%, #553c9a 100%);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.btn-share:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(107, 70, 193, 0.35);
+}
+
+.btn-share.active {
+  background: linear-gradient(135deg, #553c9a 0%, #44337a 100%);
 }
 
 /* Tabs */
