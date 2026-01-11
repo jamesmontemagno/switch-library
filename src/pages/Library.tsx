@@ -7,7 +7,7 @@ import type { GameEntry, Platform, ShareProfile } from '../types';
 import { loadGames, saveGame, deleteGame as deleteGameFromDb, getShareProfile, enableSharing, disableSharing, updateSharePrivacy, updateDisplayName, getUserProfile } from '../services/database';
 import { EditGameModal } from '../components/EditGameModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faPenToSquare, faGear, faClipboard, faEye, faGamepad, faTrash, faCartShopping, faTrophy, faLink, faUser, faLock, faXmark, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faPenToSquare, faGear, faClipboard, faEye, faGamepad, faTrash, faCartShopping, faTrophy, faLink, faUser, faLock, faXmark, faMagnifyingGlass, faTableCells, faList, faGripLines } from '@fortawesome/free-solid-svg-icons';
 import './Library.css';
 
 type SortOption = 'title_asc' | 'title_desc' | 'added_newest' | 'added_oldest' | 'purchase_newest' | 'purchase_oldest' | 'platform' | 'format' | 'completed_first' | 'not_completed_first';
@@ -425,7 +425,7 @@ export function Library() {
             title="Grid View"
             aria-label="Grid View"
           >
-            ▦
+            <FontAwesomeIcon icon={faTableCells} />
           </button>
           <button
             className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
@@ -433,7 +433,7 @@ export function Library() {
             title="List View"
             aria-label="List View"
           >
-            ☰
+            <FontAwesomeIcon icon={faList} />
           </button>
           <button
             className={`view-btn ${viewMode === 'compact' ? 'active' : ''}`}
@@ -441,7 +441,7 @@ export function Library() {
             title="Compact View"
             aria-label="Compact View"
           >
-            ▤
+            <FontAwesomeIcon icon={faGripLines} />
           </button>
         </div>
       </div>
@@ -509,7 +509,7 @@ export function Library() {
             title="Grid View"
             aria-label="Grid View"
           >
-            ▦
+            <FontAwesomeIcon icon={faTableCells} />
           </button>
           <button
             className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
@@ -517,7 +517,7 @@ export function Library() {
             title="List View"
             aria-label="List View"
           >
-            ☰
+            <FontAwesomeIcon icon={faList} />
           </button>
           <button
             className={`view-btn ${viewMode === 'compact' ? 'active' : ''}`}
@@ -525,7 +525,7 @@ export function Library() {
             title="Compact View"
             aria-label="Compact View"
           >
-            ▤
+            <FontAwesomeIcon icon={faGripLines} />
           </button>
         </div>
       </div>

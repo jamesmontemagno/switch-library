@@ -1,18 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useSEO } from '../hooks/useSEO';
 import type { GameEntry, Format, Platform } from '../types';
-import { loadSharedGames, getSharedUserProfile, getShareProfile, isFriend, loadGames, saveGame } from '../services/database';
+import { loadSharedGames, getSharedUserProfile, getShareProfile, isFollowing, loadGames, saveGame, getFollowers } from '../services/database';
 import { AddFriendModal } from '../components/AddFriendModal';
 import { UpsellBanner } from '../components/UpsellBanner';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowsLeftRight, faPlus, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { faArrowsLeftRight, faPlus, faCheck, faUserCheck } from '@fortawesome/free-solid-svg-icons';
 import './SharedLibrary.css';
 
 type SortOption = 'title_asc' | 'title_desc' | 'added_newest' | 'platform' | 'format';
 type ViewMode = 'grid' | 'list';
 type PlatformFilter = 'all' | 'switch' | 'switch2';
+
+// Relationship state: whether you follow them and/or they follow you
+interface FollowRelationship {
+  youFollowThem: boolean;
+  theyFollowYou: boolean;
+}
 
 interface SharedUserInfo {
   displayName: string;
@@ -39,9 +45,13 @@ export function SharedLibrary() {
   // For compare functionality
   const [myShareId, setMyShareId] = useState<string | null>(null);
   
-  // For friend functionality
-  const [isAlreadyFriend, setIsAlreadyFriend] = useState(false);
+  // For follow functionality
+  const [followRelationship, setFollowRelationship] = useState<FollowRelationship>({
+    youFollowThem: false,
+    theyFollowYou: false
+  });
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   // For "Add to Collection" functionality
   const [myGames, setMyGames] = useState<GameEntry[]>([]);
@@ -60,6 +70,28 @@ export function SharedLibrary() {
     url: `https://myswitchlibrary.com/shared/${shareId}`,
     type: 'profile',
   });
+
+  // Auto-dismiss toast after 3 seconds
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
+  // Check the follow relationship state
+  const checkFollowRelationship = useCallback(async () => {
+    if (!user || !shareId) return;
+    
+    // Check if we follow them
+    const youFollowThem = await isFollowing(user.id, shareId);
+    
+    // Check if they follow us by looking at our followers
+    const myFollowers = await getFollowers(user.id);
+    const theyFollowYou = myFollowers.some(f => f.followerShareId === shareId);
+    
+    setFollowRelationship({ youFollowThem, theyFollowYou });
+  }, [user, shareId]);
 
   useEffect(() => {
     async function loadData() {
@@ -84,18 +116,19 @@ export function SharedLibrary() {
         setGames(sharedGames);
         setUserInfo(sharedUserInfo);
         
-        // Get current user's share ID for compare feature, check if already friends, and load user's games
+        // Get current user's share ID for compare feature, check relationship, and load user's games
         if (user) {
-          const [myProfile, alreadyFriend, userGames] = await Promise.all([
+          const [myProfile, userGames] = await Promise.all([
             getShareProfile(user.id),
-            isFriend(user.id, shareId),
             loadGames(user.id)
           ]);
           if (myProfile?.enabled) {
             setMyShareId(myProfile.shareId);
           }
-          setIsAlreadyFriend(alreadyFriend);
           setMyGames(userGames);
+          
+          // Check relationship state
+          await checkFollowRelationship();
         }
       } catch (err) {
         console.error('Failed to load shared library:', err);
@@ -106,7 +139,7 @@ export function SharedLibrary() {
     }
 
     loadData();
-  }, [shareId, user]);
+  }, [shareId, user, checkFollowRelationship]);
 
   // Helper to check if a game is already in user's collection
   const isGameInMyCollection = (game: GameEntry): boolean => {
@@ -251,18 +284,28 @@ export function SharedLibrary() {
             </Link>
           )}
           {user && shareId && myShareId !== shareId && (
-            isAlreadyFriend ? (
-              <Link to="/friends" className="btn-friend-status">
-                ✓ In Friends List
-              </Link>
-            ) : (
-              <button onClick={() => setShowAddFriendModal(true)} className="btn-add-friend">
-                + Add Friend
-              </button>
-            )
+            <>
+              {followRelationship.youFollowThem ? (
+                <Link to="/friends" className="btn-friend-status">
+                  <FontAwesomeIcon icon={faUserCheck} /> Following
+                  {followRelationship.theyFollowYou && ' • Follows You'}
+                </Link>
+              ) : (
+                <button onClick={() => setShowAddFriendModal(true)} className="btn-add-friend">
+                  + Follow
+                </button>
+              )}
+            </>
           )}
         </div>
       </header>
+
+      {/* Toast notification */}
+      {toast && (
+        <div className={`toast toast-${toast.type}`} role="status" aria-live="polite">
+          {toast.message}
+        </div>
+      )}
 
       {/* Mobile Toolbar Header */}
       <div className="toolbar-mobile-header">
@@ -419,10 +462,9 @@ export function SharedLibrary() {
         <AddFriendModal
           onClose={() => setShowAddFriendModal(false)}
           onAdd={async () => {
-            if (user && shareId) {
-              const alreadyFriend = await isFriend(user.id, shareId);
-              setIsAlreadyFriend(alreadyFriend);
-            }
+            // Refresh the relationship state after following
+            await checkFollowRelationship();
+            setToast({ message: `Now following ${userInfo.displayName}!`, type: 'success' });
           }}
           prefilledShareId={shareId}
           prefilledNickname={userInfo.displayName}

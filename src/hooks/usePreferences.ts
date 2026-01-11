@@ -10,6 +10,7 @@ export interface ShareSettings {
   enabled: boolean;
   showGameCount: boolean;
   showProgress: boolean;
+  acceptFollowRequests: boolean;  // Allow others to request you follow them back
 }
 
 export interface UserPreferences {
@@ -38,6 +39,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
     enabled: false,
     showGameCount: true,
     showProgress: true,
+    acceptFollowRequests: true,
   },
   library: {
     filterPlatform: 'all',

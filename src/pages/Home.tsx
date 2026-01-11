@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useSEO } from '../hooks/useSEO';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPenToSquare, faClipboardList, faGamepad, faShareNodes, faMagnifyingGlass, faCloud } from '@fortawesome/free-solid-svg-icons';
 import './Home.css';
 
 export function Home() {
@@ -39,7 +41,7 @@ export function Home() {
       <section className="features">
         <div className="feature-grid">
           <div className="feature-card">
-            <div className="feature-icon">✍️</div>
+            <div className="feature-icon"><FontAwesomeIcon icon={faPenToSquare} /></div>
             <h3>Easy Entry</h3>
             <p>
               Quickly add games manually or search TheGamesDB to find your titles
@@ -48,7 +50,7 @@ export function Home() {
           </div>
 
           <div className="feature-card">
-            <div className="feature-icon">📋</div>
+            <div className="feature-icon"><FontAwesomeIcon icon={faClipboardList} /></div>
             <h3>Track Everything</h3>
             <p>
               Monitor physical and digital formats, purchase dates, completion status, 
@@ -57,7 +59,7 @@ export function Home() {
           </div>
 
           <div className="feature-card">
-            <div className="feature-icon">🎮</div>
+            <div className="feature-icon"><FontAwesomeIcon icon={faGamepad} /></div>
             <h3>Wishlist & Status</h3>
             <p>
               Organize games by status: owned, wishlist, borrowed, lent, or sold.
@@ -66,7 +68,7 @@ export function Home() {
           </div>
 
           <div className="feature-card">
-            <div className="feature-icon">🔗</div>
+            <div className="feature-icon"><FontAwesomeIcon icon={faShareNodes} /></div>
             <h3>Share & Compare</h3>
             <p>
               Share your collection with friends, save their libraries to your friends list for quick access, and easily compare collections to find games in common.
@@ -74,7 +76,7 @@ export function Home() {
           </div>
 
           <div className="feature-card">
-            <div className="feature-icon">🔍</div>
+            <div className="feature-icon"><FontAwesomeIcon icon={faMagnifyingGlass} /></div>
             <h3>Powerful Organization</h3>
             <p>
               Search, filter by platform and format, sort by various criteria, 
@@ -83,7 +85,7 @@ export function Home() {
           </div>
 
           <div className="feature-card">
-            <div className="feature-icon">☁️</div>
+            <div className="feature-icon"><FontAwesomeIcon icon={faCloud} /></div>
             <h3>Cloud Sync</h3>
             <p>
               Your library is saved to your account and accessible 

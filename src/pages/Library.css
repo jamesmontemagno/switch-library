@@ -680,10 +680,11 @@
 
 .view-btn {
   padding: 0.5rem 0.75rem;
-  font-size: 1.125rem;
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
+  font-size: 1rem;
+  background: #f8f9fa;
+  color: #333;
+  border: 2px solid #d0d0d0;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
   min-width: 48px;
@@ -691,26 +692,38 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  font-weight: 500;
 }
 
 .view-btn.active {
   background: #e60012;
   color: white;
   border-color: #e60012;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(230, 0, 18, 0.25);
 }
 
 .view-btn:hover:not(.active) {
-  background: #f0f0f0;
+  background: #e8e9eb;
+  border-color: #b0b0b0;
+  color: #000;
 }
 
 @media (prefers-color-scheme: dark) {
   .view-btn {
-    background: #2a2a2a;
-    border-color: #444;
+    background: #1a1a1a;
+    border-color: #555;
+    color: #e0e0e0;
+  }
+  .view-btn.active {
+    background: #e60012;
     color: white;
+    border-color: #e60012;
   }
   .view-btn:hover:not(.active) {
-    background: #333;
+    background: #2a2a2a;
+    border-color: #666;
+    color: white;
   }
 }
 

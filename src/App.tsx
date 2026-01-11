@@ -24,7 +24,14 @@ function App() {
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
             <Route path="auth" element={<Auth />} />
-            <Route path="search" element={<Search />} />
+            <Route
+              path="search"
+              element={
+                <ProtectedRoute>
+                  <Search />
+                </ProtectedRoute>
+              }
+            />
             <Route path="shared/:shareId" element={<SharedLibrary />} />
             <Route path="compare/:shareId1/:shareId2" element={<Compare />} />
             <Route

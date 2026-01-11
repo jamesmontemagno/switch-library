@@ -1,8 +1,13 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMagnifyingGlass, faBookOpen, faUserGroup } from '@fortawesome/free-solid-svg-icons';
+import { faMagnifyingGlass, faBookOpen, faUserGroup, faRotate } from '@fortawesome/free-solid-svg-icons';
 import './Header.css';
+
+export interface HeaderProps {
+  pendingRequestCount?: number;
+  onRefreshRequests?: () => void;
+}
 
 // Simple MD5-like hash for Gravatar (Note: For production, use a proper MD5 library)
 async function getMD5Hash(text: string): Promise<string> {
@@ -25,7 +30,7 @@ async function getGravatarUrl(email: string | undefined): Promise<string> {
   }
 }
 
-export function Header() {
+export function Header({ pendingRequestCount = 0, onRefreshRequests }: HeaderProps) {
   const { user, isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -53,18 +58,38 @@ export function Header() {
         </Link>
 
         <nav className="nav" aria-label="Main navigation">
-          <Link to="/search" className={`nav-link nav-link-icon ${isActive('/search') ? 'active' : ''}`} aria-label="Search">
-            <FontAwesomeIcon icon={faMagnifyingGlass} />
-          </Link>
           {isAuthenticated && (
             <>
+              <Link to="/search" className={`nav-link nav-link-icon ${isActive('/search') ? 'active' : ''}`} aria-label="Search">
+                <FontAwesomeIcon icon={faMagnifyingGlass} />
+              </Link>
               <Link to="/library" className={`nav-link ${isActive('/library') ? 'active' : ''}`}>
                 <FontAwesomeIcon icon={faBookOpen} />
                 <span>Library</span>
               </Link>
               <Link to="/friends" className={`nav-link ${isActive('/friends') ? 'active' : ''}`}>
-                <FontAwesomeIcon icon={faUserGroup} />
+                <span className="nav-link-wrapper">
+                  <FontAwesomeIcon icon={faUserGroup} />
+                  {pendingRequestCount > 0 && (
+                    <span className="nav-badge" aria-label={`${pendingRequestCount} pending friend requests`}>
+                      {pendingRequestCount > 99 ? '99+' : pendingRequestCount}
+                    </span>
+                  )}
+                </span>
                 <span>Friends</span>
+                {onRefreshRequests && pendingRequestCount > 0 && (
+                  <button 
+                    className="nav-refresh-btn" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onRefreshRequests();
+                    }}
+                    aria-label="Refresh friend requests"
+                  >
+                    <FontAwesomeIcon icon={faRotate} />
+                  </button>
+                )}
               </Link>
             </>
           )}

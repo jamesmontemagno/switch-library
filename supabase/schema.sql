@@ -39,6 +39,7 @@ create table if not exists public.share_profiles (
   enabled boolean default false,
   show_display_name boolean default true,
   show_avatar boolean default true,
+  accept_follow_requests boolean default true,  -- Allow others to request you follow them back
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   revoked_at timestamp with time zone
 );
@@ -51,13 +52,19 @@ create table if not exists public.api_usage (
   timestamp timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- Friend lists table
+-- Follow lists table (Following/Followers with follow-back request support)
+-- When you follow someone, an entry is created with your user_id pointing to their share_id
+-- status is always 'accepted' for active follows
+-- follow_back_requested: true when you want them to follow you back
 create table if not exists public.friend_lists (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users on delete cascade not null,
   friend_share_id uuid references public.share_profiles(share_id) on delete cascade not null,
   nickname text not null check (length(nickname) <= 50),
+  status text not null default 'accepted' check (status in ('accepted')),
+  follow_back_requested boolean default false,
   added_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  requested_at timestamp with time zone,  -- When follow-back was requested (null if not requested)
   unique(user_id, friend_share_id)
 );
 
@@ -148,19 +155,30 @@ create policy "Users can insert their own API usage"
   with check (auth.uid() = user_id);
 
 -- Friend lists policies
-create policy "Users can view their own friends"
+create policy "Users can view their own following list"
   on public.friend_lists for select
   using (auth.uid() = user_id);
 
-create policy "Users can add their own friends"
+-- Users can view who is following them (for Followers tab)
+create policy "Users can view their followers"
+  on public.friend_lists for select
+  using (
+    exists (
+      select 1 from public.share_profiles
+      where share_profiles.share_id = friend_lists.friend_share_id
+      and share_profiles.user_id = auth.uid()
+    )
+  );
+
+create policy "Users can add to their following list"
   on public.friend_lists for insert
   with check (auth.uid() = user_id);
 
-create policy "Users can update their own friends"
+create policy "Users can update their own following"
   on public.friend_lists for update
   using (auth.uid() = user_id);
 
-create policy "Users can delete their own friends"
+create policy "Users can unfollow"
   on public.friend_lists for delete
   using (auth.uid() = user_id);
 
@@ -213,8 +231,6 @@ begin
       'https://ui-avatars.com/api/?name=' || split_part(new.email, '@', 1) || '&background=e60012&color=fff'
     )
   );
-create index if not exists friend_lists_user_id_idx on public.friend_lists(user_id);
-create index if not exists friend_lists_friend_share_id_idx on public.friend_lists(friend_share_id);
   return new;
 end;
 $$;
@@ -232,3 +248,29 @@ create index if not exists share_profiles_user_id_idx on public.share_profiles(u
 create index if not exists share_profiles_enabled_idx on public.share_profiles(enabled) where enabled = true;
 create index if not exists api_usage_user_id_idx on public.api_usage(user_id);
 create index if not exists api_usage_timestamp_idx on public.api_usage(timestamp);
+create index if not exists friend_lists_user_id_idx on public.friend_lists(user_id);
+create index if not exists friend_lists_friend_share_id_idx on public.friend_lists(friend_share_id);
+create index if not exists friend_lists_follow_back_requested_idx on public.friend_lists(follow_back_requested) where follow_back_requested = true;
+
+-- Function to cleanup expired follow-back requests (requested > 30 days ago, clears the flag)
+-- Run manually in Supabase SQL Editor: SELECT cleanup_expired_follow_requests();
+-- See MAINTENANCE.md for recommended schedule
+create or replace function public.cleanup_expired_follow_requests()
+returns integer
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  updated_count integer;
+begin
+  -- Clear the follow_back_requested flag for old requests (keeps the follow relationship)
+  update public.friend_lists
+  set follow_back_requested = false, requested_at = null
+  where follow_back_requested = true
+  and requested_at < now() - interval '30 days';
+  
+  get diagnostics updated_count = row_count;
+  return updated_count;
+end;
+$$;

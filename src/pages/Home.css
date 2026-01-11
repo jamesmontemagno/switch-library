@@ -146,6 +146,20 @@
   border-radius: 100px;
   font-weight: 600;
   font-size: 1rem;
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  position: relative;
+}
+
+.platform-badge::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  background: linear-gradient(145deg, #ffffff, #f5f5f5);
+  border-radius: 100px;
+  z-index: -1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .platform-badge.switch {
@@ -159,6 +173,11 @@
 }
 
 @media (prefers-color-scheme: dark) {
+  .platform-badge::before {
+    background: linear-gradient(145deg, #2a2a2a, #1f1f1f);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
   .platform-badge.switch2 {
     background: #333;
     border: 1px solid #444;

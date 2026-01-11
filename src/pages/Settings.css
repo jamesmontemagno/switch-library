@@ -243,9 +243,35 @@
   color: #555;
 }
 
+.privacy-label-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.privacy-label-group span {
+  font-size: 0.875rem;
+  color: #555;
+}
+
+.privacy-hint {
+  font-size: 0.75rem !important;
+  color: #888 !important;
+  font-weight: normal;
+}
+
 @media (prefers-color-scheme: dark) {
   .privacy-toggle-row span {
     color: #bbb;
+  }
+  
+  .privacy-label-group span {
+    color: #bbb;
+  }
+  
+  .privacy-hint {
+    color: #999 !important;
   }
 }
 

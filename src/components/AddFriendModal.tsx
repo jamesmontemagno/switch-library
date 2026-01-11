@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { getSharedUserProfile, isFriend, addFriend } from '../services/database';
+import { getSharedUserProfile, isFollowing, followUser } from '../services/database';
 import { useAuth } from '../hooks/useAuth';
 import './AddGameModal.css';
 
@@ -52,10 +52,10 @@ export function AddFriendModal({ onClose, onAdd, prefilledShareId, prefilledNick
     setIsFetching(true);
 
     try {
-      // Check if already a friend
-      const alreadyFriend = await isFriend(user.id, shareId);
-      if (alreadyFriend) {
-        setError('This user is already in your friends list.');
+      // Check if already following
+      const alreadyFollowing = await isFollowing(user.id, shareId);
+      if (alreadyFollowing) {
+        setError('You are already following this user.');
         setIsFetching(false);
         return;
       }
@@ -108,17 +108,17 @@ export function AddFriendModal({ onClose, onAdd, prefilledShareId, prefilledNick
     setError('');
 
     try {
-      const result = await addFriend(user.id, extractedShareId, trimmedNickname);
+      const result = await followUser(user.id, extractedShareId, trimmedNickname);
       
       if (result) {
         await onAdd();
         onClose();
       } else {
-        setError('Failed to add friend. Please try again.');
+        setError('Failed to follow user. Please try again.');
       }
     } catch (err) {
-      setError('Failed to add friend. Please try again.');
-      console.error('Error adding friend:', err);
+      setError('Failed to follow user. Please try again.');
+      console.error('Error following user:', err);
     } finally {
       setIsLoading(false);
     }
@@ -131,7 +131,7 @@ export function AddFriendModal({ onClose, onAdd, prefilledShareId, prefilledNick
     <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="add-friend-modal-title">
       <div className="modal add-game-modal" onClick={e => e.stopPropagation()}>
         <header className="modal-header">
-          <h2 id="add-friend-modal-title">Add Friend</h2>
+          <h2 id="add-friend-modal-title">Follow User</h2>
           <button onClick={onClose} className="modal-close" aria-label="Close">
             ✕
           </button>
@@ -154,10 +154,16 @@ export function AddFriendModal({ onClose, onAdd, prefilledShareId, prefilledNick
               type="button"
               onClick={handleFetchProfile}
               disabled={!shareInput.trim() || isFetching || isLoading}
-              className="btn-fetch"
-              style={{ marginTop: '0.5rem' }}
+              className="btn-submit"
+              style={{ 
+                marginTop: '0.5rem',
+                width: '100%',
+                padding: '0.75rem',
+                fontSize: '0.9375rem',
+                fontWeight: '600'
+              }}
             >
-              {isFetching ? 'Fetching...' : 'Fetch Profile'}
+              {isFetching ? 'Validating...' : 'Validate Profile'}
             </button>
           </div>
 
@@ -179,9 +185,6 @@ export function AddFriendModal({ onClose, onAdd, prefilledShareId, prefilledNick
               />
               <div>
                 <strong>{profileData.displayName}</strong>
-                <p style={{ margin: '0.25rem 0 0', fontSize: '0.875rem', opacity: 0.7 }}>
-                  Sharing enabled
-                </p>
               </div>
             </div>
           )}
@@ -231,7 +234,7 @@ export function AddFriendModal({ onClose, onAdd, prefilledShareId, prefilledNick
               className="btn-submit"
               disabled={isLoading || !profileData || !nickname.trim() || isOverLimit}
             >
-              {isLoading ? 'Adding...' : 'Add Friend'}
+              {isLoading ? 'Following...' : 'Follow'}
             </button>
           </div>
         </form>

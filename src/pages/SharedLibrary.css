@@ -135,7 +135,9 @@
 }
 
 .btn-add-friend,
-.btn-friend-status {
+.btn-friend-status,
+.btn-friend-pending,
+.btn-accept-request {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -166,6 +168,31 @@
 
 .btn-friend-status:hover {
   background: var(--bg-hover);
+}
+
+.btn-friend-pending {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  cursor: default;
+}
+
+.btn-accept-request {
+  background: #22c55e;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-accept-request:hover:not(:disabled) {
+  background: #16a34a;
+  transform: translateY(-2px);
+}
+
+.btn-accept-request:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* Toolbar */
@@ -856,7 +883,9 @@
   
   .shared-actions .btn-compare,
   .shared-actions .btn-add-friend,
-  .shared-actions .btn-friend-status {
+  .shared-actions .btn-friend-status,
+  .shared-actions .btn-friend-pending,
+  .shared-actions .btn-accept-request {
     flex: 1;
     justify-content: center;
   }
@@ -912,8 +941,45 @@
   
   .btn-compare,
   .btn-add-friend,
-  .btn-friend-status {
+  .btn-friend-status,
+  .btn-friend-pending,
+  .btn-accept-request {
     font-size: 0.9375rem;
     padding: 0.625rem 1rem;
+  }
+}
+
+/* Toast Notifications */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  z-index: 1001;
+  animation: toast-slide-up 0.3s ease-out;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.toast-success {
+  background: #22c55e;
+  color: white;
+}
+
+.toast-error {
+  background: #ef4444;
+  color: white;
+}
+
+@keyframes toast-slide-up {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
   }
 }

@@ -1,6 +1,8 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useSEO } from '../hooks/useSEO';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faMagnifyingGlass, faWrench, faGamepad, faCalendar, faUsers, faStar, faBox, faCloud, faTriangleExclamation, faXmark, faHourglassHalf, faTableCells, faList } from '@fortawesome/free-solid-svg-icons';
 import type { GameEntry, Platform, Format } from '../types';
 import { 
   searchGames, 
@@ -422,7 +424,7 @@ export function Search() {
     return (
       <div className="search-page">
         <div className="search-not-configured">
-          <div className="config-icon">🔧</div>
+          <div className="config-icon"><FontAwesomeIcon icon={faWrench} /></div>
           <h2>Search Not Available</h2>
           <p>TheGamesDB API key is not configured. Please add your API key to enable game search.</p>
         </div>
@@ -434,7 +436,7 @@ export function Search() {
     <div className="search-page">
       <header className="search-header">
         <div>
-          <h1>🔍 Game Search</h1>
+          <h1><FontAwesomeIcon icon={faMagnifyingGlass} /> Game Search</h1>
           <p>Search TheGamesDB to find and add games to your collection</p>
         </div>
         {isAuthenticated && (
@@ -461,7 +463,7 @@ export function Search() {
             disabled={!query.trim() || isSearching}
             className="search-btn-main"
           >
-            {isSearching ? '⏳' : '🔍'}
+            {isSearching ? <FontAwesomeIcon icon={faHourglassHalf} /> : <FontAwesomeIcon icon={faMagnifyingGlass} />}
           </button>
         </div>
       </div>
@@ -474,7 +476,7 @@ export function Search() {
           aria-expanded={showFilters}
           aria-label="Toggle filters"
         >
-          <span>🔧 Filters & Sort</span>
+          <span><FontAwesomeIcon icon={faWrench} /> Filters & Sort</span>
           <span className="toggle-icon">{showFilters ? '▲' : '▼'}</span>
         </button>
         <div className="view-toggle view-toggle-mobile">
@@ -484,7 +486,7 @@ export function Search() {
             title="Grid View"
             aria-label="Grid View"
           >
-            ▦
+            <FontAwesomeIcon icon={faTableCells} />
           </button>
           <button
             className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
@@ -492,7 +494,7 @@ export function Search() {
             title="List View"
             aria-label="List View"
           >
-            ☰
+            <FontAwesomeIcon icon={faList} />
           </button>
         </div>
       </div>
@@ -574,7 +576,7 @@ export function Search() {
             title="Grid View"
             aria-label="Grid View"
           >
-            ▦
+            <FontAwesomeIcon icon={faTableCells} />
           </button>
           <button
             className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
@@ -582,7 +584,7 @@ export function Search() {
             title="List View"
             aria-label="List View"
           >
-            ☰
+            <FontAwesomeIcon icon={faList} />
           </button>
         </div>
       </div>
@@ -598,13 +600,13 @@ export function Search() {
 
         {error && (
           <div className="search-error">
-            <p>⚠️ {error}</p>
+            <p><FontAwesomeIcon icon={faTriangleExclamation} /> {error}</p>
           </div>
         )}
 
         {!isSearching && hasSearched && results.length === 0 && (
           <div className="search-no-results">
-            <div className="no-results-icon">🎮</div>
+            <div className="no-results-icon"><FontAwesomeIcon icon={faGamepad} /></div>
             <h3>No games found</h3>
             <p>Try adjusting your search query or filters</p>
           </div>
@@ -657,7 +659,7 @@ export function Search() {
                         <img src={game.boxartUrl} alt={game.title} loading="lazy" />
                       ) : (
                         <div className="cover-placeholder">
-                          <span>🎮</span>
+                          <span><FontAwesomeIcon icon={faGamepad} /></span>
                         </div>
                       )}
                       {gameInLibrary && (
@@ -671,9 +673,9 @@ export function Search() {
                           {game.platformId === 5021 ? 'Switch 2' : 'Switch'}
                         </span>
                         {game.region_id !== undefined && <span className="region-badge">{getRegionName(game.region_id)}</span>}
-                        <span className="release-date">📅 {formatDate(game.releaseDate)}</span>
-                        {game.players && <span className="players">👥 {game.players} player{game.players > 1 ? 's' : ''}</span>}
-                        {game.rating && <span className="rating">⭐ {game.rating}</span>}
+                        <span className="release-date"><FontAwesomeIcon icon={faCalendar} /> {formatDate(game.releaseDate)}</span>
+                        {game.players && <span className="players"><FontAwesomeIcon icon={faUsers} /> {game.players} player{game.players > 1 ? 's' : ''}</span>}
+                        {game.rating && <span className="rating"><FontAwesomeIcon icon={faStar} /> {game.rating}</span>}
                       </div>
                       {viewMode === 'list' && game.overview && (
                         <p className="result-overview">
@@ -690,7 +692,7 @@ export function Search() {
                               onClick={() => handleRemoveGame(game)}
                               disabled={isRemoving}
                             >
-                              {isRemoving ? '⏳ Removing...' : '− Remove from Library'}
+                              {isRemoving ? <><FontAwesomeIcon icon={faHourglassHalf} /> Removing...</> : '− Remove from Library'}
                             </button>
                           ) : (
                             <button
@@ -698,7 +700,7 @@ export function Search() {
                               onClick={() => openQuickAdd(game)}
                               disabled={addingGameId === game.id}
                             >
-                              {addingGameId === game.id ? '⏳ Adding...' : '+ Add to Collection'}
+                              {addingGameId === game.id ? <><FontAwesomeIcon icon={faHourglassHalf} /> Adding...</> : '+ Add to Collection'}
                             </button>
                           )
                         ) : (
@@ -744,7 +746,7 @@ export function Search() {
 
         {!hasSearched && !isSearching && (
           <div className="search-prompt">
-            <div className="prompt-icon">🎮</div>
+            <div className="prompt-icon"><FontAwesomeIcon icon={faGamepad} /></div>
             <h3>Find Your Next Game</h3>
             <p>Search for Nintendo Switch games to add to your collection</p>
             <div className="search-tips">
@@ -764,8 +766,8 @@ export function Search() {
         <div className="modal-overlay" onClick={() => setShowAllowanceWarning(false)}>
           <div className="allowance-warning-modal" onClick={(e) => e.stopPropagation()}>
             <header className="modal-header">
-              <h2>{allowanceInfo.remaining === 0 ? '⚠️ API Limit Reached' : '⚠️ API Limit Warning'}</h2>
-              <button onClick={() => setShowAllowanceWarning(false)} className="modal-close">✕</button>
+              <h2>{allowanceInfo.remaining === 0 ? <><FontAwesomeIcon icon={faTriangleExclamation} /> API Limit Reached</> : <><FontAwesomeIcon icon={faTriangleExclamation} /> API Limit Warning</>}</h2>
+              <button onClick={() => setShowAllowanceWarning(false)} className="modal-close"><FontAwesomeIcon icon={faXmark} /></button>
             </header>
             <div className="allowance-warning-content">
               {allowanceInfo.remaining === 0 ? (
@@ -810,7 +812,7 @@ export function Search() {
           <div className="quick-add-modal" onClick={(e) => e.stopPropagation()}>
             <header className="modal-header">
               <h2>Add to Collection</h2>
-              <button onClick={() => setQuickAddGame(null)} className="modal-close">✕</button>
+              <button onClick={() => setQuickAddGame(null)} className="modal-close"><FontAwesomeIcon icon={faXmark} /></button>
             </header>
             <div className="quick-add-content">
               <div className="quick-add-game-info">
@@ -819,7 +821,7 @@ export function Search() {
                 )}
                 <div className="quick-add-details">
                   <h3>{quickAddGame.title}</h3>
-                  <p className="release-date">📅 {formatDate(quickAddGame.releaseDate)}</p>
+                  <p className="release-date"><FontAwesomeIcon icon={faCalendar} /> {formatDate(quickAddGame.releaseDate)}</p>
                 </div>
               </div>
               <div className="quick-add-options">
@@ -831,14 +833,14 @@ export function Search() {
                       className={`segment ${quickAddPlatform === 'Nintendo Switch' ? 'active' : ''}`}
                       onClick={() => setQuickAddPlatform('Nintendo Switch')}
                     >
-                      🎮 Switch
+                      <FontAwesomeIcon icon={faGamepad} /> Switch
                     </button>
                     <button
                       type="button"
                       className={`segment ${quickAddPlatform === 'Nintendo Switch 2' ? 'active' : ''}`}
                       onClick={() => setQuickAddPlatform('Nintendo Switch 2')}
                     >
-                      🎮 Switch 2
+                      <FontAwesomeIcon icon={faGamepad} /> Switch 2
                     </button>
                   </div>
                 </div>
@@ -850,14 +852,14 @@ export function Search() {
                       className={`segment ${quickAddFormat === 'Physical' ? 'active' : ''}`}
                       onClick={() => setQuickAddFormat('Physical')}
                     >
-                      📦 Physical
+                      <FontAwesomeIcon icon={faBox} /> Physical
                     </button>
                     <button
                       type="button"
                       className={`segment ${quickAddFormat === 'Digital' ? 'active' : ''}`}
                       onClick={() => setQuickAddFormat('Digital')}
                     >
-                      ☁️ Digital
+                      <FontAwesomeIcon icon={faCloud} /> Digital
                     </button>
                   </div>
                 </div>
@@ -888,8 +890,8 @@ export function Search() {
         <div className="modal-overlay" onClick={() => setGameToDelete(null)}>
           <div className="delete-confirmation-modal" onClick={(e) => e.stopPropagation()}>
             <header className="modal-header">
-              <h2>⚠️ Remove from Library</h2>
-              <button onClick={() => setGameToDelete(null)} className="modal-close">✕</button>
+              <h2><FontAwesomeIcon icon={faTriangleExclamation} /> Remove from Library</h2>
+              <button onClick={() => setGameToDelete(null)} className="modal-close"><FontAwesomeIcon icon={faXmark} /></button>
             </header>
             <div className="modal-content">
               <p>Are you sure you want to remove <strong>{gameToDelete.searchResult.title}</strong> from your library?</p>

@@ -11,7 +11,6 @@ export function Settings() {
   const { user, logout } = useAuth();
   const { theme, setTheme, shareSettings, updateShareSettings } = usePreferences();
   const [shareLink, setShareLink] = useState<string>('');
-  const [loadingShareLink, setLoadingShareLink] = useState(false);
   const [displayName, setDisplayName] = useState(user?.displayName || '');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
@@ -232,6 +231,18 @@ export function Settings() {
                     {shareSettings.showProgress ? 'ON' : 'OFF'}
                   </button>
                 </div>
+                <div className="privacy-toggle-row">
+                  <div className="privacy-label-group">
+                    <span>Accept Follow-Back Requests</span>
+                    <small className="privacy-hint">When disabled, users you follow cannot request you to follow them back</small>
+                  </div>
+                  <button 
+                    className={`btn-toggle small ${shareSettings.acceptFollowRequests ? 'on' : 'off'}`}
+                    onClick={() => updateShareSettings({ acceptFollowRequests: !shareSettings.acceptFollowRequests })}
+                  >
+                    {shareSettings.acceptFollowRequests ? 'ON' : 'OFF'}
+                  </button>
+                </div>
               </div>
             </>
           )}
@@ -313,7 +324,7 @@ export function Settings() {
         </div>
       )}
 
-      {/* Disable Sharing Confirmation Modal */
+      {/* Disable Sharing Confirmation Modal */}
       {showDisableConfirm && (
         <div className="modal-overlay" onClick={() => setShowDisableConfirm(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>

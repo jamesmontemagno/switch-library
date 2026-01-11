@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSEO } from '../hooks/useSEO';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faChartColumn, faTriangleExclamation, faCircleCheck, faUser, faChartLine, faGamepad, faCheck } from '@fortawesome/free-solid-svg-icons';
 import type { GameEntry } from '../types';
 import { loadSharedGames, getSharedUserProfile } from '../services/database';
 import './Compare.css';
@@ -161,7 +163,7 @@ export function Compare() {
     return (
       <div className="compare-page">
         <div className="error-state">
-          <div className="error-icon">⚠️</div>
+          <div className="error-icon"><FontAwesomeIcon icon={faTriangleExclamation} /></div>
           <h2>Comparison Not Available</h2>
           <p>{error || 'Unable to compare libraries'}</p>
           <button onClick={() => navigate('/')} className="btn-home">
@@ -175,7 +177,7 @@ export function Compare() {
   return (
     <div className="compare-page">
       <header className="compare-header">
-        <h1>📊 Library Comparison</h1>
+        <h1><FontAwesomeIcon icon={faChartColumn} /> Library Comparison</h1>
         <div className="compare-users">
           <div className="user-card">
             {leftUser.avatarUrl && (
@@ -225,25 +227,25 @@ export function Compare() {
           className={`tab-btn ${activeTab === 'common' ? 'active' : ''}`}
           onClick={() => setActiveTab('common')}
         >
-          ✅ In Common ({comparison.common.length})
+          <FontAwesomeIcon icon={faCircleCheck} /> In Common ({comparison.common.length})
         </button>
         <button
           className={`tab-btn ${activeTab === 'unique-left' ? 'active' : ''}`}
           onClick={() => setActiveTab('unique-left')}
         >
-          👤 Only {leftUser.displayName} ({comparison.uniqueLeft.length})
+          <FontAwesomeIcon icon={faUser} /> Only {leftUser.displayName} ({comparison.uniqueLeft.length})
         </button>
         <button
           className={`tab-btn ${activeTab === 'unique-right' ? 'active' : ''}`}
           onClick={() => setActiveTab('unique-right')}
         >
-          👤 Only {rightUser.displayName} ({comparison.uniqueRight.length})
+          <FontAwesomeIcon icon={faUser} /> Only {rightUser.displayName} ({comparison.uniqueRight.length})
         </button>
         <button
           className={`tab-btn ${activeTab === 'stats' ? 'active' : ''}`}
           onClick={() => setActiveTab('stats')}
         >
-          📈 Stats
+          <FontAwesomeIcon icon={faChartLine} /> Stats
         </button>
       </div>
 
@@ -332,7 +334,7 @@ export function Compare() {
 
           {displayedGames.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-icon">🎮</div>
+              <div className="empty-icon"><FontAwesomeIcon icon={faGamepad} /></div>
               <h2>No games found</h2>
               <p>{searchQuery ? 'Try a different search term' : 'No games in this category'}</p>
             </div>
@@ -344,10 +346,10 @@ export function Compare() {
                     {game.coverUrl ? (
                       <img src={game.coverUrl} alt={game.title} />
                     ) : (
-                      <div className="cover-placeholder">🎮</div>
+                      <div className="cover-placeholder"><FontAwesomeIcon icon={faGamepad} /></div>
                     )}
                     {game.completed && (
-                      <div className="completed-badge" title="Completed">✓</div>
+                      <div className="completed-badge" title="Completed"><FontAwesomeIcon icon={faCheck} /></div>
                     )}
                   </div>
                   <div className="compare-game-info">
