@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Toast Test</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      padding: 2rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .test-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    button {
+      padding: 1rem;
+      font-size: 1rem;
+      cursor: pointer;
+      border: none;
+      border-radius: 0.5rem;
+      background: #e60012;
+      color: white;
+      font-weight: 600;
+    }
+    button:hover {
+      background: #c4000f;
+    }
+    .theme-toggle {
+      margin-bottom: 2rem;
+    }
+    .dark-mode {
+      background-color: #121212;
+      color: rgba(255, 255, 255, 0.87);
+    }
+    .dark-mode button {
+      background: #e60012;
+    }
+    .dark-mode button:hover {
+      background: #ff1a2e;
+    }
+    iframe {
+      width: 100%;
+      height: 600px;
+      border: 1px solid #ccc;
+      border-radius: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>React Hot Toast Test</h1>
+  <div class="theme-toggle">
+    <button onclick="document.documentElement.setAttribute('data-theme', 'light'); document.body.classList.remove('dark-mode')">Light Mode</button>
+    <button onclick="document.documentElement.setAttribute('data-theme', 'dark'); document.body.classList.add('dark-mode')">Dark Mode</button>
+  </div>
+  
+  <h2>Open the app in the iframe below and test toasts:</h2>
+  <p>Instructions:</p>
+  <ol>
+    <li>Open browser dev console and run: <code>window.testToast = (type, msg) => { if(type==='success') toast.success(msg); else if(type==='error') toast.error(msg); else toast(msg); }</code></li>
+    <li>Then call: <code>window.testToast('success', 'This is a success toast!')</code></li>
+    <li>Or: <code>window.testToast('error', 'This is an error toast!')</code></li>
+  </ol>
+  
+  <iframe src="http://localhost:5173/"></iframe>
+  
+  <h2>Expected Result:</h2>
+  <ul>
+    <li>Toasts should appear in the bottom-right corner (not full screen!)</li>
+    <li>They should be compact and unobtrusive</li>
+    <li>Dark mode: toasts should have dark background (#2a2a2a) with light text</li>
+    <li>Light mode: toasts should have light background (#ffffff) with dark text</li>
+    <li>Success toasts show green icon, error toasts show red icon</li>
+    <li>Toasts auto-dismiss after 4 seconds</li>
+  </ul>
+</body>
+</html>
