@@ -194,7 +194,7 @@ export function Friends() {
     setProcessingAction(person.id);
     
     try {
-      const success = await requestFollowBack(person.id, user.id);
+      const success = await requestFollowBack(user.id, person.friendShareId);
       if (success) {
         showToast(`Requested ${person.nickname} to follow you back`, 'success');
         await fetchData();

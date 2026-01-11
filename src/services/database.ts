@@ -1103,7 +1103,19 @@ export async function getFollowers(userId: string): Promise<FollowerEntry[]> {
   }
 
   // Get my following list to check which followers I follow back
-  const myFollowing = loadFriendsFromLocalStorage(userId);
+  let myFollowing: FriendEntry[] = [];
+  if (useSupabase) {
+    const { data } = await supabase
+      .from('friend_lists')
+      .select('*')
+      .eq('user_id', userId);
+    
+    if (data) {
+      myFollowing = ((data as Record<string, unknown>[] | null) || []).map(mapSupabaseFriendToEntry);
+    }
+  } else {
+    myFollowing = loadFriendsFromLocalStorage(userId);
+  }
 
   // Enrich with profile data
   const enrichedFollowers = await Promise.all(
