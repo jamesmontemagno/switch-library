@@ -16,7 +16,7 @@ import { RemoveFriendModal } from '../components/RemoveFriendModal';
 import { EditNicknameModal } from '../components/EditNicknameModal';
 import { ShareLibraryModal } from '../components/ShareLibraryModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUserGroup, faMagnifyingGlass, faEye, faPenToSquare, faArrowsLeftRight, faUserPlus, faRotate, faUserCheck, faTableCells, faList, faGripLines, faUsers, faUserMinus } from '@fortawesome/free-solid-svg-icons';
+import { faUserGroup, faMagnifyingGlass, faEye, faPenToSquare, faArrowsLeftRight, faUserPlus, faRotate, faUserCheck, faTableCells, faList, faGripLines, faUsers, faUserMinus, faGear } from '@fortawesome/free-solid-svg-icons';
 import './Friends.css';
 
 type SortOption = 'added_desc' | 'added_asc' | 'nickname_asc' | 'nickname_desc' | 'games_desc' | 'games_asc';
@@ -215,6 +215,28 @@ export function Friends() {
             <FontAwesomeIcon icon={faRotate} />
           </button>
           <button 
+            onClick={() => setShowShareModal(true)} 
+            className="btn-refresh"
+            title="Manage Sharing Settings"
+            style={{ padding: '0.5rem 1rem', gap: '0.5rem' }}
+          >
+            <FontAwesomeIcon icon={faGear} />
+            {hasSharingEnabled && (
+              <span style={{ 
+                padding: '0.25rem 0.75rem',
+                backgroundColor: 'var(--success)',
+                color: 'white',
+                borderRadius: '16px',
+                fontSize: '0.75rem',
+                fontWeight: '600',
+                border: '2px solid var(--success)',
+                boxShadow: '0 2px 6px rgba(34, 197, 94, 0.25)'
+              }}>
+                ON
+              </span>
+            )}
+          </button>
+          <button 
             onClick={() => setShowAddModal(true)} 
             className="btn-add-friend"
             disabled={!hasSharingEnabled}
@@ -258,9 +280,13 @@ export function Friends() {
                 cursor: 'pointer',
                 fontSize: '0.875rem',
                 fontWeight: '600',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
               }}
             >
-              Enable Sharing
+              <FontAwesomeIcon icon={faGear} />
+              Manage Sharing Settings
             </button>
           </div>
         </div>

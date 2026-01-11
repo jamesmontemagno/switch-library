@@ -252,7 +252,13 @@ export function ShareLibraryModal({ userId, onClose, onSharingEnabled }: ShareLi
                 className="btn-submit"
                 style={{
                   backgroundColor: shareProfile?.enabled ? 'var(--success)' : 'var(--text-secondary)',
-                  minWidth: '60px'
+                  minWidth: '60px',
+                  borderRadius: '20px',
+                  padding: '0.4rem 1rem',
+                  fontWeight: '600',
+                  fontSize: '0.875rem',
+                  border: shareProfile?.enabled ? '2px solid var(--success)' : 'none',
+                  boxShadow: shareProfile?.enabled ? '0 2px 8px rgba(34, 197, 94, 0.3)' : 'none'
                 }}
               >
                 {isLoadingShare ? '...' : shareProfile?.enabled ? 'ON' : 'OFF'}
@@ -310,8 +316,12 @@ export function ShareLibraryModal({ userId, onClose, onSharingEnabled }: ShareLi
                       style={{
                         backgroundColor: shareProfile?.showDisplayName ? 'var(--success)' : 'var(--text-secondary)',
                         minWidth: '50px',
-                        padding: '0.25rem 0.5rem',
-                        fontSize: '0.75rem'
+                        padding: '0.25rem 0.75rem',
+                        fontSize: '0.75rem',
+                        borderRadius: '16px',
+                        fontWeight: '600',
+                        border: shareProfile?.showDisplayName ? '2px solid var(--success)' : 'none',
+                        boxShadow: shareProfile?.showDisplayName ? '0 2px 6px rgba(34, 197, 94, 0.25)' : 'none'
                       }}
                     >
                       {shareProfile?.showDisplayName ? 'ON' : 'OFF'}
@@ -330,8 +340,12 @@ export function ShareLibraryModal({ userId, onClose, onSharingEnabled }: ShareLi
                       style={{
                         backgroundColor: shareProfile?.showAvatar ? 'var(--success)' : 'var(--text-secondary)',
                         minWidth: '50px',
-                        padding: '0.25rem 0.5rem',
-                        fontSize: '0.75rem'
+                        padding: '0.25rem 0.75rem',
+                        fontSize: '0.75rem',
+                        borderRadius: '16px',
+                        fontWeight: '600',
+                        border: shareProfile?.showAvatar ? '2px solid var(--success)' : 'none',
+                        boxShadow: shareProfile?.showAvatar ? '0 2px 6px rgba(34, 197, 94, 0.25)' : 'none'
                       }}
                     >
                       {shareProfile?.showAvatar ? 'ON' : 'OFF'}

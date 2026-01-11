@@ -2,19 +2,20 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { usePreferences } from '../hooks/usePreferences';
 import { useSEO } from '../hooks/useSEO';
-import { getShareProfile, enableSharing, disableSharing, deleteUserAccount } from '../services/database';
+import { getShareProfile, deleteUserAccount } from '../services/database';
+import { ShareLibraryModal } from '../components/ShareLibraryModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSun, faMoon, faDesktop } from '@fortawesome/free-solid-svg-icons';
+import { faSun, faMoon, faDesktop, faShare } from '@fortawesome/free-solid-svg-icons';
 import './Settings.css';
 
 export function Settings() {
   const { user, logout } = useAuth();
-  const { theme, setTheme, shareSettings, updateShareSettings } = usePreferences();
-  const [shareLink, setShareLink] = useState<string>('');
+  const { theme, setTheme } = usePreferences();
   const [displayName, setDisplayName] = useState(user?.displayName || '');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
-  const [showDisableConfirm, setShowDisableConfirm] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [sharingEnabled, setSharingEnabled] = useState(false);
   
   useSEO({
     title: 'Settings',
@@ -28,62 +29,19 @@ export function Settings() {
       
       const profile = await getShareProfile(user.id);
       if (profile) {
-        // Sync database state with local preferences
-        updateShareSettings({
-          enabled: profile.enabled,
-          showGameCount: shareSettings.showGameCount,
-          showProgress: shareSettings.showProgress,
-        });
-        
-        if (profile.enabled) {
-          const fullUrl = `${window.location.origin}${import.meta.env.BASE_URL}shared/${profile.shareId}`;
-          setShareLink(fullUrl);
-        }
+        setSharingEnabled(profile.enabled);
       }
     };
     
     loadShareProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
     setTheme(newTheme);
   };
 
-  const handleToggleSharing = async (enabled: boolean) => {
-    if (!user) return;
-    
-    // Show confirmation modal when disabling sharing
-    if (!enabled) {
-      setShowDisableConfirm(true);
-      return;
-    }
-    
-    updateShareSettings({ enabled });
-    
-    // Enable sharing in database
-    const profile = await enableSharing(user.id);
-    if (profile) {
-      const fullUrl = `${window.location.origin}${import.meta.env.BASE_URL}shared/${profile.shareId}`;
-      setShareLink(fullUrl);
-    }
-  };
-
-  const handleDisableSharing = async () => {
-    if (!user) return;
-    
-    updateShareSettings({ enabled: false });
-    
-    // Disable sharing in database
-    await disableSharing(user.id);
-    setShareLink('');
-    setShowDisableConfirm(false);
-  };
-
-  const handleCopyShareLink = () => {
-    if (shareLink) {
-      navigator.clipboard.writeText(shareLink);
-    }
+  const handleSharingEnabled = async () => {
+    setSharingEnabled(true);
   };
 
   const handleSaveDisplayName = () => {
@@ -178,62 +136,29 @@ export function Settings() {
         <section className="settings-section">
           <h2>Library Sharing</h2>
           <p className="setting-description" style={{ marginBottom: '1rem' }}>
-            Allow others to view your game library via a public link
+            Share your collection with friends or compare libraries
           </p>
-          
-          {/* Enable/Disable Toggle */}
-          <div className="share-toggle-row">
-            <label htmlFor="shareEnabled">Enable Library Sharing</label>
-            <button 
-              id="shareEnabled"
-              className={`btn-toggle ${shareSettings.enabled ? 'on' : 'off'}`}
-              onClick={() => handleToggleSharing(!shareSettings.enabled)}
-            >
-              {shareSettings.enabled ? 'ON' : 'OFF'}
-            </button>
-          </div>
-          
-          {shareSettings.enabled && (
-            <>
-              {/* Share Link Row */}
-              {shareLink && (
-                <div className="share-link-row">
-                  <input
-                    type="text"
-                    value={shareLink}
-                    readOnly
-                    className="share-url-input"
-                  />
-                  <button onClick={handleCopyShareLink} className="btn-copy">
-                    Copy
-                  </button>
-                </div>
+          <div className="setting-item">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <button onClick={() => setShowShareModal(true)} className="btn btn-primary">
+                <FontAwesomeIcon icon={faShare} /> Manage Sharing Settings
+              </button>
+              {sharingEnabled && (
+                <span style={{ 
+                  padding: '0.4rem 1rem',
+                  backgroundColor: 'var(--success)',
+                  color: 'white',
+                  borderRadius: '20px',
+                  fontSize: '0.875rem',
+                  fontWeight: '600',
+                  border: '2px solid var(--success)',
+                  boxShadow: '0 2px 8px rgba(34, 197, 94, 0.3)'
+                }}>
+                  ON
+                </span>
               )}
-              
-              {/* Privacy Settings */}
-              <div className="privacy-settings">
-                <h5>Privacy Settings</h5>
-                <div className="privacy-toggle-row">
-                  <span>Show Game Count</span>
-                  <button 
-                    className={`btn-toggle small ${shareSettings.showGameCount ? 'on' : 'off'}`}
-                    onClick={() => updateShareSettings({ showGameCount: !shareSettings.showGameCount })}
-                  >
-                    {shareSettings.showGameCount ? 'ON' : 'OFF'}
-                  </button>
-                </div>
-                <div className="privacy-toggle-row">
-                  <span>Show Completion Progress</span>
-                  <button 
-                    className={`btn-toggle small ${shareSettings.showProgress ? 'on' : 'off'}`}
-                    onClick={() => updateShareSettings({ showProgress: !shareSettings.showProgress })}
-                  >
-                    {shareSettings.showProgress ? 'ON' : 'OFF'}
-                  </button>
-                </div>
-              </div>
-            </>
-          )}
+            </div>
+          </div>
         </section>
 
         {/* Account Section */}
@@ -312,51 +237,13 @@ export function Settings() {
         </div>
       )}
 
-      {/* Disable Sharing Confirmation Modal */}
-      {showDisableConfirm && (
-        <div className="modal-overlay" onClick={() => setShowDisableConfirm(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
-            <header className="modal-header">
-              <h2>Disable Library Sharing</h2>
-              <button onClick={() => setShowDisableConfirm(false)} className="modal-close" aria-label="Close">
-                ×
-              </button>
-            </header>
-            <div className="modal-form" style={{ padding: '1.5rem' }}>
-              <p style={{ marginBottom: '1rem', color: '#dc3545', fontWeight: '600' }}>
-                ⚠️ Warning: This will affect your friends!
-              </p>
-              <p style={{ marginBottom: '1rem' }}>
-                Disabling library sharing will:
-              </p>
-              <ul style={{ marginBottom: '1.5rem', marginLeft: '1.5rem', lineHeight: '1.8' }}>
-                <li><strong>Prevent friends from viewing your library</strong></li>
-                <li>Invalidate your current share link</li>
-                <li>Hide your profile from public view</li>
-                <li>Require re-enabling to share your library again</li>
-              </ul>
-              <p style={{ marginBottom: '1.5rem', color: '#6c757d' }}>
-                Your friends will no longer be able to see your game collection until you re-enable sharing.
-              </p>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button 
-                  onClick={() => setShowDisableConfirm(false)} 
-                  className="btn btn-secondary"
-                  style={{ flex: 1 }}
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={handleDisableSharing}
-                  className="btn btn-danger"
-                  style={{ flex: 1 }}
-                >
-                  Disable Sharing
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Share Library Modal */}
+      {showShareModal && user && (
+        <ShareLibraryModal
+          userId={user.id}
+          onClose={() => setShowShareModal(false)}
+          onSharingEnabled={handleSharingEnabled}
+        />
       )}
     </div>
   );
