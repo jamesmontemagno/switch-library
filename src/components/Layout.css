@@ -55,3 +55,9 @@
   color: rgba(255, 255, 255, 0.8);
   font-weight: 500;
 }
+
+.footer-version {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-style: italic;
+}

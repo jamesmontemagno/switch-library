@@ -27,6 +27,11 @@ export function Layout() {
             Game data provided by{' '}
             <a href="https://thegamesdb.net" target="_blank" rel="noopener noreferrer">TheGamesDB.net</a>
           </p>
+          {import.meta.env.VITE_APP_VERSION && (
+            <p className="footer-version">
+              Version {import.meta.env.VITE_APP_VERSION}
+            </p>
+          )}
         </div>
         <ApiAllowanceIndicator />
       </footer>
