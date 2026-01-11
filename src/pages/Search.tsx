@@ -75,6 +75,7 @@ function TrendingGameCard({ game, userGames, isAuthenticated, onQuickAdd, adding
               {game.platformId === PLATFORM_IDS.NINTENDO_SWITCH_2 ? 'Switch 2' : 'Switch'}
             </span>
           )}
+          {game.region_id !== undefined && <span className="region-badge">{getRegionName(game.region_id)}</span>}
           {game.releaseDate && (
             <span className="release-date"><FontAwesomeIcon icon={faCalendar} /> {game.releaseDate.split('-')[0]}</span>
           )}
