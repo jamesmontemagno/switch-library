@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { getShareProfile } from '../services/database';
+import { ShareLibraryModal } from './ShareLibraryModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMagnifyingGlass, faBookOpen, faUserGroup, faUser } from '@fortawesome/free-solid-svg-icons';
+import { faMagnifyingGlass, faBookOpen, faUserGroup, faUser, faLink } from '@fortawesome/free-solid-svg-icons';
+import type { ShareProfile } from '../types';
 import './Header.css';
 
 // Simple MD5-like hash for Gravatar (Note: For production, use a proper MD5 library)
@@ -31,8 +34,27 @@ export function Header() {
   const location = useLocation();
   const navigate = useNavigate();
   const [avatarError, setAvatarError] = useState(false);
+  const [shareProfile, setShareProfile] = useState<ShareProfile | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const isActive = (path: string) => location.pathname === path;
+
+  // Load share profile when authenticated
+  useEffect(() => {
+    const loadShareProfile = async () => {
+      if (user) {
+        try {
+          const profile = await getShareProfile(user.id);
+          setShareProfile(profile);
+        } catch (error) {
+          console.error('Failed to load share profile:', error);
+        }
+      } else {
+        setShareProfile(null);
+      }
+    };
+    loadShareProfile();
+  }, [user]);
 
   const handleAuthClick = () => {
     navigate('/auth');
@@ -40,6 +62,22 @@ export function Header() {
 
   const handleSettingsClick = () => {
     navigate('/settings');
+  };
+
+  const handleShareClick = () => {
+    setShowShareModal(true);
+  };
+
+  const handleSharingEnabled = async () => {
+    // Refresh share profile after enabling
+    if (user) {
+      try {
+        const updatedProfile = await getShareProfile(user.id);
+        setShareProfile(updatedProfile);
+      } catch (error) {
+        console.error('Failed to refresh share profile:', error);
+      }
+    }
   };
 
   // Use user avatar or fallback to person icon
@@ -68,6 +106,15 @@ export function Header() {
                 <FontAwesomeIcon icon={faUserGroup} />
                 <span>Following</span>
               </Link>
+              <button 
+                onClick={handleShareClick} 
+                className={`nav-link nav-link-button ${shareProfile?.enabled ? 'share-active' : ''}`}
+                aria-label="Share library"
+                title={shareProfile?.enabled ? 'Sharing enabled' : 'Share your library'}
+              >
+                <FontAwesomeIcon icon={faLink} />
+                <span className="nav-link-text">Share</span>
+              </button>
             </>
           )}
         </nav>
@@ -106,6 +153,15 @@ export function Header() {
           )}
         </div>
       </div>
+
+      {/* Share Library Modal */}
+      {showShareModal && user && (
+        <ShareLibraryModal 
+          userId={user.id} 
+          onClose={() => setShowShareModal(false)}
+          onSharingEnabled={handleSharingEnabled}
+        />
+      )}
     </header>
   );
 }

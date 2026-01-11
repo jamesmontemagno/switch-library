@@ -7,6 +7,7 @@ import type { GameEntry, Platform, ShareProfile } from '../types';
 import { loadGames, saveGame, deleteGame as deleteGameFromDb, getShareProfile } from '../services/database';
 import { EditGameModal } from '../components/EditGameModal';
 import { ShareLibraryModal } from '../components/ShareLibraryModal';
+import { SharePromptBanner } from '../components/SharePromptBanner';
 import { SegmentedControl } from '../components/SegmentedControl';
 import { logger } from '../services/logger';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -47,6 +48,13 @@ export function Library() {
   // Share state
   const [shareProfile, setShareProfile] = useState<ShareProfile | null>(null);
   const [showSharePanel, setShowSharePanel] = useState(false);
+  const [dismissedSharePrompt, setDismissedSharePrompt] = useState(() => {
+    try {
+      return localStorage.getItem('dismissedSharePrompt') === 'true';
+    } catch {
+      return false;
+    }
+  });
 
   // Save preferences when filters/sort/view change
   useEffect(() => {
@@ -166,6 +174,25 @@ export function Library() {
       console.error('Failed to refresh share profile:', error);
     }
   };
+
+  const handleDismissSharePrompt = () => {
+    setDismissedSharePrompt(true);
+    try {
+      localStorage.setItem('dismissedSharePrompt', 'true');
+    } catch (error) {
+      console.error('Failed to save dismissal preference:', error);
+    }
+  };
+
+  const handleSharePromptClick = () => {
+    setShowSharePanel(true);
+  };
+
+  // Show share prompt if:
+  // 1. User has at least one game
+  // 2. Sharing is not enabled
+  // 3. User hasn't dismissed the prompt
+  const shouldShowSharePrompt = games.length > 0 && !shareProfile?.enabled && !dismissedSharePrompt;
 
   const stats = {
     total: games.length,
@@ -318,6 +345,14 @@ export function Library() {
           />
         </div>
       </div>
+
+      {/* Share Prompt Banner */}
+      {shouldShowSharePrompt && (
+        <SharePromptBanner 
+          onShareClick={handleSharePromptClick}
+          onDismiss={handleDismissSharePrompt}
+        />
+      )}
 
       {filteredGames.length === 0 ? (
         <div className="empty-state">

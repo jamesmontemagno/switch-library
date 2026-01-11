@@ -8,6 +8,7 @@ import {
   getShareProfile,
   getUserProfile
 } from '../services/database';
+import { useToast } from '../contexts/ToastContext';
 import { SegmentedControl } from './SegmentedControl';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
@@ -32,6 +33,7 @@ interface ShareLibraryModalProps {
 
 export function ShareLibraryModal({ userId, onClose, onSharingEnabled }: ShareLibraryModalProps) {
   const navigate = useNavigate();
+  const toast = useToast();
   const [shareProfile, setShareProfile] = useState<ShareProfile | null>(null);
   const [displayName, setDisplayName] = useState('');
   const [editingDisplayName, setEditingDisplayName] = useState(false);
@@ -67,16 +69,23 @@ export function ShareLibraryModal({ userId, onClose, onSharingEnabled }: ShareLi
         const success = await disableSharing(userId);
         if (success) {
           setShareProfile(prev => prev ? { ...prev, enabled: false } : null);
+          toast.success('Sharing disabled', 'Your library is now private');
+        } else {
+          toast.error('Failed to disable sharing', 'Please try again');
         }
       } else {
         const newProfile = await enableSharing(userId);
         if (newProfile) {
           setShareProfile(newProfile);
           onSharingEnabled?.();
+          toast.success('Sharing enabled!', 'Your share link is ready to use');
+        } else {
+          toast.error('Failed to enable sharing', 'Please try again');
         }
       }
     } catch (error) {
       console.error('Failed to toggle sharing:', error);
+      toast.error('Something went wrong', 'Unable to update sharing settings');
     }
   };
 
@@ -91,9 +100,11 @@ export function ShareLibraryModal({ userId, onClose, onSharingEnabled }: ShareLi
     try {
       await navigator.clipboard.writeText(url);
       setCopySuccess(true);
+      toast.success('Link copied!', 'Share it with your friends');
       setTimeout(() => setCopySuccess(false), 2000);
     } catch (error) {
       console.error('Failed to copy link:', error);
+      toast.error('Failed to copy link', 'Please try again');
     }
   };
 
@@ -104,9 +115,13 @@ export function ShareLibraryModal({ userId, onClose, onSharingEnabled }: ShareLi
       const success = await updateDisplayNameDb(userId, displayName.trim());
       if (success) {
         setEditingDisplayName(false);
+        toast.success('Display name updated');
+      } else {
+        toast.error('Failed to update display name', 'Please try again');
       }
     } catch (error) {
       console.error('Failed to update display name:', error);
+      toast.error('Failed to update display name', 'Please try again');
     } finally {
       setSavingDisplayName(false);
     }
@@ -120,9 +135,13 @@ export function ShareLibraryModal({ userId, onClose, onSharingEnabled }: ShareLi
       });
       if (updated) {
         setShareProfile(updated);
+        toast.success('Privacy settings updated');
+      } else {
+        toast.error('Failed to update privacy settings', 'Please try again');
       }
     } catch (error) {
       console.error('Failed to toggle show name:', error);
+      toast.error('Failed to update privacy settings', 'Please try again');
     }
   };
 
@@ -134,9 +153,13 @@ export function ShareLibraryModal({ userId, onClose, onSharingEnabled }: ShareLi
       });
       if (updated) {
         setShareProfile(updated);
+        toast.success('Privacy settings updated');
+      } else {
+        toast.error('Failed to update privacy settings', 'Please try again');
       }
     } catch (error) {
       console.error('Failed to toggle show avatar:', error);
+      toast.error('Failed to update privacy settings', 'Please try again');
     }
   };
 
