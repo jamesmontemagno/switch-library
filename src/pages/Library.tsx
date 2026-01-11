@@ -7,6 +7,7 @@ import type { GameEntry, Platform, ShareProfile } from '../types';
 import { loadGames, saveGame, deleteGame as deleteGameFromDb, getShareProfile } from '../services/database';
 import { EditGameModal } from '../components/EditGameModal';
 import { ShareLibraryModal } from '../components/ShareLibraryModal';
+import { SegmentedControl } from '../components/SegmentedControl';
 import { logger } from '../services/logger';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faPenToSquare, faGamepad, faTrash, faCartShopping, faTrophy, faLink, faMagnifyingGlass, faTableCells, faList, faGripLines } from '@fortawesome/free-solid-svg-icons';
@@ -228,31 +229,20 @@ export function Library() {
           <span>🔧 Filters & Sort</span>
           <span className="toggle-icon">{showFilters ? '▲' : '▼'}</span>
         </button>
-        <div className="view-toggle view-toggle-mobile">
-          <button
-            className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
-            onClick={() => setViewMode('grid')}
-            title="Grid View"
-            aria-label="Grid View"
-          >
-            <FontAwesomeIcon icon={faTableCells} />
-          </button>
-          <button
-            className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
-            onClick={() => setViewMode('list')}
-            title="List View"
-            aria-label="List View"
-          >
-            <FontAwesomeIcon icon={faList} />
-          </button>
-          <button
-            className={`view-btn ${viewMode === 'compact' ? 'active' : ''}`}
-            onClick={() => setViewMode('compact')}
-            title="Compact View"
-            aria-label="Compact View"
-          >
-            <FontAwesomeIcon icon={faGripLines} />
-          </button>
+        <div className="view-toggle-mobile">
+          <SegmentedControl
+            options={[
+              { value: 'grid', label: 'Grid View', icon: <FontAwesomeIcon icon={faTableCells} /> },
+              { value: 'list', label: 'List View', icon: <FontAwesomeIcon icon={faList} /> },
+              { value: 'compact', label: 'Compact View', icon: <FontAwesomeIcon icon={faGripLines} /> },
+            ]}
+            value={viewMode}
+            onChange={setViewMode}
+            ariaLabel="View mode"
+            variant="buttons"
+            size="sm"
+            iconOnly
+          />
         </div>
       </div>
 
@@ -312,31 +302,20 @@ export function Library() {
           <option value="completed_first">Completed First</option>
           <option value="not_completed_first">Not Completed First</option>
         </select>
-        <div className="view-toggle view-toggle-desktop">
-          <button
-            className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
-            onClick={() => setViewMode('grid')}
-            title="Grid View"
-            aria-label="Grid View"
-          >
-            <FontAwesomeIcon icon={faTableCells} />
-          </button>
-          <button
-            className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
-            onClick={() => setViewMode('list')}
-            title="List View"
-            aria-label="List View"
-          >
-            <FontAwesomeIcon icon={faList} />
-          </button>
-          <button
-            className={`view-btn ${viewMode === 'compact' ? 'active' : ''}`}
-            onClick={() => setViewMode('compact')}
-            title="Compact View"
-            aria-label="Compact View"
-          >
-            <FontAwesomeIcon icon={faGripLines} />
-          </button>
+        <div className="view-toggle-desktop">
+          <SegmentedControl
+            options={[
+              { value: 'grid', label: 'Grid View', icon: <FontAwesomeIcon icon={faTableCells} /> },
+              { value: 'list', label: 'List View', icon: <FontAwesomeIcon icon={faList} /> },
+              { value: 'compact', label: 'Compact View', icon: <FontAwesomeIcon icon={faGripLines} /> },
+            ]}
+            value={viewMode}
+            onChange={setViewMode}
+            ariaLabel="View mode"
+            variant="buttons"
+            size="sm"
+            iconOnly
+          />
         </div>
       </div>
 

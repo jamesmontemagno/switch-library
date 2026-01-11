@@ -15,6 +15,7 @@ import { AddFriendModal } from '../components/AddFriendModal';
 import { RemoveFriendModal } from '../components/RemoveFriendModal';
 import { EditNicknameModal } from '../components/EditNicknameModal';
 import { ShareLibraryModal } from '../components/ShareLibraryModal';
+import { SegmentedControl } from '../components/SegmentedControl';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserGroup, faMagnifyingGlass, faEye, faPenToSquare, faArrowsLeftRight, faUserPlus, faRotate, faUserCheck, faTableCells, faList, faGripLines, faUsers, faUserMinus, faLink, faGear } from '@fortawesome/free-solid-svg-icons';
 import './Friends.css';
@@ -278,25 +279,18 @@ export function Friends() {
       )}
 
       {/* Tabs */}
-      <div className="friends-tabs" role="tablist">
-        <button
-          role="tab"
-          aria-selected={activeTab === 'following'}
-          className={`tab-button ${activeTab === 'following' ? 'active' : ''}`}
-          onClick={() => setActiveTab('following')}
-        >
-          <FontAwesomeIcon icon={faUserCheck} />
-          Following ({following.length})
-        </button>
-        <button
-          role="tab"
-          aria-selected={activeTab === 'followers'}
-          className={`tab-button ${activeTab === 'followers' ? 'active' : ''}`}
-          onClick={() => setActiveTab('followers')}
-        >
-          <FontAwesomeIcon icon={faUsers} />
-          Followers ({followers.length})
-        </button>
+      <div className="friends-tabs-container">
+        <SegmentedControl
+          options={[
+            { value: 'following', label: 'Following', icon: <FontAwesomeIcon icon={faUserCheck} />, count: following.length },
+            { value: 'followers', label: 'Followers', icon: <FontAwesomeIcon icon={faUsers} />, count: followers.length },
+          ]}
+          value={activeTab}
+          onChange={setActiveTab}
+          ariaLabel="Friends tabs"
+          variant="tabs"
+          fullWidth
+        />
       </div>
 
       {/* Following Tab */}
@@ -328,30 +322,19 @@ export function Friends() {
               </select>
               
               <div className="view-toggle">
-                <button
-                  className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
-                  onClick={() => setViewMode('grid')}
-                  aria-label="Grid view"
-                  title="Grid view"
-                >
-                  <FontAwesomeIcon icon={faTableCells} />
-                </button>
-                <button
-                  className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
-                  onClick={() => setViewMode('list')}
-                  aria-label="List view"
-                  title="List view"
-                >
-                  <FontAwesomeIcon icon={faList} />
-                </button>
-                <button
-                  className={`view-btn ${viewMode === 'compact' ? 'active' : ''}`}
-                  onClick={() => setViewMode('compact')}
-                  aria-label="Compact view"
-                  title="Compact view"
-                >
-                  <FontAwesomeIcon icon={faGripLines} />
-                </button>
+                <SegmentedControl
+                  options={[
+                    { value: 'grid', label: 'Grid view', icon: <FontAwesomeIcon icon={faTableCells} /> },
+                    { value: 'list', label: 'List view', icon: <FontAwesomeIcon icon={faList} /> },
+                    { value: 'compact', label: 'Compact view', icon: <FontAwesomeIcon icon={faGripLines} /> },
+                  ]}
+                  value={viewMode}
+                  onChange={setViewMode}
+                  ariaLabel="View mode"
+                  variant="buttons"
+                  size="sm"
+                  iconOnly
+                />
               </div>
             </div>
           )}

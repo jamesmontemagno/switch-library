@@ -4,6 +4,7 @@ import { usePreferences } from '../hooks/usePreferences';
 import { useSEO } from '../hooks/useSEO';
 import { getShareProfile, deleteUserAccount } from '../services/database';
 import { ShareLibraryModal } from '../components/ShareLibraryModal';
+import { SegmentedControl } from '../components/SegmentedControl';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSun, faMoon, faDesktop, faShare } from '@fortawesome/free-solid-svg-icons';
 import './Settings.css';
@@ -106,29 +107,18 @@ export function Settings() {
           <h2>Appearance</h2>
           <div className="setting-item">
             <label>Theme</label>
-            <div className="theme-options">
-              <button
-                className={`theme-option ${theme === 'light' ? 'active' : ''}`}
-                onClick={() => handleThemeChange('light')}
-              >
-                <FontAwesomeIcon icon={faSun} className="theme-icon" />
-                Light
-              </button>
-              <button
-                className={`theme-option ${theme === 'dark' ? 'active' : ''}`}
-                onClick={() => handleThemeChange('dark')}
-              >
-                <FontAwesomeIcon icon={faMoon} className="theme-icon" />
-                Dark
-              </button>
-              <button
-                className={`theme-option ${theme === 'system' ? 'active' : ''}`}
-                onClick={() => handleThemeChange('system')}
-              >
-                <FontAwesomeIcon icon={faDesktop} className="theme-icon" />
-                System
-              </button>
-            </div>
+            <SegmentedControl
+              options={[
+                { value: 'light', label: 'Light', icon: <FontAwesomeIcon icon={faSun} /> },
+                { value: 'dark', label: 'Dark', icon: <FontAwesomeIcon icon={faMoon} /> },
+                { value: 'system', label: 'System', icon: <FontAwesomeIcon icon={faDesktop} /> },
+              ]}
+              value={theme}
+              onChange={handleThemeChange}
+              ariaLabel="Theme selection"
+              variant="buttons"
+              fullWidth
+            />
           </div>
         </section>
 

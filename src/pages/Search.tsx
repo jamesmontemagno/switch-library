@@ -15,6 +15,7 @@ import {
 import { saveGame, loadGames, getMonthlySearchCount, logSearchUsage, deleteGame as deleteGameFromDb, getTrendingGames } from '../services/database';
 import { UsageLimitModal } from '../components/UsageLimitModal';
 import { ManualAddGameModal } from '../components/ManualAddGameModal';
+import { SegmentedControl } from '../components/SegmentedControl';
 import './Search.css';
 
 type SortOption = 'relevance' | 'release_desc' | 'release_asc' | 'title_asc' | 'title_desc';
@@ -561,24 +562,16 @@ export function Search() {
 
       {/* Mode Toggle - Search / Trending */}
       <div className="mode-toggle-container">
-        <div className="mode-toggle" role="tablist" aria-label="Search mode">
-          <button
-            role="tab"
-            aria-selected={mode === 'search'}
-            className={`mode-btn ${mode === 'search' ? 'active' : ''}`}
-            onClick={() => setMode('search')}
-          >
-            <FontAwesomeIcon icon={faMagnifyingGlass} /> Search
-          </button>
-          <button
-            role="tab"
-            aria-selected={mode === 'trending'}
-            className={`mode-btn ${mode === 'trending' ? 'active' : ''}`}
-            onClick={() => setMode('trending')}
-          >
-            <FontAwesomeIcon icon={faFire} /> Trending
-          </button>
-        </div>
+        <SegmentedControl
+          options={[
+            { value: 'search', label: 'Search', icon: <FontAwesomeIcon icon={faMagnifyingGlass} /> },
+            { value: 'trending', label: 'Trending', icon: <FontAwesomeIcon icon={faFire} /> },
+          ]}
+          value={mode}
+          onChange={(value) => setMode(value as 'search' | 'trending')}
+          ariaLabel="Search mode"
+          variant="default"
+        />
       </div>
 
       {/* Search Mode Content */}
@@ -617,23 +610,19 @@ export function Search() {
           <span><FontAwesomeIcon icon={faWrench} /> Filters & Sort</span>
           <span className="toggle-icon">{showFilters ? '▲' : '▼'}</span>
         </button>
-        <div className="view-toggle view-toggle-mobile">
-          <button
-            className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
-            onClick={() => setViewMode('grid')}
-            title="Grid View"
-            aria-label="Grid View"
-          >
-            <FontAwesomeIcon icon={faTableCells} />
-          </button>
-          <button
-            className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
-            onClick={() => setViewMode('list')}
-            title="List View"
-            aria-label="List View"
-          >
-            <FontAwesomeIcon icon={faList} />
-          </button>
+        <div className="view-toggle-mobile">
+          <SegmentedControl
+            options={[
+              { value: 'grid', label: 'Grid View', icon: <FontAwesomeIcon icon={faTableCells} /> },
+              { value: 'list', label: 'List View', icon: <FontAwesomeIcon icon={faList} /> },
+            ]}
+            value={viewMode}
+            onChange={setViewMode}
+            ariaLabel="View mode"
+            variant="buttons"
+            size="sm"
+            iconOnly
+          />
         </div>
       </div>
 
@@ -707,23 +696,19 @@ export function Search() {
           <span>With Boxart Only</span>
         </label>
         
-        <div className="view-toggle view-toggle-desktop">
-          <button
-            className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
-            onClick={() => setViewMode('grid')}
-            title="Grid View"
-            aria-label="Grid View"
-          >
-            <FontAwesomeIcon icon={faTableCells} />
-          </button>
-          <button
-            className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
-            onClick={() => setViewMode('list')}
-            title="List View"
-            aria-label="List View"
-          >
-            <FontAwesomeIcon icon={faList} />
-          </button>
+        <div className="view-toggle-desktop">
+          <SegmentedControl
+            options={[
+              { value: 'grid', label: 'Grid View', icon: <FontAwesomeIcon icon={faTableCells} /> },
+              { value: 'list', label: 'List View', icon: <FontAwesomeIcon icon={faList} /> },
+            ]}
+            value={viewMode}
+            onChange={setViewMode}
+            ariaLabel="View mode"
+            variant="buttons"
+            size="sm"
+            iconOnly
+          />
         </div>
       </div>
 
@@ -1039,41 +1024,31 @@ export function Search() {
               <div className="quick-add-options">
                 <div className="form-group">
                   <label>Platform</label>
-                  <div className="format-segmented-control">
-                    <button
-                      type="button"
-                      className={`segment ${quickAddPlatform === 'Nintendo Switch' ? 'active' : ''}`}
-                      onClick={() => setQuickAddPlatform('Nintendo Switch')}
-                    >
-                      <FontAwesomeIcon icon={faGamepad} /> Switch
-                    </button>
-                    <button
-                      type="button"
-                      className={`segment ${quickAddPlatform === 'Nintendo Switch 2' ? 'active' : ''}`}
-                      onClick={() => setQuickAddPlatform('Nintendo Switch 2')}
-                    >
-                      <FontAwesomeIcon icon={faGamepad} /> Switch 2
-                    </button>
-                  </div>
+                  <SegmentedControl
+                    options={[
+                      { value: 'Nintendo Switch', label: 'Switch', icon: <FontAwesomeIcon icon={faGamepad} /> },
+                      { value: 'Nintendo Switch 2', label: 'Switch 2', icon: <FontAwesomeIcon icon={faGamepad} /> },
+                    ]}
+                    value={quickAddPlatform}
+                    onChange={(value) => setQuickAddPlatform(value as Platform)}
+                    ariaLabel="Platform"
+                    variant="buttons"
+                    fullWidth
+                  />
                 </div>
                 <div className="form-group">
                   <label>Format</label>
-                  <div className="format-segmented-control">
-                    <button
-                      type="button"
-                      className={`segment ${quickAddFormat === 'Physical' ? 'active' : ''}`}
-                      onClick={() => setQuickAddFormat('Physical')}
-                    >
-                      <FontAwesomeIcon icon={faBox} /> Physical
-                    </button>
-                    <button
-                      type="button"
-                      className={`segment ${quickAddFormat === 'Digital' ? 'active' : ''}`}
-                      onClick={() => setQuickAddFormat('Digital')}
-                    >
-                      <FontAwesomeIcon icon={faCloud} /> Digital
-                    </button>
-                  </div>
+                  <SegmentedControl
+                    options={[
+                      { value: 'Physical', label: 'Physical', icon: <FontAwesomeIcon icon={faBox} /> },
+                      { value: 'Digital', label: 'Digital', icon: <FontAwesomeIcon icon={faCloud} /> },
+                    ]}
+                    value={quickAddFormat}
+                    onChange={(value) => setQuickAddFormat(value as Format)}
+                    ariaLabel="Game format"
+                    variant="buttons"
+                    fullWidth
+                  />
                 </div>
               </div>
               <div className="quick-add-actions">
