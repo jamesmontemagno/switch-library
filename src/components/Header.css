@@ -28,6 +28,10 @@
 .logo-icon {
   width: 32px;
   height: 32px;
+  background: white;
+  border-radius: 8px;
+  padding: 2px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
 .logo-text {
