@@ -14,6 +14,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faPenToSquare, faGamepad, faTrash, faCartShopping, faTrophy, faLink, faMagnifyingGlass, faTableCells, faList, faGripLines } from '@fortawesome/free-solid-svg-icons';
 import './Library.css';
 
+const DISMISSED_SHARE_PROMPT_KEY = 'dismissedSharePrompt';
+
 type SortOption = 'title_asc' | 'title_desc' | 'added_newest' | 'added_oldest' | 'purchase_newest' | 'purchase_oldest' | 'platform' | 'format' | 'completed_first' | 'not_completed_first';
 type ViewMode = 'grid' | 'list' | 'compact';
 type FormatFilter = 'all' | 'Physical' | 'Digital';
@@ -50,7 +52,7 @@ export function Library() {
   const [showSharePanel, setShowSharePanel] = useState(false);
   const [dismissedSharePrompt, setDismissedSharePrompt] = useState(() => {
     try {
-      return localStorage.getItem('dismissedSharePrompt') === 'true';
+      return localStorage.getItem(DISMISSED_SHARE_PROMPT_KEY) === 'true';
     } catch {
       return false;
     }
@@ -178,7 +180,7 @@ export function Library() {
   const handleDismissSharePrompt = () => {
     setDismissedSharePrompt(true);
     try {
-      localStorage.setItem('dismissedSharePrompt', 'true');
+      localStorage.setItem(DISMISSED_SHARE_PROMPT_KEY, 'true');
     } catch (error) {
       console.error('Failed to save dismissal preference:', error);
     }

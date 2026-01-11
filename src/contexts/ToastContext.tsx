@@ -50,7 +50,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     message?: string,
     duration: number = 5000
   ) => {
-    const id = Math.random().toString(36).substring(7);
+    const id = crypto.randomUUID();
     const toast: Toast = { id, type, title, message };
     
     setToasts(prev => [...prev, toast]);

@@ -20,6 +20,8 @@ import { ShareLibraryModal } from '../components/ShareLibraryModal';
 import { SegmentedControl } from '../components/SegmentedControl';
 import './Search.css';
 
+const FIRST_GAME_CELEBRATION_KEY = 'hasSeenFirstGameCelebration';
+
 type SortOption = 'relevance' | 'release_desc' | 'release_asc' | 'title_asc' | 'title_desc';
 type ViewMode = 'grid' | 'list';
 type SearchMode = 'search' | 'trending';
@@ -173,7 +175,7 @@ export function Search() {
   const [firstGameTitle, setFirstGameTitle] = useState('');
   const [hasSeenCelebration, setHasSeenCelebration] = useState(() => {
     try {
-      return localStorage.getItem('hasSeenFirstGameCelebration') === 'true';
+      return localStorage.getItem(FIRST_GAME_CELEBRATION_KEY) === 'true';
     } catch {
       return false;
     }
@@ -551,7 +553,7 @@ export function Search() {
     setShowCelebrationModal(false);
     setShowShareModal(true);
     try {
-      localStorage.setItem('hasSeenFirstGameCelebration', 'true');
+      localStorage.setItem(FIRST_GAME_CELEBRATION_KEY, 'true');
       setHasSeenCelebration(true);
     } catch (error) {
       console.error('Failed to save celebration preference:', error);
@@ -561,7 +563,7 @@ export function Search() {
   const handleCelebrationDismiss = () => {
     setShowCelebrationModal(false);
     try {
-      localStorage.setItem('hasSeenFirstGameCelebration', 'true');
+      localStorage.setItem(FIRST_GAME_CELEBRATION_KEY, 'true');
       setHasSeenCelebration(true);
     } catch (error) {
       console.error('Failed to save celebration preference:', error);
