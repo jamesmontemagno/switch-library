@@ -101,6 +101,44 @@
   color: white;
 }
 
+.nav-link-button {
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: background-color 0.2s, color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nav-link-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.nav-link-button.share-active {
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.nav-link-text {
+  display: inline;
+}
+
+@media (max-width: 768px) {
+  .nav-link-text {
+    display: none;
+  }
+}
+
 .nav-link-wrapper {
   position: relative;
   display: inline-flex;
