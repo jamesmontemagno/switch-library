@@ -75,6 +75,7 @@ function TrendingGameCard({ game, userGames, isAuthenticated, onQuickAdd, adding
               {game.platformId === PLATFORM_IDS.NINTENDO_SWITCH_2 ? 'Switch 2' : 'Switch'}
             </span>
           )}
+          {game.region_id !== undefined && <span className="region-badge">{getRegionName(game.region_id)}</span>}
           {game.releaseDate && (
             <span className="release-date"><FontAwesomeIcon icon={faCalendar} /> {game.releaseDate.split('-')[0]}</span>
           )}
@@ -229,8 +230,15 @@ export function Search() {
           return parseDate(a.releaseDate) - parseDate(b.releaseDate);
         case 'release_desc':
           return parseDate(b.releaseDate) - parseDate(a.releaseDate);
-        default:
-          return 0; // Keep original order for relevance
+        default: {
+          // For relevance (default), prioritize North American releases
+          // region_id 1 = North America
+          const aIsNA = a.region_id === 1;
+          const bIsNA = b.region_id === 1;
+          if (aIsNA && !bIsNA) return -1;
+          if (!aIsNA && bIsNA) return 1;
+          return 0; // Keep original order for same region
+        }
       }
     });
     

@@ -597,6 +597,7 @@ export interface BulkGameResult {
   releaseDate?: string;
   platform: string;
   platformId: number;
+  region_id?: number;
   coverUrl?: string;
   overview?: string;
 }
@@ -666,6 +667,7 @@ export async function getGamesByIds(
               releaseDate: game.release_date,
               platform: platformName,
               platformId: game.platform,
+              region_id: game.region_id,
               coverUrl,
               overview: game.overview,
             });

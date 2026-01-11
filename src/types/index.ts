@@ -103,6 +103,7 @@ export interface TrendingGame extends TrendingGameAggregate {
   releaseDate?: string;
   platform?: string;
   platformId?: number;
+  region_id?: number;
 }
 
 export interface TrendingResponse {

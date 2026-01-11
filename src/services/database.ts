@@ -1391,6 +1391,7 @@ export async function getTrendingGames(userId?: string): Promise<TrendingRespons
         releaseDate: details?.releaseDate,
         platform: details?.platform,
         platformId: details?.platformId,
+        region_id: details?.region_id,
       };
     };
 

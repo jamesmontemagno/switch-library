@@ -6,16 +6,8 @@ type ViewMode = 'grid' | 'list' | 'compact';
 type FormatFilter = 'all' | 'Physical' | 'Digital';
 type Theme = 'light' | 'dark' | 'system';
 
-export interface ShareSettings {
-  enabled: boolean;
-  showGameCount: boolean;
-  showProgress: boolean;
-}
-
 export interface UserPreferences {
-  searchRegions: string[];
   theme: Theme;
-  shareSettings: ShareSettings;
   library?: {
     filterPlatform: Platform | 'all';
     filterFormat: FormatFilter;
@@ -25,20 +17,13 @@ export interface UserPreferences {
   };
   friends?: {
     sortBy: 'added_desc' | 'added_asc' | 'nickname_asc' | 'nickname_desc' | 'games_desc' | 'games_asc';
-    viewMode?: ViewMode;
   };
 }
 
 const STORAGE_KEY = 'switch-library-preferences';
 
 const DEFAULT_PREFERENCES: UserPreferences = {
-  searchRegions: ['US'],
   theme: 'system',
-  shareSettings: {
-    enabled: false,
-    showGameCount: true,
-    showProgress: true,
-  },
   library: {
     filterPlatform: 'all',
     filterFormat: 'all',
@@ -93,13 +78,6 @@ export function usePreferences() {
     setPreferences(prev => ({ ...prev, theme }));
   };
 
-  const updateShareSettings = (updates: Partial<ShareSettings>) => {
-    setPreferences(prev => ({
-      ...prev,
-      shareSettings: { ...prev.shareSettings, ...updates }
-    }));
-  };
-
   const resetPreferences = () => {
     setPreferences(DEFAULT_PREFERENCES);
   };
@@ -107,10 +85,8 @@ export function usePreferences() {
   return {
     preferences,
     theme: preferences.theme,
-    shareSettings: preferences.shareSettings,
     updatePreferences,
     setTheme,
-    updateShareSettings,
     resetPreferences,
   };
 }
