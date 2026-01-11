@@ -3,7 +3,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(135deg, #e60012 0%, #c70011 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
   color: white;
   padding: 1rem;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
@@ -71,11 +71,11 @@
 
 .update-banner-button-primary {
   background: white;
-  color: #e60012;
+  color: var(--primary);
 }
 
 .update-banner-button-primary:hover {
-  background: #f5f5f5;
+  background: var(--bg-hover);
   transform: translateY(-1px);
 }
 
