@@ -108,17 +108,27 @@ export function AddFriendModal({ onClose, onAdd, prefilledShareId, prefilledNick
     setError('');
 
     try {
+      console.log('[DEBUG AddFriendModal] Calling followUser with:', {
+        userId: user.id,
+        shareId: extractedShareId,
+        nickname: trimmedNickname,
+      });
+      
       const result = await followUser(user.id, extractedShareId, trimmedNickname);
       
+      console.log('[DEBUG AddFriendModal] followUser returned:', result);
+      
       if (result) {
+        console.log('[DEBUG AddFriendModal] Success! Calling onAdd callback');
         await onAdd();
         onClose();
       } else {
+        console.error('[DEBUG AddFriendModal] followUser returned null/falsy');
         setError('Failed to follow user. Please try again.');
       }
     } catch (err) {
       setError('Failed to follow user. Please try again.');
-      console.error('Error following user:', err);
+      console.error('[DEBUG AddFriendModal] Error following user:', err);
     } finally {
       setIsLoading(false);
     }

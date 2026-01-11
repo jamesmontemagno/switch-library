@@ -781,10 +781,12 @@ export async function checkAcceptsFollowRequests(shareId: string): Promise<boole
 
 // Follow a user (instant, no approval needed)
 export async function followUser(userId: string, shareId: string, nickname?: string): Promise<FriendEntry | null> {
+  console.log('[DEBUG followUser] Called with:', { userId, shareId, nickname });
+  
   // Check if already following
   const alreadyFollowing = await isFollowing(userId, shareId);
   if (alreadyFollowing) {
-    console.log('Already following this user');
+    console.log('[DEBUG followUser] Already following this user');
     return null;
   }
 
@@ -799,7 +801,7 @@ export async function followUser(userId: string, shareId: string, nickname?: str
 
   // Trim and validate nickname
   if (!finalNickname) {
-    console.error('Nickname is required');
+    console.error('[DEBUG followUser] Nickname is required');
     return null;
   }
 
@@ -807,6 +809,12 @@ export async function followUser(userId: string, shareId: string, nickname?: str
   const now = new Date().toISOString();
 
   if (useSupabase) {
+    console.log('[DEBUG followUser] Attempting Supabase INSERT:', {
+      user_id: userId,
+      friend_share_id: shareId,
+      nickname: finalNickname,
+    });
+    
     const { data, error } = await supabase
       .from('friend_lists')
       .insert({
@@ -819,11 +827,17 @@ export async function followUser(userId: string, shareId: string, nickname?: str
       .select()
       .single();
 
-    if (error || !data) {
-      console.error('Failed to follow user:', error);
+    if (error) {
+      console.error('[DEBUG followUser] Supabase error:', error);
+      return null;
+    }
+    
+    if (!data) {
+      console.error('[DEBUG followUser] No data returned from insert');
       return null;
     }
 
+    console.log('[DEBUG followUser] Supabase SUCCESS, inserted data:', data);
     return mapSupabaseFriendToEntry(data as Record<string, unknown>);
   }
 
@@ -1067,15 +1081,22 @@ async function isFollowingShareId(userId: string, shareId: string): Promise<bool
 
 // Get people following you (Followers)
 export async function getFollowers(userId: string): Promise<FollowerEntry[]> {
+  console.log('[DEBUG getFollowers] Called with userId:', userId);
+  
   // Get my share profile
   const myShareProfile = await getShareProfile(userId);
+  console.log('[DEBUG getFollowers] My share profile:', myShareProfile);
+  
   if (!myShareProfile) {
+    console.log('[DEBUG getFollowers] No share profile found, returning empty');
     return [];
   }
 
   let followerEntries: FriendEntry[] = [];
 
   if (useSupabase) {
+    console.log('[DEBUG getFollowers] Querying Supabase for friend_share_id:', myShareProfile.shareId);
+    
     // Get all entries where friend_share_id = my share ID
     const { data, error } = await supabase
       .from('friend_lists')
@@ -1083,12 +1104,15 @@ export async function getFollowers(userId: string): Promise<FollowerEntry[]> {
       .eq('friend_share_id', myShareProfile.shareId)
       .order('added_at', { ascending: false });
 
+    console.log('[DEBUG getFollowers] Supabase query result:', { data, error });
+
     if (error || !data) {
       console.error('Failed to load followers from Supabase:', error);
       return [];
     }
 
     followerEntries = ((data as Record<string, unknown>[] | null) || []).map(mapSupabaseFriendToEntry);
+    console.log('[DEBUG getFollowers] Mapped follower entries:', followerEntries);
   } else {
     // localStorage fallback - search all entries for ones pointing to my share ID
     try {
@@ -1118,23 +1142,32 @@ export async function getFollowers(userId: string): Promise<FollowerEntry[]> {
   }
 
   // Enrich with profile data
+  console.log('[DEBUG getFollowers] Starting enrichment for', followerEntries.length, 'followers');
+  
   const enrichedFollowers = await Promise.all(
-    followerEntries.map(async (follower) => {
+    followerEntries.map(async (follower, index) => {
+      console.log(`[DEBUG getFollowers] Enriching follower ${index + 1}:`, follower);
+      
       // Get the follower's share profile (so we can link to their library)
       const followerShareProfile = await getShareProfileByUserId(follower.userId);
+      console.log(`[DEBUG getFollowers] Follower ${index + 1} share profile:`, followerShareProfile);
       
       let profile: { displayName: string; avatarUrl: string } | null = null;
       let gameCount = 0;
       let followerShareId: string | null = null;
 
       if (followerShareProfile && followerShareProfile.enabled) {
+        console.log(`[DEBUG getFollowers] Follower ${index + 1} has enabled share profile, getting profile data`);
         profile = await getSharedUserProfile(followerShareProfile.shareId);
         const games = await loadSharedGames(followerShareProfile.shareId);
         gameCount = games.length;
         followerShareId = followerShareProfile.shareId;
+        console.log(`[DEBUG getFollowers] Follower ${index + 1} profile data:`, { profile, gameCount });
       } else {
         // They don't have sharing enabled, try to get basic profile
+        console.log(`[DEBUG getFollowers] Follower ${index + 1} no share profile or disabled, getting basic profile`);
         profile = await getUserProfile(follower.userId);
+        console.log(`[DEBUG getFollowers] Follower ${index + 1} basic profile:`, profile);
       }
 
       // Check if I follow them back
@@ -1142,7 +1175,7 @@ export async function getFollowers(userId: string): Promise<FollowerEntry[]> {
         ? myFollowing.some(f => f.friendShareId === followerShareId)
         : false;
 
-      return {
+      const enrichedFollower = {
         id: follower.id,
         followerUserId: follower.userId,
         followerShareId,
@@ -1154,9 +1187,13 @@ export async function getFollowers(userId: string): Promise<FollowerEntry[]> {
         gameCount,
         youFollowThem,
       };
+      
+      console.log(`[DEBUG getFollowers] Follower ${index + 1} enriched result:`, enrichedFollower);
+      return enrichedFollower;
     })
   );
 
+  console.log('[DEBUG getFollowers] Final enriched followers:', enrichedFollowers);
   return enrichedFollowers;
 }
 

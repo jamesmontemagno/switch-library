@@ -101,6 +101,17 @@ export function Friends() {
     fetchData();
   }, [fetchData]);
 
+  // DEBUG: Log the actual logged-in user
+  useEffect(() => {
+    if (user) {
+      console.log('[DEBUG Friends] Logged in as user:', {
+        userId: user.id,
+        displayName: user.displayName,
+        email: user.email,
+      });
+    }
+  }, [user]);
+
   // Filter and sort following
   const filteredFollowing = following
     .filter(person => {
