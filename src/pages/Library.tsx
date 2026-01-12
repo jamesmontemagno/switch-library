@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { usePreferences } from '../hooks/usePreferences';
 import { useSEO } from '../hooks/useSEO';
+import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import type { GameEntry, Platform, ShareProfile } from '../types';
 import { loadGames, saveGame, deleteGame as deleteGameFromDb, getShareProfile } from '../services/database';
+import { cacheLibraryData, loadCachedLibraryData } from '../services/offlineCache';
 import { EditGameModal } from '../components/EditGameModal';
 import { ShareLibraryModal } from '../components/ShareLibraryModal';
 import { SharePromptBanner } from '../components/SharePromptBanner';
@@ -24,6 +26,7 @@ export function Library() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { preferences, updatePreferences } = usePreferences();
+  const isOnline = useOnlineStatus();
   
   logger.component('Library', 'mount');
   
@@ -77,22 +80,48 @@ export function Library() {
     logger.info('Fetching library games', { userId: user.id });
     setIsLoading(true);
     try {
-      const [userGames, userShareProfile] = await Promise.all([
-        loadGames(user.id),
-        getShareProfile(user.id)
-      ]);
-      setGames(userGames);
-      setShareProfile(userShareProfile);
-      logger.info('Library data loaded', { 
-        gamesCount: userGames.length, 
-        hasShareProfile: !!userShareProfile 
-      });
+      if (isOnline) {
+        // Online: fetch from database and cache the results
+        const [userGames, userShareProfile] = await Promise.all([
+          loadGames(user.id),
+          getShareProfile(user.id)
+        ]);
+        setGames(userGames);
+        setShareProfile(userShareProfile);
+        
+        // Cache for offline use
+        cacheLibraryData(user.id, userGames);
+        
+        logger.info('Library data loaded from database', { 
+          gamesCount: userGames.length, 
+          hasShareProfile: !!userShareProfile 
+        });
+      } else {
+        // Offline: load from cache
+        const cachedGames = loadCachedLibraryData(user.id);
+        if (cachedGames) {
+          setGames(cachedGames);
+          logger.info('Library data loaded from cache', { gamesCount: cachedGames.length });
+        } else {
+          logger.info('No cached library data available');
+          setGames([]);
+        }
+        // Don't fetch share profile when offline
+        setShareProfile(null);
+      }
     } catch (error) {
       console.error('Failed to load games:', error);
+      // Try loading from cache on error
+      if (!isOnline) {
+        const cachedGames = loadCachedLibraryData(user.id);
+        if (cachedGames) {
+          setGames(cachedGames);
+        }
+      }
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, isOnline]);
 
   useEffect(() => {
     fetchGames();
@@ -142,6 +171,12 @@ export function Library() {
     });
 
   const handleDeleteGame = async (id: string) => {
+    // Prevent deletion when offline
+    if (!isOnline) {
+      alert('You are offline. Game deletion is not available in offline mode.');
+      return;
+    }
+    
     const gameToDelete = games.find(g => g.id === id);
     if (gameToDelete) {
       setGameToDelete(gameToDelete);
@@ -151,6 +186,13 @@ export function Library() {
   const confirmDelete = async () => {
     if (!gameToDelete) return;
     
+    // Double-check online status
+    if (!isOnline) {
+      alert('You are offline. Game deletion is not available in offline mode.');
+      setGameToDelete(null);
+      return;
+    }
+    
     const success = await deleteGameFromDb(gameToDelete.id);
     if (success) {
       setGames(prev => prev.filter(g => g.id !== gameToDelete.id));
@@ -159,6 +201,13 @@ export function Library() {
   };
 
   const handleEditGame = async (updatedGame: GameEntry) => {
+    // Prevent editing when offline
+    if (!isOnline) {
+      alert('You are offline. Game editing is not available in offline mode.');
+      setEditingGame(null);
+      return;
+    }
+    
     const savedGame = await saveGame(updatedGame, games);
     if (savedGame) {
       setGames(prev => prev.map(g => g.id === savedGame.id ? savedGame : g));
@@ -167,6 +216,11 @@ export function Library() {
   };
 
   const handleSharingEnabled = async () => {
+    // Prevent sharing changes when offline
+    if (!isOnline) {
+      return;
+    }
+    
     // Refresh share profile after enabling sharing in modal
     if (!user) return;
     try {
@@ -227,12 +281,31 @@ export function Library() {
         </div>
         <div className="header-actions">
           <button 
-            onClick={() => setShowSharePanel(!showSharePanel)} 
+            onClick={() => {
+              if (!isOnline) {
+                alert('You are offline. Sharing settings are not available in offline mode.');
+                return;
+              }
+              setShowSharePanel(!showSharePanel);
+            }} 
             className={`btn-share ${shareProfile?.enabled ? 'active' : ''}`}
+            disabled={!isOnline}
+            title={!isOnline ? 'Sharing not available offline' : undefined}
           >
             <FontAwesomeIcon icon={faLink} /> {showSharePanel ? 'Hide Sharing' : 'Share'}
           </button>
-          <button onClick={() => navigate('/search')} className="btn-add">
+          <button 
+            onClick={() => {
+              if (!isOnline) {
+                alert('You are offline. Adding games is not available in offline mode.');
+                return;
+              }
+              navigate('/search');
+            }} 
+            className="btn-add"
+            disabled={!isOnline}
+            title={!isOnline ? 'Adding games not available offline' : undefined}
+          >
             + Add Games
           </button>
         </div>

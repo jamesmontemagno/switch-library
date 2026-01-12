@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { usePreferences } from '../hooks/usePreferences';
 import { useSEO } from '../hooks/useSEO';
 import { useToast } from '../contexts/ToastContext';
+import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { logger } from '../services/logger';
 import type { FriendWithDetails, FollowerEntry } from '../types';
 import { 
@@ -12,6 +13,7 @@ import {
   getShareProfile, 
   followUser
 } from '../services/database';
+import { cacheFriendsData, cacheFollowersData, loadCachedFriendsData, loadCachedFollowersData } from '../services/offlineCache';
 import { AddFriendModal } from '../components/AddFriendModal';
 import { RemoveFriendModal } from '../components/RemoveFriendModal';
 import { EditNicknameModal } from '../components/EditNicknameModal';
@@ -29,6 +31,7 @@ export function Friends() {
   const navigate = useNavigate();
   const { preferences, updatePreferences } = usePreferences();
   const toast = useToast();
+  const isOnline = useOnlineStatus();
   
   useSEO({
     title: 'Following - My Switch Library',
@@ -71,21 +74,44 @@ export function Friends() {
     if (!user) return;
     setIsLoading(true);
     try {
-      const [userFollowing, userFollowers, shareProfile] = await Promise.all([
-        getFollowing(user.id),
-        getFollowers(user.id),
-        getShareProfile(user.id),
-      ]);
-      setFollowing(userFollowing);
-      setFollowers(userFollowers);
-      setUserShareId(shareProfile?.shareId || null);
-      setHasSharingEnabled(shareProfile?.enabled || false);
+      if (isOnline) {
+        // Online: fetch from database and cache
+        const [userFollowing, userFollowers, shareProfile] = await Promise.all([
+          getFollowing(user.id),
+          getFollowers(user.id),
+          getShareProfile(user.id),
+        ]);
+        setFollowing(userFollowing);
+        setFollowers(userFollowers);
+        setUserShareId(shareProfile?.shareId || null);
+        setHasSharingEnabled(shareProfile?.enabled || false);
+        
+        // Cache for offline use
+        cacheFriendsData(user.id, userFollowing);
+        cacheFollowersData(user.id, userFollowers);
+      } else {
+        // Offline: load from cache
+        const cachedFollowing = loadCachedFriendsData(user.id);
+        const cachedFollowers = loadCachedFollowersData(user.id);
+        
+        setFollowing(cachedFollowing || []);
+        setFollowers(cachedFollowers || []);
+        setUserShareId(null);
+        setHasSharingEnabled(false);
+      }
     } catch (error) {
       console.error('Failed to load data:', error);
+      // Try loading from cache on error
+      if (!isOnline) {
+        const cachedFollowing = loadCachedFriendsData(user.id);
+        const cachedFollowers = loadCachedFollowersData(user.id);
+        setFollowing(cachedFollowing || []);
+        setFollowers(cachedFollowers || []);
+      }
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, isOnline]);
 
   useEffect(() => {
     fetchData();

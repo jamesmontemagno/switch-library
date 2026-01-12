@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { usePreferences } from '../hooks/usePreferences';
 import { useSEO } from '../hooks/useSEO';
+import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMagnifyingGlass, faWrench, faGamepad, faCalendar, faUsers, faStar, faBox, faCloud, faTriangleExclamation, faXmark, faHourglassHalf, faTableCells, faList, faFire, faArrowTrendUp } from '@fortawesome/free-solid-svg-icons';
 import type { GameEntry, Platform, Format, TrendingGame, TrendingResponse } from '../types';
@@ -110,6 +111,7 @@ function TrendingGameCard({ game, userGames, isAuthenticated, onQuickAdd, adding
 export function Search() {
   const { user, isAuthenticated } = useAuth();
   const { preferences, updatePreferences } = usePreferences();
+  const isOnline = useOnlineStatus();
   
   useSEO({
     title: 'Search Nintendo Switch Games - My Switch Library',
@@ -608,6 +610,21 @@ export function Search() {
 
   return (
     <div className="search-page">
+      {/* Offline Warning */}
+      {!isOnline && (
+        <div className="offline-banner" style={{
+          background: 'var(--warning)',
+          color: 'white',
+          padding: '1rem',
+          textAlign: 'center',
+          marginBottom: '1rem',
+          borderRadius: '8px',
+          fontWeight: '500'
+        }}>
+          <FontAwesomeIcon icon={faTriangleExclamation} /> You are offline. Search is not available. Please check your internet connection.
+        </div>
+      )}
+      
       <header className="search-header">
         <div>
           <h1><FontAwesomeIcon icon={faMagnifyingGlass} /> Game Search</h1>
@@ -623,7 +640,13 @@ export function Search() {
             { value: 'trending', label: 'Trending', icon: <FontAwesomeIcon icon={faFire} /> },
           ]}
           value={mode}
-          onChange={(value) => setMode(value as 'search' | 'trending')}
+          onChange={(value) => {
+            if (!isOnline) {
+              alert('You are offline. Search and trending features are not available in offline mode.');
+              return;
+            }
+            setMode(value as 'search' | 'trending');
+          }}
           ariaLabel="Search mode"
           variant="default"
         />
@@ -643,11 +666,13 @@ export function Search() {
                 placeholder="Search for games..."
                 className="search-input-main"
                 autoFocus
+                disabled={!isOnline}
               />
               <button
                 onClick={() => handleSearch(1)}
-                disabled={!query.trim() || isSearching}
+                disabled={!query.trim() || isSearching || !isOnline}
                 className="search-btn-main"
+                title={!isOnline ? 'Search not available offline' : undefined}
               >
                 {isSearching ? <FontAwesomeIcon icon={faHourglassHalf} /> : <FontAwesomeIcon icon={faMagnifyingGlass} />}
               </button>
