@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { usePreferences } from '../hooks/usePreferences';
 import { useSEO } from '../hooks/useSEO';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMagnifyingGlass, faWrench, faGamepad, faCalendar, faUsers, faStar, faBox, faCloud, faTriangleExclamation, faXmark, faHourglassHalf, faTableCells, faList, faFire, faArrowTrendUp } from '@fortawesome/free-solid-svg-icons';
@@ -108,6 +109,7 @@ function TrendingGameCard({ game, userGames, isAuthenticated, onQuickAdd, adding
 
 export function Search() {
   const { user, isAuthenticated } = useAuth();
+  const { preferences, updatePreferences } = usePreferences();
   
   useSEO({
     title: 'Search Nintendo Switch Games - My Switch Library',
@@ -132,13 +134,13 @@ export function Search() {
   // User's existing games (for demo mode support)
   const [userGames, setUserGames] = useState<GameEntry[]>([]);
   
-  // Filters
-  const [platform, setPlatform] = useState<'all' | Platform>('all');
-  const [region, setRegion] = useState<'all' | number>('all');
-  const [sortBy, setSortBy] = useState<SortOption>('relevance');
+  // Filters - initialized from saved preferences
+  const [platform, setPlatform] = useState<'all' | Platform>(preferences.search?.platform || 'all');
+  const [region, setRegion] = useState<'all' | number>(preferences.search?.region || 'all');
+  const [sortBy, setSortBy] = useState<SortOption>(preferences.search?.sortBy || 'relevance');
   
-  // View
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  // View - initialized from saved preferences
+  const [viewMode, setViewMode] = useState<ViewMode>(preferences.search?.viewMode || 'grid');
   
   // Mobile filters toggle
   const [showFilters, setShowFilters] = useState(false);
@@ -186,6 +188,18 @@ export function Search() {
   
   const searchRequestIdRef = useRef(0);
   const hasTheGamesDB = isTheGamesDBConfigured();
+
+  // Save preferences when filters/sort/view change
+  useEffect(() => {
+    updatePreferences({
+      search: {
+        platform,
+        region,
+        sortBy,
+        viewMode,
+      },
+    });
+  }, [platform, region, sortBy, viewMode, updatePreferences]);
 
   // Load user's games on mount (for demo mode)
   useEffect(() => {

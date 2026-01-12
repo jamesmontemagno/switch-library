@@ -3,8 +3,10 @@ import type { Platform } from '../types';
 
 type SortOption = 'title_asc' | 'title_desc' | 'added_newest' | 'added_oldest' | 'purchase_newest' | 'purchase_oldest' | 'platform' | 'format' | 'completed_first' | 'not_completed_first';
 type ViewMode = 'grid' | 'list' | 'compact';
+type SearchViewMode = 'grid' | 'list';
 type FormatFilter = 'all' | 'Physical' | 'Digital';
 type Theme = 'light' | 'dark' | 'system';
+type SearchSortOption = 'relevance' | 'release_desc' | 'release_asc' | 'title_asc' | 'title_desc';
 
 export interface UserPreferences {
   theme: Theme;
@@ -14,6 +16,12 @@ export interface UserPreferences {
     filterCompleted: 'all' | 'completed' | 'not_completed';
     sortBy: SortOption;
     viewMode: ViewMode;
+  };
+  search?: {
+    platform: Platform | 'all';
+    region: 'all' | number;
+    sortBy: SearchSortOption;
+    viewMode: SearchViewMode;
   };
   friends?: {
     sortBy: 'added_desc' | 'added_asc' | 'nickname_asc' | 'nickname_desc' | 'games_desc' | 'games_asc';
@@ -29,6 +37,12 @@ const DEFAULT_PREFERENCES: UserPreferences = {
     filterFormat: 'all',
     filterCompleted: 'all',
     sortBy: 'added_newest',
+    viewMode: 'grid',
+  },
+  search: {
+    platform: 'all',
+    region: 'all',
+    sortBy: 'relevance',
     viewMode: 'grid',
   },
   friends: {
