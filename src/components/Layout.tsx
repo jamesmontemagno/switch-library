@@ -1,11 +1,15 @@
 import { Outlet } from 'react-router-dom';
 import { Header } from './Header';
+import { BottomNavigation } from './BottomNavigation';
 import { ApiAllowanceIndicator } from './ApiAllowanceFooter';
 import { UpdateAvailableBanner } from './UpdateAvailableBanner';
 import { NetworkStatus } from './NetworkStatus';
+import { useAuth } from '../hooks/useAuth';
 import './Layout.css';
 
 export function Layout() {
+  const { isAuthenticated } = useAuth();
+
   return (
     <div className="layout">
       <Header />
@@ -36,6 +40,7 @@ export function Layout() {
         <ApiAllowanceIndicator />
       </footer>
       <UpdateAvailableBanner />
+      {isAuthenticated && <BottomNavigation />}
     </div>
   );
 }

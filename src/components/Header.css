@@ -42,18 +42,12 @@
     justify-content: center;
     width: 100%;
   }
-  
-  /* Hide text labels in navigation, show icons only */
-  .nav-link span,
-  .nav-link-button span {
+}
+
+/* Hide navigation items on mobile since they're in bottom nav */
+@media (max-width: 768px) {
+  .header-content .nav {
     display: none;
-  }
-  
-  /* Adjust padding for icon-only mode */
-  .nav-link,
-  .nav-link-button {
-    padding: 0.5rem 0.75rem;
-    font-size: 1.125rem;
   }
 }
 
