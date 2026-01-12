@@ -207,6 +207,12 @@
     padding: 0.625rem 1rem;
     font-size: 0.9375rem;
   }
+  
+  /* Match view toggle buttons to filter toggle button height (48px) */
+  .segmented-control--buttons.segmented-control--sm .segmented-control__button {
+    min-height: 48px;
+    padding: 0.875rem 1rem;
+  }
 }
 
 @media (max-width: 480px) {
