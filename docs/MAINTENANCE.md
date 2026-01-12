@@ -2,162 +2,199 @@
 
 This document describes routine maintenance tasks for the My Switch Library database.
 
-## Migration: Add Follow-Back Request Support
+## Database Schema Overview
 
-If you have an existing `friend_lists` table, run this migration to add support for the follow-back request feature:
+The My Switch Library database uses these main tables:
+- **profiles** - User profile information (display name, avatar, etc.)
+- **games** - User game collections
+- **share_profiles** - User sharing settings and share IDs
+- **friend_lists** - Following/follower relationships (instant follow model)
+- **api_usage** - API usage tracking for rate limiting
+- **game_additions** - Anonymous game addition tracking for trending feature
+
+## Follow System (Instant Follow Model)
+
+The app uses an **instant follow model** similar to Twitter:
+- When you follow someone, you're added to their followers list immediately
+- No approval required
+- No pending requests
+- Users can set nicknames for people they follow
+
+### Friend Lists Table Schema
 
 ```sql
--- ============================================
--- MIGRATION: Add Follow-Back Request Columns
--- ============================================
--- Run this in the Supabase SQL Editor
+create table if not exists public.friend_lists (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users on delete cascade not null,
+  friend_share_id uuid references public.share_profiles(share_id) on delete cascade not null,
+  nickname text not null check (length(nickname) <= 50),
+  status text not null default 'accepted' check (status in ('accepted')),
+  added_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  unique(user_id, friend_share_id)
+);
+```
 
--- Step 1: Add new columns
-ALTER TABLE public.friend_lists 
-ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'accepted' 
-CHECK (status IN ('accepted'));
+Note: The `status` column always has value `'accepted'` as follows are instant. This column exists for potential future features but is not currently used for pending states.
 
-ALTER TABLE public.friend_lists 
-ADD COLUMN IF NOT EXISTS follow_back_requested boolean DEFAULT false;
+## Trending Games (Anonymous Tracking)
 
-ALTER TABLE public.friend_lists 
-ADD COLUMN IF NOT EXISTS requested_at timestamp with time zone;
+The `game_additions` table tracks when games are added to collections for the trending feature:
+- Completely anonymous (no user_id)
+- No Row Level Security (public read/write)
+- Tracks `thegamesdb_id` and `added_at` timestamp
 
--- Step 2: Create index for follow_back_requested lookups
-CREATE INDEX IF NOT EXISTS friend_lists_follow_back_requested_idx 
-ON public.friend_lists(follow_back_requested) 
-WHERE follow_back_requested = true;
+### Manual Data Pruning (Optional)
 
--- Step 3: Create the cleanup function
-CREATE OR REPLACE FUNCTION cleanup_expired_follow_requests()
-RETURNS integer AS $$
-DECLARE
-  updated_count integer;
-BEGIN
-  UPDATE public.friend_lists
-  SET 
-    follow_back_requested = false,
-    requested_at = null
-  WHERE follow_back_requested = true
-  AND requested_at < now() - interval '30 days';
-  
-  GET DIAGNOSTICS updated_count = ROW_COUNT;
-  RETURN updated_count;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+To keep the trending data fresh, you can periodically remove old entries:
 
--- Step 4: Verify the migration
-SELECT 
-  'Total follows' as metric, count(*) as value FROM friend_lists
+```sql
+-- Delete game additions older than 90 days
+DELETE FROM public.game_additions 
+WHERE added_at < now() - interval '90 days';
+```
+
+**Recommended Schedule**: Run quarterly (every 3 months)
+
+## API Usage Cleanup
+
+The `api_usage` table tracks search queries for rate limiting (50 searches/month per user).
+
+### Cleanup Old Usage Data
+
+```sql
+-- Delete API usage records older than 12 months
+DELETE FROM public.api_usage
+WHERE timestamp < now() - interval '12 months';
+```
+
+**Recommended Schedule**: Run annually or when the table grows large
+
+## Maintenance Schedule
+
+| Task | Frequency | SQL Command | Purpose |
+|------|-----------|-------------|---------|
+| Game additions cleanup | Quarterly | `DELETE FROM game_additions WHERE added_at < now() - interval '90 days';` | Keep trending data fresh |
+| API usage cleanup | Annually | `DELETE FROM api_usage WHERE timestamp < now() - interval '12 months';` | Prevent table bloat |
+
+## Monitoring Queries
+
+### Check Database Statistics
+
+```sql
+-- Count records in each table
+SELECT 'profiles' as table_name, count(*) as records FROM profiles
 UNION ALL
+SELECT 'games', count(*) FROM games
+UNION ALL
+SELECT 'share_profiles', count(*) FROM share_profiles
+UNION ALL
+SELECT 'friend_lists', count(*) FROM friend_lists
+UNION ALL
+SELECT 'api_usage', count(*) FROM api_usage
+UNION ALL
+SELECT 'game_additions', count(*) FROM game_additions;
+```
+
+### Check Follow Statistics
+
+```sql
+-- Most followed users (users with most followers)
 SELECT 
-  'Columns added', count(*) FROM information_schema.columns 
-  WHERE table_name = 'friend_lists' AND column_name IN ('status', 'follow_back_requested', 'requested_at');
+  sp.user_id,
+  p.display_name,
+  count(fl.id) as follower_count
+FROM share_profiles sp
+LEFT JOIN friend_lists fl ON fl.friend_share_id = sp.share_id
+LEFT JOIN profiles p ON p.id = sp.user_id
+WHERE sp.enabled = true
+GROUP BY sp.user_id, p.display_name
+ORDER BY follower_count DESC
+LIMIT 10;
 ```
 
-### What This Migration Does
-
-- Adds `status` column (always 'accepted' for the follow model)
-- Adds `follow_back_requested` boolean for tracking requests
-- Adds `requested_at` timestamp for request expiration
-- Creates index for efficient follow-back request queries
-- Creates cleanup function for expired requests
-
-**Existing friend entries** automatically become "follows" - no data changes needed!
-
-## Follow-Back Request Cleanup
-
-Follow-back requests older than 30 days are automatically cleared (the follow relationship remains, just the request flag is removed).
-
-### Manual Cleanup Procedure
-
-Run this SQL command in the [Supabase SQL Editor](https://supabase.com/dashboard):
+### Check Trending Games Activity
 
 ```sql
-SELECT cleanup_expired_follow_requests();
+-- Most added games in the last 7 days
+SELECT 
+  thegamesdb_id,
+  count(*) as addition_count,
+  max(added_at) as last_added
+FROM game_additions
+WHERE added_at > now() - interval '7 days'
+GROUP BY thegamesdb_id
+ORDER BY addition_count DESC
+LIMIT 10;
 ```
 
-This function will:
-- Clear the `follow_back_requested` flag on entries older than 30 days
-- Keep the follow relationship intact
-- Return the number of updated records
-
-### Recommended Schedule
-
-Run the cleanup function **monthly** to keep the database clean. Suggested schedule:
-
-| Task | Frequency | SQL Command |
-|------|-----------|-------------|
-| Follow-back request cleanup | Monthly (1st of month) | `SELECT cleanup_expired_follow_requests();` |
-
-### Example Output
+### Check API Usage
 
 ```sql
--- Running cleanup
-SELECT cleanup_expired_follow_requests();
-
--- Result: Returns the count of updated records
--- cleanup_expired_follow_requests
--- -------------------------------
---                              42
+-- Users approaching or exceeding monthly limit
+WITH monthly_usage AS (
+  SELECT 
+    user_id,
+    count(*) as search_count,
+    max(timestamp) as last_search
+  FROM api_usage
+  WHERE timestamp > date_trunc('month', now())
+  GROUP BY user_id
+)
+SELECT 
+  mu.user_id,
+  p.display_name,
+  mu.search_count,
+  mu.last_search
+FROM monthly_usage mu
+LEFT JOIN profiles p ON p.id = mu.user_id
+WHERE mu.search_count >= 40  -- Approaching 50 limit
+ORDER BY mu.search_count DESC;
 ```
-
-## Future Automation (Optional)
-
-For automated cleanup, you can enable the `pg_cron` extension in Supabase and schedule the cleanup:
-
-```sql
--- Enable pg_cron extension (requires Supabase Pro plan)
--- create extension if not exists pg_cron;
-
--- Schedule monthly cleanup on the 1st at midnight UTC
--- select cron.schedule(
---   'monthly-follow-request-cleanup',
---   '0 0 1 * *',
---   'SELECT cleanup_expired_follow_requests();'
--- );
-```
-
-> **Note**: The `pg_cron` extension requires a Supabase Pro plan. For free tier projects, use manual cleanup.
 
 ## Troubleshooting
 
-### No records updated when expected
+### Orphaned Share Profiles
 
-Check if there are actually expired requests:
+Check for share profiles without associated users:
 
 ```sql
-SELECT count(*) 
-FROM friend_lists 
-WHERE follow_back_requested = true
-AND requested_at < now() - interval '30 days';
+SELECT sp.* 
+FROM share_profiles sp
+LEFT JOIN auth.users u ON u.id = sp.user_id
+WHERE u.id IS NULL;
 ```
 
-### View pending follow-back requests
+### Duplicate Follows
+
+The `unique(user_id, friend_share_id)` constraint prevents duplicates, but you can verify:
 
 ```sql
--- All pending follow-back requests
-SELECT fl.*, sp.user_id as target_user_id
-FROM friend_lists fl
-JOIN share_profiles sp ON sp.share_id = fl.friend_share_id
-WHERE fl.follow_back_requested = true
-ORDER BY fl.requested_at DESC;
-
--- Expired requests (candidates for cleanup)
-SELECT * 
-FROM friend_lists 
-WHERE follow_back_requested = true
-AND requested_at < now() - interval '30 days';
-```
-
-### Check follow statistics
-
-```sql
-SELECT 
-  follow_back_requested,
-  count(*) as count,
-  min(requested_at) as oldest_request,
-  max(requested_at) as newest_request
+SELECT user_id, friend_share_id, count(*)
 FROM friend_lists
-GROUP BY follow_back_requested;
+GROUP BY user_id, friend_share_id
+HAVING count(*) > 1;
 ```
+
+### Games Without Owners
+
+Check for games referencing deleted users:
+
+```sql
+SELECT g.* 
+FROM games g
+LEFT JOIN auth.users u ON u.id = g.user_id
+WHERE u.id IS NULL;
+```
+
+> Note: This should not happen due to `ON DELETE CASCADE` in foreign keys, but good to verify.
+
+## Backup Recommendations
+
+1. **Enable Point-in-Time Recovery (PITR)** in Supabase dashboard
+2. **Regular backups** - Supabase Pro includes daily backups
+3. **Test restore procedures** periodically
+4. **Export critical data** for disaster recovery:
+   ```sql
+   -- Example: Export all user games
+   COPY (SELECT * FROM games) TO STDOUT WITH CSV HEADER;
+   ```
