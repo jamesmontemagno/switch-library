@@ -45,6 +45,12 @@
   }
 }
 
+/* ==============================================
+   LEGACY BUTTON STYLES - Prefer using Button component
+   These are kept for backwards compatibility with
+   components not yet migrated to the Button component
+   ============================================== */
+
 .btn-add,
 .btn-search {
   display: inline-flex;
@@ -79,6 +85,7 @@
   box-shadow: 0 6px 20px rgba(0, 150, 214, 0.35);
 }
 
+/* Share button legacy styles */
 .btn-share {
   display: inline-flex;
   align-items: center;
@@ -1077,6 +1084,12 @@
   justify-content: flex-end;
   padding-top: 0.5rem;
 }
+
+/* ==============================================
+   LEGACY MODAL BUTTON STYLES
+   Prefer using Button component in modals
+   These are kept for backwards compatibility
+   ============================================== */
 
 .btn-cancel {
   padding: 0.75rem 1.5rem;
