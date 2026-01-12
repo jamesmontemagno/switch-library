@@ -169,6 +169,12 @@ export function Friends() {
   const handleCompare = async (friend: FriendWithDetails) => {
     if (!user) return;
     
+    // Prevent comparison when offline
+    if (!isOnline) {
+      alert('You are offline. Comparison is not available in offline mode.');
+      return;
+    }
+    
     // Check if user has sharing enabled
     if (!userShareId) {
       setComparingFriend(friend.id);
@@ -183,6 +189,13 @@ export function Friends() {
   // Handle following a follower back
   const handleFollowFollower = async (follower: FollowerEntry) => {
     if (!user || !follower.followerShareId) return;
+    
+    // Prevent following when offline
+    if (!isOnline) {
+      alert('You are offline. Following users is not available in offline mode.');
+      return;
+    }
+    
     setProcessingAction(follower.followerUserId);
     
     try {
@@ -221,22 +234,46 @@ export function Friends() {
           <h1><FontAwesomeIcon icon={faUserGroup} /> Following</h1>
         </div>
         <div className="header-actions">
-          <button onClick={fetchData} className="btn-refresh" title="Refresh">
+          <button 
+            onClick={() => {
+              if (!isOnline) {
+                alert('You are offline. Refreshing is not available in offline mode.');
+                return;
+              }
+              fetchData();
+            }} 
+            className="btn-refresh" 
+            title={!isOnline ? 'Refresh not available offline' : 'Refresh'}
+            disabled={!isOnline}
+          >
             <FontAwesomeIcon icon={faRotate} />
           </button>
           <button 
-            onClick={() => setShowShareModal(true)} 
+            onClick={() => {
+              if (!isOnline) {
+                alert('You are offline. Sharing settings are not available in offline mode.');
+                return;
+              }
+              setShowShareModal(true);
+            }} 
             className={`btn-share ${hasSharingEnabled ? 'active' : ''}`}
-            title="Manage Sharing Settings"
+            title={!isOnline ? 'Sharing settings not available offline' : 'Manage Sharing Settings'}
+            disabled={!isOnline}
           >
             <FontAwesomeIcon icon={faLink} /> {showShareModal ? 'Hide Sharing' : 'Share'}
           </button>
           <button 
-            onClick={() => setShowAddModal(true)} 
+            onClick={() => {
+              if (!isOnline) {
+                alert('You are offline. Following users is not available in offline mode.');
+                return;
+              }
+              setShowAddModal(true);
+            }} 
             className="btn-add-friend"
-            disabled={!hasSharingEnabled}
-            title={!hasSharingEnabled ? 'Enable sharing on your library first' : 'Follow a user'}
-            style={!hasSharingEnabled ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
+            disabled={!hasSharingEnabled || !isOnline}
+            title={!isOnline ? 'Following not available offline' : !hasSharingEnabled ? 'Enable sharing on your library first' : 'Follow a user'}
+            style={!hasSharingEnabled || !isOnline ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
           >
             <FontAwesomeIcon icon={faUserPlus} />
             Follow User
@@ -384,8 +421,15 @@ export function Friends() {
                   </div>
                   <div className="friend-actions">
                     <button
-                      onClick={() => navigate(`/shared/${person.friendShareId}`)}
-                      title="View Library"
+                      onClick={() => {
+                        if (!isOnline) {
+                          alert('You are offline. Viewing shared libraries is not available in offline mode.');
+                          return;
+                        }
+                        navigate(`/shared/${person.friendShareId}`);
+                      }}
+                      title={!isOnline ? 'Viewing not available offline' : 'View Library'}
+                      disabled={!isOnline}
                     >
                       <FontAwesomeIcon icon={faEye} /> View
                     </button>
@@ -401,20 +445,35 @@ export function Friends() {
                     ) : (
                       <button
                         onClick={() => handleCompare(person)}
-                        title="Compare Libraries"
+                        title={!isOnline ? 'Comparison not available offline' : 'Compare Libraries'}
+                        disabled={!isOnline}
                       >
                         <FontAwesomeIcon icon={faArrowsLeftRight} /> Compare
                       </button>
                     )}
                     <button
-                      onClick={() => setEditingFriend(person)}
-                      title="Edit Nickname"
+                      onClick={() => {
+                        if (!isOnline) {
+                          alert('You are offline. Editing is not available in offline mode.');
+                          return;
+                        }
+                        setEditingFriend(person);
+                      }}
+                      title={!isOnline ? 'Editing not available offline' : 'Edit Nickname'}
+                      disabled={!isOnline}
                     >
                       <FontAwesomeIcon icon={faPenToSquare} /> Edit
                     </button>
                     <button
-                      onClick={() => setRemovingFriend(person)}
-                      title="Unfollow"
+                      onClick={() => {
+                        if (!isOnline) {
+                          alert('You are offline. Unfollowing is not available in offline mode.');
+                          return;
+                        }
+                        setRemovingFriend(person);
+                      }}
+                      title={!isOnline ? 'Unfollowing not available offline' : 'Unfollow'}
+                      disabled={!isOnline}
                     >
                       <FontAwesomeIcon icon={faUserMinus} /> Unfollow
                     </button>

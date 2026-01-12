@@ -461,6 +461,7 @@ export function Library() {
                 viewMode={viewMode}
                 onDelete={() => handleDeleteGame(game.id)}
                 onEdit={() => setEditingGame(game)}
+                isOnline={isOnline}
               />
             ))}
           </div>
@@ -506,9 +507,10 @@ interface GameCardProps {
   viewMode: ViewMode;
   onDelete: () => void;
   onEdit: () => void;
+  isOnline: boolean;
 }
 
-function GameCard({ game, viewMode, onDelete, onEdit }: GameCardProps) {
+function GameCard({ game, viewMode, onDelete, onEdit, isOnline }: GameCardProps) {
   const navigate = useNavigate();
   const formatDate = (dateStr: string | undefined) => {
     if (!dateStr) return null;
@@ -522,6 +524,13 @@ function GameCard({ game, viewMode, onDelete, onEdit }: GameCardProps) {
     if (target.closest('.game-actions') || target.closest('.list-actions') || target.closest('.compact-actions')) {
       return;
     }
+    
+    // Prevent navigation to details when offline
+    if (!isOnline) {
+      alert('You are offline. Game details cannot be viewed in offline mode.');
+      return;
+    }
+    
     navigate(`/game/${game.id}`);
   };
 
@@ -549,8 +558,8 @@ function GameCard({ game, viewMode, onDelete, onEdit }: GameCardProps) {
           </div>
         </div>
         <div className="compact-actions">
-          <button onClick={onEdit} className="edit-btn" aria-label={`Edit ${game.title}`}><FontAwesomeIcon icon={faPenToSquare} /></button>
-          <button onClick={onDelete} className="delete-btn" aria-label={`Delete ${game.title}`}><FontAwesomeIcon icon={faTrash} /></button>
+          <button onClick={onEdit} className="edit-btn" aria-label={`Edit ${game.title}`} disabled={!isOnline} title={!isOnline ? 'Editing not available offline' : undefined}><FontAwesomeIcon icon={faPenToSquare} /></button>
+          <button onClick={onDelete} className="delete-btn" aria-label={`Delete ${game.title}`} disabled={!isOnline} title={!isOnline ? 'Deleting not available offline' : undefined}><FontAwesomeIcon icon={faTrash} /></button>
         </div>
       </article>
     );
@@ -595,8 +604,8 @@ function GameCard({ game, viewMode, onDelete, onEdit }: GameCardProps) {
           </div>
         </div>
         <div className="list-actions">
-          <button onClick={onEdit} className="edit-btn" aria-label={`Edit ${game.title}`}><FontAwesomeIcon icon={faPenToSquare} /></button>
-          <button onClick={onDelete} className="delete-btn" aria-label={`Delete ${game.title}`}><FontAwesomeIcon icon={faTrash} /></button>
+          <button onClick={onEdit} className="edit-btn" aria-label={`Edit ${game.title}`} disabled={!isOnline} title={!isOnline ? 'Editing not available offline' : undefined}><FontAwesomeIcon icon={faPenToSquare} /></button>
+          <button onClick={onDelete} className="delete-btn" aria-label={`Delete ${game.title}`} disabled={!isOnline} title={!isOnline ? 'Deleting not available offline' : undefined}><FontAwesomeIcon icon={faTrash} /></button>
         </div>
       </article>
     );
@@ -648,6 +657,8 @@ function GameCard({ game, viewMode, onDelete, onEdit }: GameCardProps) {
             onClick={onEdit} 
             className="edit-btn"
             aria-label={`Edit ${game.title}`}
+            disabled={!isOnline}
+            title={!isOnline ? 'Editing not available offline' : undefined}
           >
             <FontAwesomeIcon icon={faPenToSquare} />
           </button>
@@ -655,6 +666,8 @@ function GameCard({ game, viewMode, onDelete, onEdit }: GameCardProps) {
             onClick={onDelete} 
             className="delete-btn"
             aria-label={`Delete ${game.title}`}
+            disabled={!isOnline}
+            title={!isOnline ? 'Deleting not available offline' : undefined}
           >
             <FontAwesomeIcon icon={faTrash} />
           </button>
