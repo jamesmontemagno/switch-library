@@ -19,10 +19,17 @@ A web app for tracking your Nintendo Switch and Nintendo Switch 2 game collectio
 
 This app is a full Progressive Web App with:
 - ✅ **Offline Support** - Service worker caches static assets and API responses
+- ✅ **Offline Mode** - View cached library and friends when offline (editing/adding disabled)
 - ✅ **Installable** - Add to home screen on mobile and desktop
 - ✅ **Auto-Update Prompts** - Get notified when new versions are available
 - ✅ **Network Status Detection** - Visual indicators for online/offline state
 - ✅ **Shortcuts** - Quick actions for Add Game, Library, and Search
+
+See [OFFLINE-MODE-TESTING.md](OFFLINE-MODE-TESTING.md) for:
+- Offline mode testing guide
+- What works offline vs. what's disabled
+- Browser compatibility
+- Troubleshooting
 
 See [PWA-GUIDE.md](PWA-GUIDE.md) for complete documentation on:
 - PWA architecture and caching strategies
