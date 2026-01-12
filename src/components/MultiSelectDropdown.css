@@ -1,0 +1,149 @@
+.multi-select-dropdown {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.multi-select-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.multi-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.625rem 0.875rem;
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  font-size: 0.9375rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 200px;
+}
+
+.multi-select-trigger:hover {
+  border-color: var(--primary);
+}
+
+.multi-select-trigger:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.multi-select-display {
+  flex: 1;
+  text-align: left;
+}
+
+.multi-select-arrow {
+  margin-left: 0.5rem;
+  transition: transform 0.2s ease;
+  color: var(--text-secondary);
+}
+
+.multi-select-arrow.open {
+  transform: rotate(180deg);
+}
+
+.multi-select-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  left: 0;
+  right: 0;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 50;
+  padding: 0.5rem 0;
+}
+
+.multi-select-option {
+  display: flex;
+  align-items: center;
+  padding: 0.625rem 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  gap: 0.75rem;
+  user-select: none;
+}
+
+.multi-select-option:hover {
+  background: var(--bg-hover);
+}
+
+.multi-select-option:first-child {
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 0.25rem;
+  padding-bottom: 0.75rem;
+}
+
+.multi-select-checkbox {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.multi-select-checkbox-custom {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  border: 2px solid var(--border-color);
+  border-radius: 0.25rem;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.multi-select-option:hover .multi-select-checkbox-custom {
+  border-color: var(--primary);
+}
+
+.multi-select-checkbox:checked + .multi-select-checkbox-custom {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+.multi-select-checkbox:focus + .multi-select-checkbox-custom {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.multi-select-checkbox-custom svg {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.multi-select-option-label {
+  flex: 1;
+  font-size: 0.9375rem;
+  color: var(--text-primary);
+}
+
+/* Scrollbar styling */
+.multi-select-dropdown-menu::-webkit-scrollbar {
+  width: 8px;
+}
+
+.multi-select-dropdown-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.multi-select-dropdown-menu::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.multi-select-dropdown-menu::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}

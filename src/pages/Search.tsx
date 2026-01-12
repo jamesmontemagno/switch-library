@@ -19,6 +19,7 @@ import { ManualAddGameModal } from '../components/ManualAddGameModal';
 import { FirstGameCelebrationModal } from '../components/FirstGameCelebrationModal';
 import { ShareLibraryModal } from '../components/ShareLibraryModal';
 import { SegmentedControl } from '../components/SegmentedControl';
+import { MultiSelectDropdown } from '../components/MultiSelectDropdown';
 import './Search.css';
 
 const FIRST_GAME_CELEBRATION_KEY = 'hasSeenFirstGameCelebration';
@@ -136,7 +137,15 @@ export function Search() {
   
   // Filters - initialized from saved preferences
   const [platform, setPlatform] = useState<'all' | Platform>(preferences.search?.platform || 'all');
-  const [region, setRegion] = useState<'all' | number>(preferences.search?.region || 'all');
+  // Support both legacy single region and new array of regions
+  const [selectedRegions, setSelectedRegions] = useState<number[]>(() => {
+    const savedRegion = preferences.search?.region;
+    if (savedRegion === 'all' || savedRegion === undefined) {
+      return []; // Empty array means "all regions"
+    }
+    // Convert legacy single number to array
+    return Array.isArray(savedRegion) ? savedRegion : [savedRegion];
+  });
   const [sortBy, setSortBy] = useState<SortOption>(preferences.search?.sortBy || 'relevance');
   
   // View - initialized from saved preferences
@@ -190,16 +199,18 @@ export function Search() {
   const hasTheGamesDB = isTheGamesDBConfigured();
 
   // Save preferences when filters/sort/view change
+  // Use JSON.stringify for array comparison to avoid infinite loops
   useEffect(() => {
     updatePreferences({
       search: {
         platform,
-        region,
+        region: selectedRegions.length === 0 ? 'all' : selectedRegions,
         sortBy,
         viewMode,
       },
     });
-  }, [platform, region, sortBy, viewMode, updatePreferences]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [platform, JSON.stringify(selectedRegions), sortBy, viewMode]);
 
   // Load user's games on mount (for demo mode)
   useEffect(() => {
@@ -246,8 +257,11 @@ export function Search() {
   const results = useMemo(() => {
     let filtered = [...rawResults];
     
-    if (region !== 'all') {
-      filtered = filtered.filter(r => r.region_id === region);
+    // Filter by selected regions (empty array means "all regions")
+    if (selectedRegions.length > 0) {
+      filtered = filtered.filter(r => 
+        r.region_id !== undefined && selectedRegions.includes(r.region_id)
+      );
     }
     
     // Apply sorting
@@ -275,7 +289,7 @@ export function Search() {
     });
     
     return filtered;
-  }, [rawResults, region, sortBy]);
+  }, [rawResults, selectedRegions, sortBy]);
 
   const handleSearch = useCallback(async (page: number = 1) => {
     if (!query.trim() || !hasTheGamesDB) return;
@@ -693,18 +707,22 @@ export function Search() {
         </div>
         
         <div className="filter-item">
-          <label>Region</label>
-          <select value={region} onChange={(e) => setRegion(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}>
-            <option value="all">All Regions</option>
-            <option value="1">North America</option>
-            <option value="3">Japan</option>
-            <option value="4">Australia</option>
-            <option value="5">Asia</option>
-            <option value="6">Europe</option>
-            <option value="7">South America</option>
-            <option value="8">Africa</option>
-            <option value="9">Middle East</option>
-          </select>
+          <MultiSelectDropdown
+            label="Region"
+            options={[
+              { value: 1, label: 'North America' },
+              { value: 3, label: 'Japan' },
+              { value: 4, label: 'Australia' },
+              { value: 5, label: 'Asia' },
+              { value: 6, label: 'Europe' },
+              { value: 7, label: 'South America' },
+              { value: 8, label: 'Africa' },
+              { value: 9, label: 'Middle East' },
+            ]}
+            selectedValues={selectedRegions}
+            onChange={(values) => setSelectedRegions(values.filter((v): v is number => typeof v === 'number'))}
+            selectAllLabel="All Regions"
+          />
         </div>
         
         <div className="filter-item">

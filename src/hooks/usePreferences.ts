@@ -19,7 +19,7 @@ export interface UserPreferences {
   };
   search?: {
     platform: Platform | 'all';
-    region: 'all' | number;
+    region: 'all' | number | number[]; // Support both legacy single value and new array
     sortBy: SearchSortOption;
     viewMode: SearchViewMode;
   };
