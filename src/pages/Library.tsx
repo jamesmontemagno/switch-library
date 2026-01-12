@@ -9,9 +9,10 @@ import { EditGameModal } from '../components/EditGameModal';
 import { ShareLibraryModal } from '../components/ShareLibraryModal';
 import { SharePromptBanner } from '../components/SharePromptBanner';
 import { SegmentedControl } from '../components/SegmentedControl';
+import { Button } from '../components/Button';
 import { logger } from '../services/logger';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faPenToSquare, faGamepad, faTrash, faCartShopping, faTrophy, faLink, faMagnifyingGlass, faTableCells, faList, faGripLines } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faPenToSquare, faGamepad, faTrash, faCartShopping, faTrophy, faLink, faMagnifyingGlass, faTableCells, faList, faGripLines, faPlus } from '@fortawesome/free-solid-svg-icons';
 import './Library.css';
 
 const DISMISSED_SHARE_PROMPT_KEY = 'dismissedSharePrompt';
@@ -226,15 +227,23 @@ export function Library() {
           </p>
         </div>
         <div className="header-actions">
-          <button 
-            onClick={() => setShowSharePanel(!showSharePanel)} 
+          <Button
+            variant="secondary"
+            size="lg"
+            icon={<FontAwesomeIcon icon={faLink} />}
+            onClick={() => setShowSharePanel(!showSharePanel)}
             className={`btn-share ${shareProfile?.enabled ? 'active' : ''}`}
           >
-            <FontAwesomeIcon icon={faLink} /> {showSharePanel ? 'Hide Sharing' : 'Share'}
-          </button>
-          <button onClick={() => navigate('/search')} className="btn-add">
-            + Add Games
-          </button>
+            {showSharePanel ? 'Hide Sharing' : 'Share'}
+          </Button>
+          <Button
+            variant="primary"
+            size="lg"
+            icon={<FontAwesomeIcon icon={faPlus} />}
+            onClick={() => navigate('/search')}
+          >
+            Add Games
+          </Button>
         </div>
       </header>
 
@@ -363,9 +372,14 @@ export function Library() {
               <div className="empty-icon"><FontAwesomeIcon icon={faGamepad} /></div>
               <h2>No games yet</h2>
               <p>Start building your collection by adding your first game!</p>
-              <button onClick={() => navigate('/search')} className="btn-add">
-                + Add Games
-              </button>
+              <Button
+                variant="primary"
+                size="lg"
+                icon={<FontAwesomeIcon icon={faPlus} />}
+                onClick={() => navigate('/search')}
+              >
+                Add Games
+              </Button>
             </>
           ) : (
             <>
@@ -414,12 +428,20 @@ export function Library() {
               <p className="warning-text">This action cannot be undone.</p>
             </div>
             <div className="modal-actions">
-              <button className="btn-cancel" onClick={() => setGameToDelete(null)}>
+              <Button
+                variant="secondary"
+                size="md"
+                onClick={() => setGameToDelete(null)}
+              >
                 Cancel
-              </button>
-              <button className="btn-delete" onClick={confirmDelete}>
+              </Button>
+              <Button
+                variant="danger"
+                size="md"
+                onClick={confirmDelete}
+              >
                 Delete Game
-              </button>
+              </Button>
             </div>
           </div>
         </div>
