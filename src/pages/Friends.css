@@ -25,6 +25,28 @@
   align-items: center;
 }
 
+@media (max-width: 768px) {
+  .header-actions {
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  
+  .btn-refresh {
+    padding: 0.625rem;
+    min-width: 44px;
+  }
+  
+  .btn-share {
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+  }
+  
+  .btn-add-friend {
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+  }
+}
+
 .btn-add-friend {
   display: flex;
   align-items: center;
