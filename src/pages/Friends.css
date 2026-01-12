@@ -142,50 +142,6 @@
 }
 
 /* Toast notifications */
-.toast {
-  position: fixed;
-  top: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 1rem 1.5rem;
-  border-radius: 0.5rem;
-  font-weight: 500;
-  font-size: 0.875rem;
-  line-height: 1.4;
-  max-width: 500px;
-  width: auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  animation: slideDown 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  text-align: center;
-}
-
-.toast-success {
-  background: #4caf50;
-  color: white;
-}
-
-.toast-error {
-  background: #f44336;
-  color: white;
-}
-
-@keyframes slideDown {
-  from {
-    transform: translateX(-50%) translateY(-20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(-50%) translateY(0);
-    opacity: 1;
-  }
-}
-
 /* Follower Cards (previously Request Cards) */
 .requests-list {
   display: flex;
@@ -776,11 +732,5 @@
   
   .request-actions button {
     flex: 1;
-  }
-  
-  .toast {
-    max-width: calc(100% - 2rem);
-    white-space: normal;
-    text-align: center;
   }
 }

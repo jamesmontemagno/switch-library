@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { usePreferences } from '../hooks/usePreferences';
 import { useSEO } from '../hooks/useSEO';
+import { useToast } from '../contexts/ToastContext';
 import { logger } from '../services/logger';
 import type { FriendWithDetails, FollowerEntry } from '../types';
 import { 
@@ -27,6 +28,7 @@ export function Friends() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { preferences, updatePreferences } = usePreferences();
+  const toast = useToast();
   
   useSEO({
     title: 'Following - My Switch Library',
@@ -41,9 +43,6 @@ export function Friends() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>(preferences.friends?.sortBy || 'added_desc');
   
-  // Toast state
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-  
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -57,12 +56,6 @@ export function Friends() {
   
   // Processing states
   const [processingAction, setProcessingAction] = useState<string | null>(null);
-
-  // Show toast helper
-  const showToast = useCallback((message: string, type: 'success' | 'error') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  }, []);
 
   // Save preferences when sort changes
   useEffect(() => {
@@ -105,11 +98,11 @@ export function Friends() {
       const shareProfile = await getShareProfile(user.id);
       setUserShareId(shareProfile?.shareId || null);
       setHasSharingEnabled(shareProfile?.enabled || false);
-      showToast('Sharing enabled successfully!', 'success');
+      toast.success('Sharing enabled successfully!');
     } catch (error) {
       console.error('Failed to refresh share profile:', error);
     }
-  }, [user, showToast]);
+  }, [user, toast]);
 
   // Log the current logged-in user for debugging
   useEffect(() => {
@@ -169,16 +162,16 @@ export function Friends() {
     try {
       const success = await followUser(user.id, follower.followerShareId, follower.profile?.displayName || 'User');
       if (success) {
-        showToast(`Now following ${follower.profile?.displayName || 'user'}`, 'success');
+        toast.success(`Now following ${follower.profile?.displayName || 'user'}`);
         await fetchData();
       } else {
-        showToast('Failed to follow', 'error');
+        toast.error('Failed to follow');
       }
     } catch (error) {
       console.error('Failed to follow:', error);
       // Show specific error message if available
       const errorMessage = error instanceof Error ? error.message : 'Failed to follow';
-      showToast(errorMessage, 'error');
+      toast.error(errorMessage);
     } finally {
       setProcessingAction(null);
     }
@@ -197,13 +190,6 @@ export function Friends() {
 
   return (
     <div className="friends">
-      {/* Toast notification */}
-      {toast && (
-        <div className={`toast toast-${toast.type}`} role="alert">
-          {toast.message}
-        </div>
-      )}
-      
       <header className="friends-header">
         <div>
           <h1><FontAwesomeIcon icon={faUserGroup} /> Following</h1>

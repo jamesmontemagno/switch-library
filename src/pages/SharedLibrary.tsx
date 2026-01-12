@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useSEO } from '../hooks/useSEO';
+import { useToast } from '../contexts/ToastContext';
 import type { GameEntry, Format, Platform } from '../types';
 import { loadSharedGames, getSharedUserProfile, getShareProfile, isFollowing, loadGames, saveGame, getFollowers } from '../services/database';
 import { AddFriendModal } from '../components/AddFriendModal';
@@ -31,6 +32,7 @@ export function SharedLibrary() {
   const { shareId } = useParams<{ shareId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const toast = useToast();
   
   const [games, setGames] = useState<GameEntry[]>([]);
   const [userInfo, setUserInfo] = useState<SharedUserInfo | null>(null);
@@ -54,7 +56,6 @@ export function SharedLibrary() {
   });
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   // For "Add to Collection" functionality
   const [myGames, setMyGames] = useState<GameEntry[]>([]);
@@ -73,14 +74,6 @@ export function SharedLibrary() {
     url: `https://myswitchlibrary.com/shared/${shareId}`,
     type: 'profile',
   });
-
-  // Auto-dismiss toast after 3 seconds
-  useEffect(() => {
-    if (toast) {
-      const timer = setTimeout(() => setToast(null), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [toast]);
 
   // Check the follow relationship state
   const checkFollowRelationship = useCallback(async () => {
@@ -103,12 +96,12 @@ export function SharedLibrary() {
       const myProfile = await getShareProfile(user.id);
       if (myProfile?.enabled) {
         setMyShareId(myProfile.shareId);
-        setToast({ message: 'Sharing enabled successfully! You can now follow others and compare libraries.', type: 'success' });
+        toast.success('Sharing enabled successfully! You can now follow others and compare libraries.');
       }
     } catch (error) {
       console.error('Failed to refresh share profile:', error);
     }
-  }, [user]);
+  }, [user, toast]);
 
   useEffect(() => {
     async function loadData() {
@@ -317,13 +310,6 @@ export function SharedLibrary() {
         </div>
       </header>
 
-      {/* Toast notification */}
-      {toast && (
-        <div className={`toast toast-${toast.type}`} role="status" aria-live="polite">
-          {toast.message}
-        </div>
-      )}
-
       {/* CTA for authenticated users to enable sharing */}
       {user && !myShareId && (
         <div style={{
@@ -510,7 +496,7 @@ export function SharedLibrary() {
           onAdd={async () => {
             // Refresh the relationship state after following
             await checkFollowRelationship();
-            setToast({ message: `Now following ${userInfo.displayName}!`, type: 'success' });
+            toast.success(`Now following ${userInfo.displayName}!`);
           }}
           prefilledShareId={shareId}
           prefilledNickname={userInfo.displayName}
