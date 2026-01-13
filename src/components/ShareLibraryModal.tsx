@@ -10,6 +10,7 @@ import {
 } from '../services/database';
 import { useToast } from '../contexts/ToastContext';
 import { SegmentedControl } from './SegmentedControl';
+import { Button } from './Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faLink, 
@@ -216,32 +217,32 @@ export function ShareLibraryModal({ userId, onClose, onSharingEnabled }: ShareLi
                     placeholder="Your display name"
                     style={{ flex: 1 }}
                   />
-                  <button 
-                    onClick={handleSaveDisplayName} 
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={handleSaveDisplayName}
                     disabled={savingDisplayName || !displayName.trim()}
-                    className="btn-submit"
-                    style={{ padding: '0.5rem 0.75rem' }}
-                  >
-                    {savingDisplayName ? '...' : <><FontAwesomeIcon icon={faCheck} /></>}
-                  </button>
-                  <button 
+                    loading={savingDisplayName}
+                    icon={<FontAwesomeIcon icon={faCheck} />}
+                  />
+                  <Button
+                    variant="secondary"
+                    size="sm"
                     onClick={() => setEditingDisplayName(false)}
-                    className="btn-cancel"
-                    style={{ padding: '0.5rem 0.75rem' }}
-                  >
-                    <FontAwesomeIcon icon={faXmark} />
-                  </button>
+                    icon={<FontAwesomeIcon icon={faXmark} />}
+                  />
                 </>
               ) : (
                 <>
                   <span style={{ flex: 1, fontWeight: '500' }}>{displayName || 'Not set'}</span>
-                  <button 
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    icon={<FontAwesomeIcon icon={faPenToSquare} />}
                     onClick={() => setEditingDisplayName(true)}
-                    className="btn-submit"
-                    style={{ padding: '0.5rem 0.75rem' }}
                   >
-                    <FontAwesomeIcon icon={faPenToSquare} /> Edit
-                  </button>
+                    Edit
+                  </Button>
                 </>
               )}
             </div>
@@ -283,9 +284,14 @@ export function ShareLibraryModal({ userId, onClose, onSharingEnabled }: ShareLi
                       style={{ flex: 1 }}
                       onClick={(e) => (e.target as HTMLInputElement).select()}
                     />
-                    <button onClick={handleCopyLink} className="btn-submit">
-                      {copySuccess ? <><FontAwesomeIcon icon={faCheck} /> Copied!</> : <><FontAwesomeIcon icon={faClipboard} /> Copy</>}
-                    </button>
+                    <Button
+                      variant="primary"
+                      size="md"
+                      icon={<FontAwesomeIcon icon={copySuccess ? faCheck : faClipboard} />}
+                      onClick={handleCopyLink}
+                    >
+                      {copySuccess ? 'Copied!' : 'Copy'}
+                    </Button>
                   </div>
                 </div>
                 
@@ -350,22 +356,24 @@ export function ShareLibraryModal({ userId, onClose, onSharingEnabled }: ShareLi
                   </div>
                 </div>
                 
-                <button 
+                <Button
+                  variant="primary"
+                  size="md"
+                  icon={<FontAwesomeIcon icon={faEye} />}
                   onClick={handlePreview}
-                  className="btn-submit"
-                  style={{ width: '100%' }}
+                  fullWidth
                 >
-                  <FontAwesomeIcon icon={faEye} /> Preview Shared Library
-                </button>
+                  Preview Shared Library
+                </Button>
               </>
             )}
           </div>
         </div>
 
         <div className="modal-actions">
-          <button onClick={onClose} className="btn-cancel">
+          <Button variant="secondary" size="md" onClick={onClose}>
             Close
-          </button>
+          </Button>
         </div>
       </div>
     </div>
