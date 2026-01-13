@@ -26,8 +26,8 @@ The `isSupabaseConfigured()` check determines mode at runtime. No hardcoded assu
 ### TheGamesDB API Integration (3-tier caching strategy)
 
 1. **Frontend Cache** (localStorage, 7-30 day TTL)
-2. **Backend Proxy** ([backend-api/TheGamesDbProxy.cs](backend-api/TheGamesDbProxy.cs)) - handles CORS, adds API key server-side
-3. **Blob Storage Cache** ([backend-api/GetGameById.cs](backend-api/GetGameById.cs)) - preserves API quota
+2. **Backend Proxy** ([backend-api/TheGamesDbProxy.cs](backend-api/TheGamesDbProxy.cs)) - handles CORS, adds API key server-side, caches search results
+3. **Blob Storage Cache** ([backend-api/GetGameById.cs](backend-api/GetGameById.cs) and [backend-api/GetGamesByIds.cs](backend-api/GetGamesByIds.cs)) - preserves API quota
 
 **Why**: TheGamesDB has strict rate limits (50 searches/month). Always check cache first. Background caching on search results is fire-and-forget to avoid blocking responses.
 
@@ -36,10 +36,14 @@ The `isSupabaseConfigured()` check determines mode at runtime. No hardcoded assu
 _ = CacheSearchResultsInBackgroundAsync(jsonDocument.RootElement);
 ```
 
+**Bulk Lookups**: The GetGamesByIds endpoint supports fetching multiple games from blob cache for the trending games feature without consuming API quota.
+
 ### Database Schema Key Points ([supabase/schema.sql](supabase/schema.sql))
 
 - **RLS Policies**: All tables use Row Level Security - users only see their own data
 - **Share Profiles**: Separate policy allows public read when `enabled = true`
+- **Friend Lists**: Instant follow system (no approval required), supports nicknames and follower tracking
+- **Game Additions**: Anonymous tracking table for trending games feature (no RLS, public data)
 - **Automatic Triggers**: `updated_at` and profile creation on auth signup
 - **Snake_case DB** ↔ **camelCase TypeScript**: Manual mapping in [database.ts](src/services/database.ts) `mapSupabaseGameToEntry()`
 
@@ -85,16 +89,26 @@ npm run dev  # Runs on http://localhost:5173
 - **Auto-detection**: Checks `isSupabaseConfigured()` at runtime
 - **User mapping**: `mapSupabaseUser()` handles both GitHub OAuth and email metadata
 - **State management**: Reducer pattern, not useState - maintains consistency
+- **Email auth**: Supports signup, login, password reset with configurable email confirmation
 
 ### Component Structure
 
 - **Pages** ([src/pages/](src/pages/)): Top-level routes, handle data fetching
+  - **Library**: Main collection view with grid/list/compact modes
+  - **Search**: Game search with trending games section
+  - **Friends**: Following/followers management with instant follow system
+  - **Compare**: Side-by-side library comparison
+  - **SharedLibrary**: Public view of shared collections
+  - **GameDetails**: Detailed game information and editing
 - **Components** ([src/components/](src/components/)): Presentational, receive props
   - **ShareLibraryModal** ([src/components/ShareLibraryModal.tsx](src/components/ShareLibraryModal.tsx)): Reusable modal for managing share library settings
     - Used across Library, Friends, and SharedLibrary pages
     - Handles display name editing, sharing toggle, privacy settings (show name/avatar)
     - Auto-loads user profile and share settings on mount
     - Triggers `onSharingEnabled` callback when sharing is enabled for parent refresh
+  - **AddGameModal/EditGameModal/ManualAddGameModal**: Game entry forms
+  - **BottomNavigation**: Mobile-friendly navigation bar
+  - **NetworkStatus**: Online/offline indicator for PWA
 - **Hooks** ([src/hooks/](src/hooks/)): Reusable logic (useAuth, usePreferences, useSEO)
 - **Services** ([src/services/](src/services/)): External API/database interfaces
 
@@ -368,9 +382,12 @@ func azure functionapp publish <function-app-name>
 | [src/services/logger.ts](src/services/logger.ts) | Universal conditional logger for debugging |
 | [backend-api/TheGamesDbProxy.cs](backend-api/TheGamesDbProxy.cs) | CORS proxy + background blob caching |
 | [backend-api/GetGameById.cs](backend-api/GetGameById.cs) | Blob-first lookup with API fallback |
+| [backend-api/GetGamesByIds.cs](backend-api/GetGamesByIds.cs) | Bulk game lookup for trending feature |
 | [supabase/schema.sql](supabase/schema.sql) | Database schema with RLS policies |
-| [vite.config.ts](vite.config.ts) | Dev proxy configuration |
+| [vite.config.ts](vite.config.ts) | Dev proxy configuration + PWA settings |
 | [LOGGING-GUIDE.md](LOGGING-GUIDE.md) | Complete logger documentation |
+| [PWA-GUIDE.md](PWA-GUIDE.md) | Progressive Web App documentation |
+| [SEO-GUIDE.md](SEO-GUIDE.md) | SEO implementation guide |
 
 ## Quick Command Reference
 

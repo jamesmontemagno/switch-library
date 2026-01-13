@@ -6,6 +6,7 @@ import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { getShareProfile, deleteUserAccount } from '../services/database';
 import { ShareLibraryModal } from '../components/ShareLibraryModal';
 import { SegmentedControl } from '../components/SegmentedControl';
+import { Button } from '../components/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSun, faMoon, faDesktop, faShare } from '@fortawesome/free-solid-svg-icons';
 import './Settings.css';
@@ -98,9 +99,9 @@ export function Settings() {
                 className="input"
                 placeholder="Your display name"
               />
-              <button onClick={handleSaveDisplayName} className="btn btn-primary">
+              <Button variant="primary" size="md" onClick={handleSaveDisplayName}>
                 Save
-              </button>
+              </Button>
             </div>
           </div>
           <div className="setting-item">
@@ -137,20 +138,22 @@ export function Settings() {
           </p>
           <div className="setting-item">
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <button 
+              <Button
+                variant="primary"
+                size="md"
+                icon={<FontAwesomeIcon icon={faShare} />}
                 onClick={() => {
                   if (!isOnline) {
                     alert('You are offline. Sharing settings are not available in offline mode.');
                     return;
                   }
                   setShowShareModal(true);
-                }} 
-                className="btn btn-primary"
+                }}
                 disabled={!isOnline}
                 title={!isOnline ? 'Sharing settings not available offline' : undefined}
               >
-                <FontAwesomeIcon icon={faShare} /> Manage Sharing Settings
-              </button>
+                Manage Sharing Settings
+              </Button>
               {sharingEnabled && (
                 <span style={{ 
                   padding: '0.4rem 1rem',
@@ -173,18 +176,18 @@ export function Settings() {
         <section className="settings-section">
           <h2>Account</h2>
           <div className="setting-item">
-            <button onClick={logout} className="btn btn-secondary">
+            <Button variant="secondary" size="md" onClick={logout}>
               Sign Out
-            </button>
+            </Button>
           </div>
           <div className="setting-item">
             <label>Delete Account</label>
             <p className="setting-description">
               Permanently delete your account and all associated data. This action cannot be undone.
             </p>
-            <button onClick={() => setShowDeleteConfirm(true)} className="btn btn-danger">
+            <Button variant="danger" size="md" onClick={() => setShowDeleteConfirm(true)}>
               Delete Account
-            </button>
+            </Button>
           </div>
         </section>
       </div>
@@ -224,21 +227,23 @@ export function Settings() {
                 style={{ marginBottom: '1.5rem' }}
               />
               <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button 
-                  onClick={() => setShowDeleteConfirm(false)} 
-                  className="btn btn-secondary"
+                <Button
+                  variant="secondary"
+                  size="md"
+                  onClick={() => setShowDeleteConfirm(false)}
                   style={{ flex: 1 }}
                 >
                   Cancel
-                </button>
-                <button 
+                </Button>
+                <Button
+                  variant="danger"
+                  size="md"
                   onClick={handleDeleteAccount}
-                  className="btn btn-danger"
                   disabled={deleteConfirmText !== 'DELETE'}
                   style={{ flex: 1 }}
                 >
                   Delete Account
-                </button>
+                </Button>
               </div>
             </div>
           </div>
