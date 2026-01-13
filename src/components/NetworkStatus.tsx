@@ -10,7 +10,12 @@ export function NetworkStatus() {
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
-      setShowOfflineBanner(false);
+      setShowOfflineBanner(true); // Show "Back online" message
+      
+      // Auto-dismiss after 3 seconds
+      setTimeout(() => {
+        setShowOfflineBanner(false);
+      }, 3000);
     };
 
     const handleOffline = () => {
