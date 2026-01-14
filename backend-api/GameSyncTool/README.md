@@ -17,6 +17,60 @@ A .NET console application for syncing Nintendo Switch and Nintendo Switch 2 gam
 - TheGamesDB API Key (get one at [TheGamesDB.net](https://thegamesdb.net/))
 - Azure Storage Account (or use Azurite for local development)
 
+## CI/CD and Build Pipeline
+
+The GameSyncTool has automated build pipelines configured via GitHub Actions:
+
+### Build Workflow
+
+The tool is automatically built on:
+- Every push to `main` branch
+- Every pull request to `main` branch
+- Manual workflow dispatch
+
+**Build Pipeline**: `.github/workflows/build.yml` includes a job that:
+- Restores NuGet dependencies
+- Builds the project in Release configuration
+- Runs tests (if available)
+
+### Multi-Platform Release Workflow
+
+For releases, the tool is built for multiple platforms:
+- **Linux** (linux-x64) - Self-contained executable
+- **Windows** (win-x64) - Self-contained executable
+- **macOS** (osx-x64) - Self-contained executable
+
+**Release Pipeline**: `.github/workflows/build-gamesync-tool.yml` automatically:
+1. Builds for all platforms when changes are pushed to the GameSyncTool directory
+2. Creates self-contained executables (no .NET installation required)
+3. Includes README, usage examples, and configuration template
+4. Uploads build artifacts for testing
+5. Creates release archives (`.zip` for Windows, `.tar.gz` for Linux/macOS) on GitHub releases
+
+### Downloading Pre-built Binaries
+
+Pre-built binaries are available from:
+1. **GitHub Actions Artifacts**: Download from the Actions tab (7-day retention)
+2. **GitHub Releases**: Download from the Releases page (permanent, when tagged)
+
+To use a pre-built binary:
+```bash
+# Extract the archive
+tar -xzf GameSyncTool-linux-x64.tar.gz  # Linux/macOS
+# or unzip GameSyncTool-win-x64.zip      # Windows
+
+# Navigate to directory
+cd GameSyncTool-linux-x64
+
+# Configure
+cp appsettings.json.example appsettings.json
+# Edit appsettings.json with your credentials
+
+# Run (no dotnet required)
+./GameSyncTool                          # Linux/macOS
+# or GameSyncTool.exe                    # Windows
+```
+
 ## Configuration
 
 ### appsettings.json
