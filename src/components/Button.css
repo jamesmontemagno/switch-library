@@ -217,7 +217,7 @@
 /* Share button styling */
 .btn-share {
   background: linear-gradient(135deg, #6b46c1 0%, #553c9a 100%);
-  color: white;
+  color: white !important;
   box-shadow: 0 2px 8px rgba(107, 70, 193, 0.2);
 }
 
@@ -228,6 +228,13 @@
 
 .btn-share.active {
   background: linear-gradient(135deg, #553c9a 0%, #44337a 100%);
+  color: white !important;
+}
+
+/* Ensure share button icon is also white */
+.btn-share .btn-icon,
+.btn-share .btn-content {
+  color: white;
 }
 
 /* Search/Info button styling */
