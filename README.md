@@ -47,8 +47,17 @@ See PWA documentation:
 - **Database**: Supabase (PostgreSQL)
 - **Auth**: Supabase Auth with GitHub OAuth
 - **Game API**: TheGamesDB
+- **Backend**: Azure Functions (.NET 10) + [Game Sync Tool](backend-api/GameSyncTool/README.md)
 - **PWA**: vite-plugin-pwa with Workbox
 - **Styling**: CSS with dark mode support
+
+## Tools
+
+### Game Sync Tool
+
+The [Game Sync Tool](backend-api/GameSyncTool/README.md) is a .NET console application for syncing Nintendo Switch and Nintendo Switch 2 games from TheGamesDB API to Azure Blob Storage. It supports both interactive and non-interactive modes for manual or automated syncing.
+
+See [backend-api/GameSyncTool/README.md](backend-api/GameSyncTool/README.md) for complete documentation.
 
 ## Getting Started
 

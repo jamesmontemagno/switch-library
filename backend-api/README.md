@@ -20,11 +20,31 @@ backend-api/
 ├── TheGamesDbProxy.cs          # HTTP trigger function for proxying TheGamesDB API requests
 ├── GetGameById.cs              # HTTP trigger function for getting game details with blob storage caching
 ├── GetGamesByIds.cs            # HTTP trigger function for bulk game lookups (trending feature)
+├── GameSyncTool/               # Console app for syncing games to blob storage
+│   ├── Program.cs              # Entry point with interactive/non-interactive modes
+│   ├── GameSyncService.cs      # Core sync logic
+│   ├── AppSettings.cs          # Configuration model
+│   ├── appsettings.json        # Configuration file
+│   └── README.md               # Tool documentation
 ├── SwitchLibraryApi.csproj     # Project file with dependencies
 ├── host.json                   # Azure Functions host configuration
 ├── local.settings.json         # Local development settings (not committed)
 └── .gitignore                  # Git ignore file
 ```
+
+## Game Sync Tool
+
+The [GameSyncTool](GameSyncTool/README.md) is a .NET console application for syncing all Nintendo Switch and Nintendo Switch 2 games from TheGamesDB API to Azure Blob Storage. This tool can be run manually or scheduled via cron/Task Scheduler for automated syncing.
+
+**Features:**
+- Full sync of all games for both platforms
+- Incremental sync for updates
+- Interactive menu mode for manual operation
+- Non-interactive command-line mode for automation
+- Sync lookup data (genres, developers, publishers)
+- Statistics and monitoring
+
+See [GameSyncTool/README.md](GameSyncTool/README.md) for complete usage instructions.
 
 ## API Endpoints
 
