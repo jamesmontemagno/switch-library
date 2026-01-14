@@ -4,7 +4,7 @@
  * Or simply verify logic by reading the test cases
  */
 
-import { normalizeGameTitle, gamesMatch, type GameComparisonKey } from './gameComparison';
+import { normalizeGameTitle, gamesMatch } from './gameComparison';
 
 // Test cases demonstrating the improved matching
 const testCases = [
