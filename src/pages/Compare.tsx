@@ -202,18 +202,33 @@ export function Compare() {
       </header>
 
       <div className="compare-summary">
-        <div className="summary-card common">
+        <button 
+          className={`summary-card common ${activeTab === 'common' ? 'active' : ''}`}
+          onClick={() => setActiveTab('common')}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveTab('common'); }}}
+          aria-label={`View ${comparison.common.length} games in common`}
+        >
           <span className="summary-value">{comparison.common.length}</span>
           <span className="summary-label">Games in Common</span>
-        </div>
-        <div className="summary-card unique">
+        </button>
+        <button 
+          className={`summary-card unique ${activeTab === 'unique-left' ? 'active' : ''}`}
+          onClick={() => setActiveTab('unique-left')}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveTab('unique-left'); }}}
+          aria-label={`View ${comparison.uniqueLeft.length} games only owned by ${leftUser.displayName}`}
+        >
           <span className="summary-value">{comparison.uniqueLeft.length}</span>
           <span className="summary-label">Only {leftUser.displayName}</span>
-        </div>
-        <div className="summary-card unique">
+        </button>
+        <button 
+          className={`summary-card unique ${activeTab === 'unique-right' ? 'active' : ''}`}
+          onClick={() => setActiveTab('unique-right')}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveTab('unique-right'); }}}
+          aria-label={`View ${comparison.uniqueRight.length} games only owned by ${rightUser.displayName}`}
+        >
           <span className="summary-value">{comparison.uniqueRight.length}</span>
           <span className="summary-label">Only {rightUser.displayName}</span>
-        </div>
+        </button>
         <div className="summary-card match">
           <span className="summary-value">
             {Math.round((comparison.common.length / Math.max(leftUser.games.length, rightUser.games.length)) * 100)}%
