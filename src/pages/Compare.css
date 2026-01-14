@@ -136,6 +136,33 @@
   border-radius: 12px;
   border: 1px solid var(--border);
   text-align: center;
+  font-family: inherit;
+  font-size: inherit;
+  width: 100%;
+}
+
+/* Clickable summary cards (buttons) */
+button.summary-card {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+button.summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+button.summary-card:active {
+  transform: translateY(0);
+}
+
+button.summary-card:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+button.summary-card.active {
+  box-shadow: 0 0 0 2px var(--accent);
 }
 
 .summary-card.common {
@@ -143,9 +170,19 @@
   background: rgba(34, 197, 94, 0.1);
 }
 
+button.summary-card.common:hover {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: #22c55e;
+}
+
 .summary-card.unique {
   border-color: var(--accent);
   background: rgba(230, 0, 18, 0.1);
+}
+
+button.summary-card.unique:hover {
+  background: rgba(230, 0, 18, 0.15);
+  border-color: var(--accent);
 }
 
 .summary-card.match {
