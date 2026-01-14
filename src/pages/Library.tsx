@@ -573,7 +573,12 @@ function GameCard({ game, viewMode, onDelete, onEdit, isOnline }: GameCardProps)
             <span className={`format-tag small ${game.format.toLowerCase()}`}>
               {game.format}
             </span>
-            {game.completed && <span className="completed-tag"><FontAwesomeIcon icon={faCheck} /> Completed</span>}
+            {game.completed && (
+              <span className="completed-tag">
+                <FontAwesomeIcon icon={faCheck} />
+                <span className="completed-text"> Completed</span>
+              </span>
+            )}
           </div>
         </div>
         <div className="compact-actions">
