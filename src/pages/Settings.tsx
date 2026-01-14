@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { usePreferences } from '../hooks/usePreferences';
 import { useSEO } from '../hooks/useSEO';
+import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { getShareProfile, deleteUserAccount } from '../services/database';
 import { ShareLibraryModal } from '../components/ShareLibraryModal';
 import { SegmentedControl } from '../components/SegmentedControl';
@@ -13,6 +14,7 @@ import './Settings.css';
 export function Settings() {
   const { user, logout } = useAuth();
   const { theme, setTheme } = usePreferences();
+  const isOnline = useOnlineStatus();
   const [displayName, setDisplayName] = useState(user?.displayName || '');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
@@ -140,7 +142,15 @@ export function Settings() {
                 variant="primary"
                 size="md"
                 icon={<FontAwesomeIcon icon={faShare} />}
-                onClick={() => setShowShareModal(true)}
+                onClick={() => {
+                  if (!isOnline) {
+                    alert('You are offline. Sharing settings are not available in offline mode.');
+                    return;
+                  }
+                  setShowShareModal(true);
+                }}
+                disabled={!isOnline}
+                title={!isOnline ? 'Sharing settings not available offline' : undefined}
               >
                 Manage Sharing Settings
               </Button>
