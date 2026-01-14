@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { GameEntry, Platform, Format, GameStatus, GameCondition } from '../types';
 import { SegmentedControl } from './SegmentedControl';
+import { Button } from './Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGamepad, faBox, faCloud } from '@fortawesome/free-solid-svg-icons';
 import './AddGameModal.css';
@@ -199,12 +200,12 @@ export function EditGameModal({ game, onClose, onSave }: EditGameModalProps) {
           </div>
 
           <div className="modal-actions">
-            <button type="button" onClick={onClose} className="btn-cancel">
+            <Button variant="secondary" size="md" type="button" onClick={onClose}>
               Cancel
-            </button>
-            <button type="submit" className="btn-submit" disabled={!title.trim()}>
+            </Button>
+            <Button variant="primary" size="md" type="submit" disabled={!title.trim()}>
               Save Changes
-            </button>
+            </Button>
           </div>
         </form>
       </div>

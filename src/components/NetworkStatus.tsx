@@ -10,7 +10,12 @@ export function NetworkStatus() {
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
-      setShowOfflineBanner(false);
+      setShowOfflineBanner(true); // Show "Back online" message
+      
+      // Auto-dismiss after 3 seconds
+      setTimeout(() => {
+        setShowOfflineBanner(false);
+      }, 3000);
     };
 
     const handleOffline = () => {
@@ -49,7 +54,7 @@ export function NetworkStatus() {
             'Back online'
           ) : (
             <>
-              You're offline. Your library and cached games are still available.
+              You're offline. Your library and friends list are cached and viewable, but adding, editing, or deleting is disabled.
             </>
           )}
         </span>

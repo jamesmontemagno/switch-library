@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "description": "A Progressive Web App for tracking your Nintendo Switch and Switch 2 game collection with cloud sync, friends system, and trending games",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

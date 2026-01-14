@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useSEO } from '../hooks/useSEO';
+import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import type { GameEntry } from '../types';
 import { loadGames, saveGame } from '../services/database';
 import { getGameById, getGenres, getDevelopers, getPublishers, mapIdsToNames } from '../services/thegamesdb';
@@ -15,6 +16,7 @@ export function GameDetails() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const isOnline = useOnlineStatus();
   const [game, setGame] = useState<GameEntry | null>(null);
   const [apiData, setApiData] = useState<TheGamesDBGame | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -37,6 +39,13 @@ export function GameDetails() {
     async function fetchGameDetails() {
       if (!user || !id) {
         setIsLoading(false);
+        return;
+      }
+
+      // When offline, redirect back to library since we can't fetch additional details
+      if (!isOnline) {
+        alert('You are offline. Game details cannot be loaded in offline mode. Returning to library.');
+        navigate('/library');
         return;
       }
 
@@ -89,9 +98,16 @@ export function GameDetails() {
     }
 
     fetchGameDetails();
-  }, [id, user, navigate]);
+  }, [id, user, navigate, isOnline]);
 
   const handleEditGame = async (updatedGame: GameEntry) => {
+    // Prevent editing when offline
+    if (!isOnline) {
+      alert('You are offline. Game editing is not available in offline mode.');
+      setEditingGame(null);
+      return;
+    }
+    
     const savedGame = await saveGame(updatedGame);
     if (savedGame) {
       setGame(savedGame);

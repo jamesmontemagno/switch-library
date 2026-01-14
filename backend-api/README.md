@@ -19,7 +19,7 @@ backend-api/
 ├── Program.cs                  # Application entry point and dependency injection setup
 ├── TheGamesDbProxy.cs          # HTTP trigger function for proxying TheGamesDB API requests
 ├── GetGameById.cs              # HTTP trigger function for getting game details with blob storage caching
-├── GetGamesByIds.cs            # HTTP trigger function for batch game lookups
+├── GetGamesByIds.cs            # HTTP trigger function for bulk game lookups (trending feature)
 ├── GameSyncTool/               # Console app for syncing games to blob storage
 │   ├── Program.cs              # Entry point with interactive/non-interactive modes
 │   ├── GameSyncService.cs      # Core sync logic
@@ -64,6 +64,20 @@ See [GameSyncTool/README.md](GameSyncTool/README.md) for complete usage instruct
   - Reduces API calls to TheGamesDB
   - Faster response times for cached games
   - Preserves API allowance
+
+### Get Games By IDs (Bulk Fetch)
+- **Route**: `POST /api/games/bulk`
+- **Description**: Gets multiple game details by IDs from blob storage cache. Primarily used for the trending games feature
+- **Request Body**: 
+  ```json
+  {
+    "ids": [123, 456, 789],
+    "includeUncached": false
+  }
+  ```
+- **Response**: Returns array of cached game details
+- **Note**: Only fetches from blob storage (no API fallback) to preserve API quota. Set `includeUncached: true` to fetch missing games from API (optional)
+- **Example**: `POST /api/games/bulk` with body `{"ids": [1, 2, 3], "includeUncached": false}`
 
 ## Local Development
 
@@ -115,7 +129,15 @@ curl "http://localhost:7071/api/thegamesdb/Games/ByGameName?name=zelda"
 
 **Cached game details endpoint:**
 ```bash
-curl "http://localhost:7071/api/games/12345
+curl "http://localhost:7071/api/games/12345"
+```
+
+**Bulk game details endpoint:**
+```bash
+curl -X POST "http://localhost:7071/api/games/bulk" \
+  -H "Content-Type: application/json" \
+  -d '{"ids": [1, 2, 3], "includeUncached": false}'
+```
 
 The API will be available at `http://localhost:7071` by default.
 

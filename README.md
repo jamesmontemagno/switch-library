@@ -6,29 +6,38 @@ A web app for tracking your Nintendo Switch and Nintendo Switch 2 game collectio
 
 ## Features
 
-- 🎮 **Track Your Collection** - Manage physical and digital games
-- 📷 **Barcode Scanning** - Quickly add games by scanning barcodes (coming soon)
-- 🔍 **Game Database** - Powered by TheGamesDB for rich game metadata
-- 🔗 **Share & Compare** - Share your library with friends (coming soon)
-- 🔐 **GitHub Authentication** - Sign in with your GitHub account via Supabase
-- 💾 **Cloud Storage** - Data persisted with Supabase
+- 🎮 **Track Your Collection** - Manage physical and digital games across Nintendo Switch and Switch 2
+- 🔍 **Game Search** - Powered by TheGamesDB with rich game metadata and cover art
+- ✍️ **Manual Entry** - Add games manually for those hard-to-find titles
+- 📊 **Multiple View Modes** - Grid, list, and compact views with customizable sorting
+- 🔗 **Share & Compare** - Share your library and compare collections with friends
+- 👥 **Friends System** - Follow other collectors, track followers, and discover shared games
+- 🔥 **Trending Games** - See what games the community is adding to their collections
+- 🔐 **Flexible Authentication** - GitHub OAuth, email/password, or demo mode (localStorage)
+- 💾 **Dual-Mode Operation** - Full Supabase cloud sync OR localStorage fallback (works offline)
 - 📱 **Progressive Web App** - Install on mobile/desktop, works offline with service worker caching
 - 🔄 **Auto-Updates** - Get notified when new versions are available
+- 🌓 **Dark Mode** - Full theme support with light, dark, and system preference modes
+- 📷 **Barcode Scanning** - Quickly add games by scanning barcodes (coming soon)
 
 ## Progressive Web App (PWA)
 
 This app is a full Progressive Web App with:
 - ✅ **Offline Support** - Service worker caches static assets and API responses
+- ✅ **Offline Mode** - View cached library and friends when offline (editing/adding disabled)
 - ✅ **Installable** - Add to home screen on mobile and desktop
 - ✅ **Auto-Update Prompts** - Get notified when new versions are available
 - ✅ **Network Status Detection** - Visual indicators for online/offline state
 - ✅ **Shortcuts** - Quick actions for Add Game, Library, and Search
 
-See [PWA-GUIDE.md](PWA-GUIDE.md) for complete documentation on:
-- PWA architecture and caching strategies
-- Testing checklist
-- Browser compatibility
-- Troubleshooting
+**PWA Implementation Rating: 8.5/10 - Excellent**
+
+See PWA documentation:
+- [PWA-REVIEW-SUMMARY.md](docs/PWA-REVIEW-SUMMARY.md) - Quick overview and issues summary
+- [PWA-IMPLEMENTATION-REVIEW.md](docs/PWA-IMPLEMENTATION-REVIEW.md) - Full audit report (28KB)
+- [PWA-FIXES-CHECKLIST.md](docs/PWA-FIXES-CHECKLIST.md) - Actionable fixes with code examples
+- [PWA-GUIDE.md](docs/PWA-GUIDE.md) - Implementation guide and usage docs
+- [OFFLINE-MODE-TESTING.md](docs/OFFLINE-MODE-TESTING.md) - Offline mode testing guide
 
 ## Tech Stack
 
@@ -98,13 +107,31 @@ Run the SQL from `supabase/schema.sql` in your Supabase SQL Editor to create:
 - `share_profiles` table for sharing functionality
 - Row Level Security policies
 
-### 3. Configure GitHub OAuth
+### 3. Configure Authentication
+
+The app supports multiple authentication methods:
+
+#### GitHub OAuth (Recommended)
 
 1. Go to Authentication > Providers in your Supabase dashboard
 2. Enable GitHub provider
 3. Create a GitHub OAuth App at https://github.com/settings/developers
 4. Set the callback URL to: `https://your-project.supabase.co/auth/v1/callback`
 5. Add the Client ID and Secret to Supabase
+
+#### Email/Password Authentication
+
+1. Go to Authentication > Providers in your Supabase dashboard
+2. Enable Email provider
+3. Configure email confirmation settings (can be disabled for testing)
+4. Users can sign up with email/password directly in the app
+
+#### Demo Mode (No Configuration Required)
+
+If no Supabase credentials are provided, the app automatically runs in demo mode:
+- Mock authentication with a demo user
+- Data stored in localStorage
+- Full functionality for testing without backend setup
 
 ### 4. Environment Variables
 
@@ -254,10 +281,11 @@ After deployment:
 
 ## Demo Mode
 
-Without Supabase configuration, the app runs in demo mode:
-- Mock authentication with a demo user
-- Data stored in localStorage
-- Full functionality for testing
+Without Supabase configuration, the app automatically runs in demo mode:
+- Mock authentication with a demo user (no account creation needed)
+- Data stored in browser localStorage (persists locally)
+- Full functionality for testing and offline use
+- Perfect for trying out the app or development without backend setup
 
 ## License
 
