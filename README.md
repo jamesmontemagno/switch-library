@@ -37,7 +37,7 @@ See PWA documentation:
 - [PWA-IMPLEMENTATION-REVIEW.md](docs/PWA-IMPLEMENTATION-REVIEW.md) - Full audit report (28KB)
 - [PWA-FIXES-CHECKLIST.md](docs/PWA-FIXES-CHECKLIST.md) - Actionable fixes with code examples
 - [PWA-GUIDE.md](docs/PWA-GUIDE.md) - Implementation guide and usage docs
-- [OFFLINE-MODE-TESTING.md](OFFLINE-MODE-TESTING.md) - Offline mode testing guide
+- [OFFLINE-MODE-TESTING.md](docs/OFFLINE-MODE-TESTING.md) - Offline mode testing guide
 
 ## Tech Stack
 
