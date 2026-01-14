@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChartColumn, faTriangleExclamation, faCircleCheck, faUser, faChartLine, faGamepad, faCheck } from '@fortawesome/free-solid-svg-icons';
 import type { GameEntry } from '../types';
 import { loadSharedGames, getSharedUserProfile } from '../services/database';
+import { normalizeGameTitle, gamesMatch, type GameComparisonKey } from '../utils/gameComparison';
 import './Compare.css';
 
 interface UserLibrary {
@@ -86,23 +87,40 @@ export function Compare() {
   const comparison = useMemo(() => {
     if (!leftUser || !rightUser) return null;
 
-    const leftTitles = new Set(leftUser.games.map(g => g.thegamesdbId || g.title.toLowerCase()));
-    const rightTitles = new Set(rightUser.games.map(g => g.thegamesdbId || g.title.toLowerCase()));
+    // Create comparison keys for all games in both libraries
+    const leftGameKeys: (GameComparisonKey & { originalGame: GameEntry })[] = leftUser.games.map(g => ({
+      id: g.thegamesdbId,
+      normalizedTitle: normalizeGameTitle(g.title),
+      originalGame: g,
+    }));
 
-    const commonGames = leftUser.games.filter(g => {
-      const key = g.thegamesdbId || g.title.toLowerCase();
-      return rightTitles.has(key);
-    });
+    const rightGameKeys: (GameComparisonKey & { originalGame: GameEntry })[] = rightUser.games.map(g => ({
+      id: g.thegamesdbId,
+      normalizedTitle: normalizeGameTitle(g.title),
+      originalGame: g,
+    }));
 
-    const uniqueLeft = leftUser.games.filter(g => {
-      const key = g.thegamesdbId || g.title.toLowerCase();
-      return !rightTitles.has(key);
-    });
+    // Find common games using improved matching logic
+    const commonGames: GameEntry[] = [];
+    const uniqueLeft: GameEntry[] = [];
+    
+    for (const leftKey of leftGameKeys) {
+      const matchFound = rightGameKeys.some(rightKey => gamesMatch(leftKey, rightKey));
+      if (matchFound) {
+        commonGames.push(leftKey.originalGame);
+      } else {
+        uniqueLeft.push(leftKey.originalGame);
+      }
+    }
 
-    const uniqueRight = rightUser.games.filter(g => {
-      const key = g.thegamesdbId || g.title.toLowerCase();
-      return !leftTitles.has(key);
-    });
+    // Find unique games in right library
+    const uniqueRight: GameEntry[] = [];
+    for (const rightKey of rightGameKeys) {
+      const matchFound = leftGameKeys.some(leftKey => gamesMatch(leftKey, rightKey));
+      if (!matchFound) {
+        uniqueRight.push(rightKey.originalGame);
+      }
+    }
 
     const getStats = (games: GameEntry[]) => ({
       total: games.length,
