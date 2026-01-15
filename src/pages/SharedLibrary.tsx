@@ -458,12 +458,9 @@ export function SharedLibrary() {
                         <span className={`format-tag small ${game.format.toLowerCase()}`}>
                           {game.format}
                         </span>
-                        {game.completed && (
-                          <span className="completed-tag">
-                            <FontAwesomeIcon icon={faCheck} />
-                            <span className="completed-text"> Completed</span>
-                          </span>
-                        )}
+                        <span className={`completed-checkbox ${game.completed ? 'checked' : ''}`} title={game.completed ? 'Completed' : 'Not completed'}>
+                          {game.completed && <FontAwesomeIcon icon={faCheck} />}
+                        </span>
                         {user && inMyCollection && (
                           <span className="in-collection-indicator" title="In Your Collection">
                             <FontAwesomeIcon icon={faCheck} /> In Collection
