@@ -98,7 +98,8 @@ export function GameDetails() {
     }
 
     fetchGameDetails();
-  }, [id, user, navigate, isOnline]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, user, navigate]); // isOnline intentionally omitted - we check it at runtime but don't want to refetch on status changes
 
   const handleEditGame = async (updatedGame: GameEntry) => {
     // Prevent editing when offline

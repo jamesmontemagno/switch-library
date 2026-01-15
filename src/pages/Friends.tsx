@@ -111,7 +111,8 @@ export function Friends() {
     } finally {
       setIsLoading(false);
     }
-  }, [user, isOnline]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]); // isOnline intentionally omitted - we check it at runtime but don't want to refetch on status changes
 
   useEffect(() => {
     fetchData();
