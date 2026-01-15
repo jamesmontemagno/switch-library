@@ -10,11 +10,11 @@ import { ShareLibraryModal } from '../components/ShareLibraryModal';
 import { UpsellBanner } from '../components/UpsellBanner';
 import { SegmentedControl } from '../components/SegmentedControl';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowsLeftRight, faPlus, faCheck, faUserCheck, faTableCells, faList } from '@fortawesome/free-solid-svg-icons';
+import { faArrowsLeftRight, faPlus, faCheck, faUserCheck, faTableCells, faList, faGripLines } from '@fortawesome/free-solid-svg-icons';
 import './SharedLibrary.css';
 
 type SortOption = 'title_asc' | 'title_desc' | 'added_newest' | 'platform' | 'format';
-type ViewMode = 'grid' | 'list';
+type ViewMode = 'grid' | 'list' | 'compact';
 type PlatformFilter = 'all' | 'switch' | 'switch2';
 
 // Relationship state: whether you follow them and/or they follow you
@@ -363,6 +363,7 @@ export function SharedLibrary() {
             options={[
               { value: 'grid', label: 'Grid View', icon: <FontAwesomeIcon icon={faTableCells} /> },
               { value: 'list', label: 'List View', icon: <FontAwesomeIcon icon={faList} /> },
+              { value: 'compact', label: 'Compact View', icon: <FontAwesomeIcon icon={faGripLines} /> },
             ]}
             value={viewMode}
             onChange={setViewMode}
@@ -407,6 +408,7 @@ export function SharedLibrary() {
             options={[
               { value: 'grid', label: 'Grid View', icon: <FontAwesomeIcon icon={faTableCells} /> },
               { value: 'list', label: 'List View', icon: <FontAwesomeIcon icon={faList} /> },
+              { value: 'compact', label: 'Compact View', icon: <FontAwesomeIcon icon={faGripLines} /> },
             ]}
             value={viewMode}
             onChange={setViewMode}
@@ -434,8 +436,115 @@ export function SharedLibrary() {
               const inMyCollection = isGameInMyCollection(game);
               const isAdding = addingGameId === game.id;
               
+              // Compact view - minimal info in a row
+              if (viewMode === 'compact') {
+                return (
+                  <article key={game.id} className="game-card compact">
+                    <div className="compact-cover">
+                      {game.coverUrl ? (
+                        <img src={game.coverUrl} alt={game.title} />
+                      ) : (
+                        <div className="cover-placeholder-small">
+                          <span>🎮</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="compact-info">
+                      <h3 className="compact-title">{game.title}</h3>
+                      <div className="compact-meta">
+                        <span className={`platform-tag small ${game.platform === 'Nintendo Switch' ? 'switch' : 'switch2'}`}>
+                          {game.platform === 'Nintendo Switch' ? 'Switch' : 'Switch 2'}
+                        </span>
+                        <span className={`format-tag small ${game.format.toLowerCase()}`}>
+                          {game.format}
+                        </span>
+                        {game.completed && (
+                          <span className="completed-tag">
+                            <FontAwesomeIcon icon={faCheck} />
+                            <span className="completed-text"> Completed</span>
+                          </span>
+                        )}
+                        {user && inMyCollection && (
+                          <span className="in-collection-indicator" title="In Your Collection">
+                            <FontAwesomeIcon icon={faCheck} /> In Collection
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {user && !inMyCollection && (
+                      <div className="compact-actions">
+                        <button
+                          onClick={() => openQuickAddModal(game)}
+                          disabled={isAdding}
+                          className="btn-add-compact"
+                          title="Add to my collection"
+                        >
+                          <FontAwesomeIcon icon={faPlus} />
+                        </button>
+                      </div>
+                    )}
+                  </article>
+                );
+              }
+              
+              // List view - horizontal card with more details
+              if (viewMode === 'list') {
+                return (
+                  <article key={game.id} className="game-card list">
+                    <div className="game-cover">
+                      {game.coverUrl ? (
+                        <img src={game.coverUrl} alt={game.title} />
+                      ) : (
+                        <div className="cover-placeholder">
+                          <span>🎮</span>
+                        </div>
+                      )}
+                      {game.completed && (
+                        <div className="completed-badge" title="Completed">✓</div>
+                      )}
+                      {user && inMyCollection && (
+                        <div className="in-collection-badge" title="In Your Collection">
+                          <FontAwesomeIcon icon={faCheck} />
+                        </div>
+                      )}
+                    </div>
+                    <div className="game-info">
+                      <h3 className="game-title">{game.title}</h3>
+                      <div className="game-meta">
+                        <span className={`platform-tag ${game.platform === 'Nintendo Switch' ? 'switch' : 'switch2'}`}>
+                          {game.platform === 'Nintendo Switch' ? 'Switch' : 'Switch 2'}
+                        </span>
+                        <span className={`format-tag ${game.format.toLowerCase()}`}>
+                          {game.format}
+                        </span>
+                      </div>
+                      {user && (
+                        <div className="game-actions">
+                          {inMyCollection ? (
+                            <div className="in-collection-text">
+                              <FontAwesomeIcon icon={faCheck} /> In Your Collection
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => openQuickAddModal(game)}
+                              disabled={isAdding}
+                              className="btn-add-to-collection"
+                              title="Add to my collection"
+                            >
+                              <FontAwesomeIcon icon={faPlus} />
+                              {isAdding ? ' Adding...' : ' Add to Collection'}
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </article>
+                );
+              }
+              
+              // Grid view (default)
               return (
-                <article key={game.id} className={`game-card ${viewMode}`}>
+                <article key={game.id} className="game-card grid">
                   <div className="game-cover">
                     {game.coverUrl ? (
                       <img src={game.coverUrl} alt={game.title} />
