@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSEO } from '../hooks/useSEO';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChartColumn, faTriangleExclamation, faCircleCheck, faUser, faChartLine, faGamepad, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { faChartColumn, faTriangleExclamation, faChartLine, faGamepad, faCheck } from '@fortawesome/free-solid-svg-icons';
 import type { GameEntry } from '../types';
 import { loadSharedGames, getSharedUserProfile } from '../services/database';
 import { normalizeGameTitle, gamesMatch, type GameComparisonKey } from '../utils/gameComparison';
@@ -247,38 +247,14 @@ export function Compare() {
           <span className="summary-value">{comparison.uniqueRight.length}</span>
           <span className="summary-label">Only {rightUser.displayName}</span>
         </button>
-        <div className="summary-card match">
-          <span className="summary-value">
-            {Math.round((comparison.common.length / Math.max(leftUser.games.length, rightUser.games.length)) * 100)}%
-          </span>
-          <span className="summary-label">Match Rate</span>
-        </div>
-      </div>
-
-      <div className="compare-tabs">
-        <button
-          className={`tab-btn ${activeTab === 'common' ? 'active' : ''}`}
-          onClick={() => setActiveTab('common')}
-        >
-          <FontAwesomeIcon icon={faCircleCheck} /> In Common ({comparison.common.length})
-        </button>
-        <button
-          className={`tab-btn ${activeTab === 'unique-left' ? 'active' : ''}`}
-          onClick={() => setActiveTab('unique-left')}
-        >
-          <FontAwesomeIcon icon={faUser} /> Only {leftUser.displayName} ({comparison.uniqueLeft.length})
-        </button>
-        <button
-          className={`tab-btn ${activeTab === 'unique-right' ? 'active' : ''}`}
-          onClick={() => setActiveTab('unique-right')}
-        >
-          <FontAwesomeIcon icon={faUser} /> Only {rightUser.displayName} ({comparison.uniqueRight.length})
-        </button>
-        <button
-          className={`tab-btn ${activeTab === 'stats' ? 'active' : ''}`}
+        <button 
+          className={`summary-card stats ${activeTab === 'stats' ? 'active' : ''}`}
           onClick={() => setActiveTab('stats')}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveTab('stats'); }}}
+          aria-label="View detailed statistics comparison"
         >
-          <FontAwesomeIcon icon={faChartLine} /> Stats
+          <span className="summary-value"><FontAwesomeIcon icon={faChartLine} /></span>
+          <span className="summary-label">Stats</span>
         </button>
       </div>
 
