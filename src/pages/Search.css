@@ -1064,6 +1064,24 @@
   color: var(--text-primary);
 }
 
+.quick-add-options .checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.quick-add-options .checkbox-label input[type="checkbox"] {
+  width: 1.125rem;
+  height: 1.125rem;
+  cursor: pointer;
+}
+
+.quick-add-options .checkbox-label span {
+  font-size: 0.9375rem;
+}
+
 .format-segmented-control {
   display: flex;
   border: 2px solid var(--border-color);
