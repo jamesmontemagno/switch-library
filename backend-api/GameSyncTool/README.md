@@ -21,13 +21,14 @@ A .NET console application for syncing Nintendo Switch and Nintendo Switch 2 gam
 
 The GameSyncTool has a simple automated build configured via GitHub Actions as a smoke test:
 
-**Build Pipeline**: `.github/workflows/build.yml` includes a job that:
-- Runs on every push to `main` branch and pull requests
+**Build Pipeline**: `.github/workflows/build-gamesync.yml` includes a job that:
+- Runs only when changes are made to `backend-api/GameSyncTool/**` or the workflow file itself
+- Supports manual triggering via workflow_dispatch
 - Restores NuGet dependencies
 - Builds the project in Release configuration on Linux
 - Runs tests (if available)
 
-This ensures the tool builds successfully without errors as a basic validation.
+This ensures the tool builds successfully without errors as a basic validation while avoiding unnecessary builds when unrelated files change.
 
 ## Configuration
 
