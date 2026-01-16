@@ -4,7 +4,7 @@ import { usePreferences } from '../hooks/usePreferences';
 import { useSEO } from '../hooks/useSEO';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMagnifyingGlass, faWrench, faGamepad, faCalendar, faUsers, faStar, faBox, faCloud, faTriangleExclamation, faXmark, faHourglassHalf, faTableCells, faList, faFire, faArrowTrendUp } from '@fortawesome/free-solid-svg-icons';
+import { faMagnifyingGlass, faWrench, faGamepad, faCalendar, faUsers, faStar, faBox, faCloud, faTriangleExclamation, faXmark, faHourglassHalf, faTableCells, faList, faGripLines, faFire, faArrowTrendUp } from '@fortawesome/free-solid-svg-icons';
 import type { GameEntry, Platform, Format, TrendingGame, TrendingResponse } from '../types';
 import { 
   searchGames, 
@@ -25,7 +25,7 @@ import './Search.css';
 const FIRST_GAME_CELEBRATION_KEY = 'hasSeenFirstGameCelebration';
 
 type SortOption = 'relevance' | 'release_desc' | 'release_asc' | 'title_asc' | 'title_desc';
-type ViewMode = 'grid' | 'list';
+type ViewMode = 'grid' | 'list' | 'compact';
 type SearchMode = 'search' | 'trending';
 
 interface SearchResult {
@@ -694,6 +694,7 @@ export function Search() {
           <SegmentedControl
             options={[
               { value: 'grid', label: 'Grid View', icon: <FontAwesomeIcon icon={faTableCells} /> },
+              { value: 'compact', label: 'Compact View', icon: <FontAwesomeIcon icon={faGripLines} /> },
             ]}
             value={viewMode}
             onChange={setViewMode}
@@ -747,6 +748,7 @@ export function Search() {
             options={[
               { value: 'grid', label: 'Grid View', icon: <FontAwesomeIcon icon={faTableCells} /> },
               { value: 'list', label: 'List View', icon: <FontAwesomeIcon icon={faList} /> },
+              { value: 'compact', label: 'Compact View', icon: <FontAwesomeIcon icon={faGripLines} /> },
             ]}
             value={viewMode}
             onChange={setViewMode}
@@ -821,6 +823,63 @@ export function Search() {
                 const gameInLibrary = getGameInLibrary(game.id);
                 const isRemoving = removingGameId === game.id;
                 
+                // Compact view - minimal info in a row
+                if (viewMode === 'compact') {
+                  return (
+                    <article key={game.id} className={`result-card ${viewMode}`}>
+                      <div className="result-cover-compact">
+                        {game.boxartUrl ? (
+                          <img src={game.boxartUrl} alt={game.title} loading="lazy" />
+                        ) : (
+                          <div className="cover-placeholder-small">
+                            <FontAwesomeIcon icon={faGamepad} />
+                          </div>
+                        )}
+                        {gameInLibrary && (
+                          <div className="added-badge-small">✓</div>
+                        )}
+                      </div>
+                      <div className="result-info-compact">
+                        <h3 className="result-title-compact">{game.title}</h3>
+                        <div className="result-meta-compact">
+                          <span className={`platform-badge small ${game.platformId === 5021 ? 'switch2' : 'switch'}`}>
+                            {game.platformId === 5021 ? 'S2' : 'S1'}
+                          </span>
+                          {game.region_id !== undefined && <span className="region-badge small">{getRegionName(game.region_id)}</span>}
+                        </div>
+                      </div>
+                      <div className="result-actions-compact">
+                        {isAuthenticated ? (
+                          gameInLibrary ? (
+                            <button
+                              className="btn-icon-only btn-remove"
+                              onClick={() => handleRemoveGame(game)}
+                              disabled={isRemoving}
+                              title="Remove from Library"
+                              aria-label={`Remove ${game.title} from library`}
+                            >
+                              {isRemoving ? <FontAwesomeIcon icon={faHourglassHalf} /> : <FontAwesomeIcon icon={faXmark} />}
+                            </button>
+                          ) : (
+                            <button
+                              className="btn-icon-only btn-add"
+                              onClick={() => openQuickAdd(game)}
+                              disabled={addingGameId === game.id}
+                              title="Add to Collection"
+                              aria-label={`Add ${game.title} to collection`}
+                            >
+                              {addingGameId === game.id ? <FontAwesomeIcon icon={faHourglassHalf} /> : '+'}
+                            </button>
+                          )
+                        ) : (
+                          <span className="login-hint-small" title="Sign in to add games">🔒</span>
+                        )}
+                      </div>
+                    </article>
+                  );
+                }
+                
+                // Grid and List views (original rendering)
                 return (
                   <article key={game.id} className={`result-card ${viewMode}`}>
                     <div className="result-cover">

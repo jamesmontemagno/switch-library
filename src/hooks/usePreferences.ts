@@ -3,7 +3,7 @@ import type { Platform } from '../types';
 
 type SortOption = 'title_asc' | 'title_desc' | 'added_newest' | 'added_oldest' | 'purchase_newest' | 'purchase_oldest' | 'platform' | 'format' | 'completed_first' | 'not_completed_first';
 type ViewMode = 'grid' | 'list' | 'compact';
-type SearchViewMode = 'grid' | 'list';
+type SearchViewMode = 'grid' | 'list' | 'compact';
 type FormatFilter = 'all' | 'Physical' | 'Digital';
 type Theme = 'light' | 'dark' | 'system';
 type SearchSortOption = 'relevance' | 'release_desc' | 'release_asc' | 'title_asc' | 'title_desc';
