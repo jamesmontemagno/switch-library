@@ -79,10 +79,20 @@ export function Library() {
   const fetchGames = useCallback(async () => {
     if (!user) return;
     logger.info('Fetching library games', { userId: user.id });
-    setIsLoading(true);
+    
+    // Load from cache immediately for instant display
+    const cachedGames = loadCachedLibraryData(user.id);
+    if (cachedGames) {
+      setGames(cachedGames);
+      setIsLoading(false);
+      logger.info('Library data loaded from cache instantly', { gamesCount: cachedGames.length });
+    } else {
+      setIsLoading(true);
+    }
+    
     try {
       if (isOnline) {
-        // Online: fetch from database and cache the results
+        // Online: fetch fresh data from database and update cache
         const [userGames, userShareProfile] = await Promise.all([
           loadGames(user.id),
           getShareProfile(user.id)
@@ -90,20 +100,16 @@ export function Library() {
         setGames(userGames);
         setShareProfile(userShareProfile);
         
-        // Cache for offline use
+        // Cache for offline use and future instant loads
         cacheLibraryData(user.id, userGames);
         
-        logger.info('Library data loaded from database', { 
+        logger.info('Library data refreshed from database', { 
           gamesCount: userGames.length, 
           hasShareProfile: !!userShareProfile 
         });
       } else {
-        // Offline: load from cache
-        const cachedGames = loadCachedLibraryData(user.id);
-        if (cachedGames) {
-          setGames(cachedGames);
-          logger.info('Library data loaded from cache', { gamesCount: cachedGames.length });
-        } else {
+        // Offline: we already loaded from cache above
+        if (!cachedGames) {
           logger.info('No cached library data available');
           setGames([]);
         }
@@ -112,11 +118,11 @@ export function Library() {
       }
     } catch (error) {
       console.error('Failed to load games:', error);
-      // Try loading from cache on error
-      if (!isOnline) {
-        const cachedGames = loadCachedLibraryData(user.id);
-        if (cachedGames) {
-          setGames(cachedGames);
+      // If we didn't have cache and there's an error, try loading from cache one more time
+      if (!cachedGames) {
+        const fallbackCachedGames = loadCachedLibraryData(user.id);
+        if (fallbackCachedGames) {
+          setGames(fallbackCachedGames);
         }
       }
     } finally {
