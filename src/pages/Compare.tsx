@@ -357,9 +357,6 @@ export function Compare() {
                     ) : (
                       <div className="cover-placeholder"><FontAwesomeIcon icon={faGamepad} /></div>
                     )}
-                    {game.completed && (
-                      <div className="completed-badge" title="Completed"><FontAwesomeIcon icon={faCheck} /></div>
-                    )}
                   </div>
                   <div className="compare-game-info">
                     <h3>{game.title}</h3>
@@ -369,6 +366,9 @@ export function Compare() {
                       </span>
                       <span className={`format-tag ${game.format.toLowerCase()}`}>
                         {game.format}
+                      </span>
+                      <span className={`completed-checkbox ${game.completed ? 'checked' : ''}`} title={game.completed ? 'Completed' : 'Not completed'}>
+                        {game.completed && <FontAwesomeIcon icon={faCheck} />}
                       </span>
                     </div>
                   </div>

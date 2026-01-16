@@ -458,12 +458,9 @@ export function SharedLibrary() {
                         <span className={`format-tag small ${game.format.toLowerCase()}`}>
                           {game.format}
                         </span>
-                        {game.completed && (
-                          <span className="completed-tag">
-                            <FontAwesomeIcon icon={faCheck} />
-                            <span className="completed-text"> Completed</span>
-                          </span>
-                        )}
+                        <span className={`completed-checkbox ${game.completed ? 'checked' : ''}`} title={game.completed ? 'Completed' : 'Not completed'}>
+                          {game.completed && <FontAwesomeIcon icon={faCheck} />}
+                        </span>
                         {user && inMyCollection && (
                           <span className="in-collection-indicator" title="In Your Collection">
                             <FontAwesomeIcon icon={faCheck} /> In Collection
@@ -499,9 +496,6 @@ export function SharedLibrary() {
                           <span>🎮</span>
                         </div>
                       )}
-                      {game.completed && (
-                        <div className="completed-badge" title="Completed">✓</div>
-                      )}
                       {user && inMyCollection && (
                         <div className="in-collection-badge" title="In Your Collection">
                           <FontAwesomeIcon icon={faCheck} />
@@ -516,6 +510,9 @@ export function SharedLibrary() {
                         </span>
                         <span className={`format-tag ${game.format.toLowerCase()}`}>
                           {game.format}
+                        </span>
+                        <span className={`completed-checkbox ${game.completed ? 'checked' : ''}`} title={game.completed ? 'Completed' : 'Not completed'}>
+                          {game.completed && <FontAwesomeIcon icon={faCheck} />}
                         </span>
                       </div>
                       {user && (
@@ -553,9 +550,6 @@ export function SharedLibrary() {
                         <span>🎮</span>
                       </div>
                     )}
-                    {game.completed && (
-                      <div className="completed-badge" title="Completed">✓</div>
-                    )}
                     {user && inMyCollection && (
                       <div className="in-collection-badge" title="In Your Collection">
                         <FontAwesomeIcon icon={faCheck} />
@@ -570,6 +564,9 @@ export function SharedLibrary() {
                       </span>
                       <span className={`format-tag ${game.format.toLowerCase()}`}>
                         {game.format}
+                      </span>
+                      <span className={`completed-checkbox ${game.completed ? 'checked' : ''}`} title={game.completed ? 'Completed' : 'Not completed'}>
+                        {game.completed && <FontAwesomeIcon icon={faCheck} />}
                       </span>
                     </div>
                     {user && (
