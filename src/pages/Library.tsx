@@ -348,7 +348,6 @@ export function Library() {
           <SegmentedControl
             options={[
               { value: 'grid', label: 'Grid View', icon: <FontAwesomeIcon icon={faTableCells} /> },
-              { value: 'list', label: 'List View', icon: <FontAwesomeIcon icon={faList} /> },
               { value: 'compact', label: 'Compact View', icon: <FontAwesomeIcon icon={faGripLines} /> },
             ]}
             value={viewMode}
