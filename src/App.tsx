@@ -13,6 +13,7 @@ import { GameDetails } from './pages/GameDetails';
 import { SharedLibrary } from './pages/SharedLibrary';
 import { Compare } from './pages/Compare';
 import { Settings } from './pages/Settings';
+import { Achievements } from './pages/Achievements';
 import { NotFound } from './pages/NotFound';
 import { usePreferences } from './hooks/usePreferences';
 
@@ -64,6 +65,14 @@ function AppContent() {
               element={
                 <ProtectedRoute>
                   <Settings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="achievements"
+              element={
+                <ProtectedRoute>
+                  <Achievements />
                 </ProtectedRoute>
               }
             />

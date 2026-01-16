@@ -119,3 +119,24 @@ export interface BulkGameResponse {
   foundCount: number;
   notFoundCount: number;
 }
+
+// Achievement Types
+export type AchievementCategory = 'collection' | 'completion' | 'social' | 'variety' | 'milestone';
+
+export interface Achievement {
+  id: string;
+  name: string;
+  description: string;
+  category: AchievementCategory;
+  icon: string; // FontAwesome icon name
+  requirement: number;
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+}
+
+export interface UserAchievement {
+  id: string;
+  userId: string;
+  achievementId: string;
+  unlockedAt: string;
+  progress?: number;
+}
