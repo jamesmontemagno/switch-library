@@ -72,10 +72,26 @@ export function Friends() {
   // Load following, followers, and requests on mount
   const fetchData = useCallback(async () => {
     if (!user) return;
-    setIsLoading(true);
+    
+    // Load from cache immediately for instant display
+    const cachedFollowing = loadCachedFriendsData(user.id);
+    const cachedFollowers = loadCachedFollowersData(user.id);
+    
+    if (cachedFollowing || cachedFollowers) {
+      setFollowing(cachedFollowing || []);
+      setFollowers(cachedFollowers || []);
+      setIsLoading(false);
+      logger.info('Friends data loaded from cache instantly', { 
+        followingCount: cachedFollowing?.length || 0,
+        followersCount: cachedFollowers?.length || 0
+      });
+    } else {
+      setIsLoading(true);
+    }
+    
     try {
       if (isOnline) {
-        // Online: fetch from database and cache
+        // Online: fetch fresh data from database and update cache
         const [userFollowing, userFollowers, shareProfile] = await Promise.all([
           getFollowing(user.id),
           getFollowers(user.id),
@@ -86,27 +102,31 @@ export function Friends() {
         setUserShareId(shareProfile?.shareId || null);
         setHasSharingEnabled(shareProfile?.enabled || false);
         
-        // Cache for offline use
+        // Cache for offline use and future instant loads
         cacheFriendsData(user.id, userFollowing);
         cacheFollowersData(user.id, userFollowers);
-      } else {
-        // Offline: load from cache
-        const cachedFollowing = loadCachedFriendsData(user.id);
-        const cachedFollowers = loadCachedFollowersData(user.id);
         
-        setFollowing(cachedFollowing || []);
-        setFollowers(cachedFollowers || []);
+        logger.info('Friends data refreshed from database', { 
+          followingCount: userFollowing.length,
+          followersCount: userFollowers.length
+        });
+      } else {
+        // Offline: we already loaded from cache above
+        if (!cachedFollowing && !cachedFollowers) {
+          setFollowing([]);
+          setFollowers([]);
+        }
         setUserShareId(null);
         setHasSharingEnabled(false);
       }
     } catch (error) {
       console.error('Failed to load data:', error);
-      // Try loading from cache on error
-      if (!isOnline) {
-        const cachedFollowing = loadCachedFriendsData(user.id);
-        const cachedFollowers = loadCachedFollowersData(user.id);
-        setFollowing(cachedFollowing || []);
-        setFollowers(cachedFollowers || []);
+      // If we didn't have cache and there's an error, try loading from cache one more time
+      if (!cachedFollowing && !cachedFollowers) {
+        const fallbackFollowing = loadCachedFriendsData(user.id);
+        const fallbackFollowers = loadCachedFollowersData(user.id);
+        setFollowing(fallbackFollowing || []);
+        setFollowers(fallbackFollowers || []);
       }
     } finally {
       setIsLoading(false);
