@@ -114,7 +114,7 @@ export function ManualAddGameModal({ onClose, onAdd }: ManualAddGameModalProps) 
                 </div>
 
                 <div className="form-group">
-                  <label className="checkbox-label">
+                  <label className="checkbox-label checkbox-label-improved">
                     <input
                       type="checkbox"
                       checked={completed}
@@ -125,7 +125,7 @@ export function ManualAddGameModal({ onClose, onAdd }: ManualAddGameModalProps) 
                         }
                       }}
                     />
-                    <span>Completed/Beaten</span>
+                    <span className="checkbox-text">✓ Completed/Beaten</span>
                   </label>
                 </div>
 

@@ -22,9 +22,6 @@ export function EditGameModal({ game, onClose, onSave }: EditGameModalProps) {
   const [purchaseDate, setPurchaseDate] = useState(game.purchaseDate || '');
   const [completed, setCompleted] = useState(game.completed || false);
   const [completedDate, setCompletedDate] = useState(game.completedDate || '');
-  const [showAdditionalDetails, setShowAdditionalDetails] = useState(
-    Boolean(game.purchaseDate)
-  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,7 +69,7 @@ export function EditGameModal({ game, onClose, onSave }: EditGameModalProps) {
 
           {/* Completed checkbox - moved higher for frequent access */}
           <div className="form-group">
-            <label className="checkbox-label">
+            <label className="checkbox-label checkbox-label-improved">
               <input
                 type="checkbox"
                 checked={completed}
@@ -83,7 +80,7 @@ export function EditGameModal({ game, onClose, onSave }: EditGameModalProps) {
                   }
                 }}
               />
-              <span>Completed/Beaten</span>
+              <span className="checkbox-text">✓ Completed/Beaten</span>
             </label>
           </div>
 
@@ -178,29 +175,15 @@ export function EditGameModal({ game, onClose, onSave }: EditGameModalProps) {
             </div>
           </div>
 
-          {/* Additional Details */}
+          {/* Purchase Date - Always visible */}
           <div className="form-group">
-            <button
-              type="button"
-              onClick={() => setShowAdditionalDetails(!showAdditionalDetails)}
-              className="btn-toggle-section"
-            >
-              {showAdditionalDetails ? '▼' : '▶'} Additional Details (Optional)
-            </button>
-            
-            {showAdditionalDetails && (
-              <div className="additional-details">
-                <div className="form-group">
-                  <label htmlFor="purchaseDate">Purchase Date</label>
-                  <input
-                    id="purchaseDate"
-                    type="date"
-                    value={purchaseDate}
-                    onChange={(e) => setPurchaseDate(e.target.value)}
-                  />
-                </div>
-              </div>
-            )}
+            <label htmlFor="purchaseDate">Purchase Date</label>
+            <input
+              id="purchaseDate"
+              type="date"
+              value={purchaseDate}
+              onChange={(e) => setPurchaseDate(e.target.value)}
+            />
           </div>
 
           <div className="modal-actions">
