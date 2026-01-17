@@ -170,6 +170,7 @@ export function Search() {
   const [quickAddGame, setQuickAddGame] = useState<SearchResult | null>(null);
   const [quickAddFormat, setQuickAddFormat] = useState<Format>('Physical');
   const [quickAddPlatform, setQuickAddPlatform] = useState<Platform>('Nintendo Switch');
+  const [quickAddCompleted, setQuickAddCompleted] = useState(false);
   
   // Manual add modal
   const [showManualAddModal, setShowManualAddModal] = useState(false);
@@ -476,6 +477,7 @@ export function Search() {
         platform: quickAddPlatform,
         format: quickAddFormat,
         status: 'Owned',
+        completed: quickAddCompleted || undefined,
         thegamesdbId: quickAddGame.id,
         coverUrl: quickAddGame.boxartUrl,
         createdAt: new Date().toISOString(),
@@ -488,6 +490,7 @@ export function Search() {
       // Update UI immediately for instant feedback
       setUserGames(prev => [...prev, newGame]);
       setQuickAddGame(null);
+      setQuickAddCompleted(false); // Reset completed state
       setAddingGameId(null);
       
       // Show celebration modal if first game
@@ -1175,6 +1178,16 @@ export function Search() {
                     variant="buttons"
                     fullWidth
                   />
+                </div>
+                <div className="form-group">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={quickAddCompleted}
+                      onChange={(e) => setQuickAddCompleted(e.target.checked)}
+                    />
+                    <span>Completed/Beaten</span>
+                  </label>
                 </div>
               </div>
               <div className="quick-add-actions">

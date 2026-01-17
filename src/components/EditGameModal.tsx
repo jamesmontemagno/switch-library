@@ -23,7 +23,7 @@ export function EditGameModal({ game, onClose, onSave }: EditGameModalProps) {
   const [completed, setCompleted] = useState(game.completed || false);
   const [completedDate, setCompletedDate] = useState(game.completedDate || '');
   const [showAdditionalDetails, setShowAdditionalDetails] = useState(
-    Boolean(game.purchaseDate || game.completed || game.completedDate || game.notes)
+    Boolean(game.purchaseDate)
   );
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -70,38 +70,48 @@ export function EditGameModal({ game, onClose, onSave }: EditGameModalProps) {
             />
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>Platform</label>
-              <SegmentedControl
-                options={[
-                  { value: 'Nintendo Switch', label: 'Switch', icon: <FontAwesomeIcon icon={faGamepad} /> },
-                  { value: 'Nintendo Switch 2', label: 'Switch 2', icon: <FontAwesomeIcon icon={faGamepad} /> },
-                ]}
-                value={platform}
-                onChange={(value) => setPlatform(value as Platform)}
-                ariaLabel="Platform"
-                variant="buttons"
-                fullWidth
+          {/* Completed checkbox - moved higher for frequent access */}
+          <div className="form-group">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={completed}
+                onChange={(e) => {
+                  setCompleted(e.target.checked);
+                  if (!e.target.checked) {
+                    setCompletedDate('');
+                  }
+                }}
               />
-            </div>
-
-            <div className="form-group">
-              <label>Format</label>
-              <SegmentedControl
-                options={[
-                  { value: 'Physical', label: 'Physical', icon: <FontAwesomeIcon icon={faBox} /> },
-                  { value: 'Digital', label: 'Digital', icon: <FontAwesomeIcon icon={faCloud} /> },
-                ]}
-                value={format}
-                onChange={(value) => setFormat(value as Format)}
-                ariaLabel="Game format"
-                variant="buttons"
-                fullWidth
-              />
-            </div>
+              <span>Completed/Beaten</span>
+            </label>
           </div>
 
+          {completed && (
+            <div className="form-group">
+              <label htmlFor="completedDate">Completion Date</label>
+              <input
+                id="completedDate"
+                type="date"
+                value={completedDate}
+                onChange={(e) => setCompletedDate(e.target.value)}
+              />
+            </div>
+          )}
+
+          {/* Notes under completed checkbox */}
+          <div className="form-group">
+            <label htmlFor="notes">Notes (optional)</label>
+            <textarea
+              id="notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Add notes about this game..."
+              rows={3}
+            />
+          </div>
+
+          {/* Status and condition at the bottom */}
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="status">Status</label>
@@ -135,15 +145,37 @@ export function EditGameModal({ game, onClose, onSave }: EditGameModalProps) {
             </div>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="notes">Notes (optional)</label>
-            <textarea
-              id="notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Add notes about this game..."
-              rows={3}
-            />
+          {/* Platform and format below status/condition */}
+          <div className="form-row">
+            <div className="form-group">
+              <label>Platform</label>
+              <SegmentedControl
+                options={[
+                  { value: 'Nintendo Switch', label: 'Switch', icon: <FontAwesomeIcon icon={faGamepad} /> },
+                  { value: 'Nintendo Switch 2', label: 'Switch 2', icon: <FontAwesomeIcon icon={faGamepad} /> },
+                ]}
+                value={platform}
+                onChange={(value) => setPlatform(value as Platform)}
+                ariaLabel="Platform"
+                variant="buttons"
+                fullWidth
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Format</label>
+              <SegmentedControl
+                options={[
+                  { value: 'Physical', label: 'Physical', icon: <FontAwesomeIcon icon={faBox} /> },
+                  { value: 'Digital', label: 'Digital', icon: <FontAwesomeIcon icon={faCloud} /> },
+                ]}
+                value={format}
+                onChange={(value) => setFormat(value as Format)}
+                ariaLabel="Game format"
+                variant="buttons"
+                fullWidth
+              />
+            </div>
           </div>
 
           {/* Additional Details */}
@@ -167,34 +199,6 @@ export function EditGameModal({ game, onClose, onSave }: EditGameModalProps) {
                     onChange={(e) => setPurchaseDate(e.target.value)}
                   />
                 </div>
-
-                <div className="form-group">
-                  <label className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={completed}
-                      onChange={(e) => {
-                        setCompleted(e.target.checked);
-                        if (!e.target.checked) {
-                          setCompletedDate('');
-                        }
-                      }}
-                    />
-                    <span>Completed/Beaten</span>
-                  </label>
-                </div>
-
-                {completed && (
-                  <div className="form-group">
-                    <label htmlFor="completedDate">Completion Date</label>
-                    <input
-                      id="completedDate"
-                      type="date"
-                      value={completedDate}
-                      onChange={(e) => setCompletedDate(e.target.value)}
-                    />
-                  </div>
-                )}
               </div>
             )}
           </div>
