@@ -543,6 +543,8 @@
   overflow: hidden;
   box-shadow: 0 2px 8px var(--card-shadow);
   transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
 }
 
 .result-card.grid:hover {
@@ -565,6 +567,10 @@
 
 .result-card.grid .result-info {
   padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0; /* Allow flex shrinking */
 }
 
 .result-card.grid .result-title {
