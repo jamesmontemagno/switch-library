@@ -9,7 +9,7 @@ import { getGameById, getGenres, getDevelopers, getPublishers, mapIdsToNames } f
 import type { TheGamesDBGame } from '../services/thegamesdb';
 import { EditGameModal } from '../components/EditGameModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPenToSquare, faGamepad, faCircleCheck } from '@fortawesome/free-solid-svg-icons';
+import { faPenToSquare, faGamepad, faCheck } from '@fortawesome/free-solid-svg-icons';
 import './GameDetails.css';
 
 export function GameDetails() {
@@ -187,11 +187,9 @@ export function GameDetails() {
                   {game.condition}
                 </span>
               )}
-              {game.completed && (
-                <span className="completed-tag">
-                  <FontAwesomeIcon icon={faCircleCheck} /> Completed
-                </span>
-              )}
+              <span className={`completed-checkbox ${game.completed ? 'checked' : ''}`} title={game.completed ? 'Completed' : 'Not completed'}>
+                {game.completed && <FontAwesomeIcon icon={faCheck} />}
+              </span>
             </div>
 
             {apiData?.overview && (
