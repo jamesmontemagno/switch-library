@@ -503,15 +503,14 @@
 .games-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .game-card.list {
   display: flex;
-  align-items: center;
-  gap: 1rem;
+  gap: 1.25rem;
+  padding: 1rem;
   background: var(--bg-secondary);
-  padding: 0.75rem 1rem;
   border-radius: 8px;
   border: 1px solid var(--border);
   transition: all 0.2s;
@@ -520,19 +519,20 @@
 .game-card.list:hover {
   border-color: var(--accent);
   background: var(--bg-tertiary);
+  transform: translateY(-2px);
 }
 
-.game-card.list .game-cover {
+.game-card.list .list-cover {
   position: relative;
+  width: 100px;
+  height: 133px;
   flex-shrink: 0;
-  width: 48px;
-  height: 64px;
-  border-radius: 4px;
+  border-radius: 8px;
   overflow: hidden;
   background: var(--bg-tertiary);
 }
 
-.game-card.list .game-cover img {
+.game-card.list .list-cover img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -543,56 +543,70 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  font-size: 1.5rem;
+  font-size: 3rem;
   color: var(--text-secondary);
 }
 
 .game-card.list .completed-badge {
-  width: 20px;
-  height: 20px;
-  font-size: 0.7rem;
-  top: 4px;
-  right: 4px;
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  background: #4caf50;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .game-card.list .in-collection-badge {
-  width: 20px;
-  height: 20px;
-  font-size: 0.65rem;
-  top: 4px;
-  left: 4px;
-}
-
-.game-card.list .game-info {
-  flex: 1;
-  min-width: 0;
+  position: absolute;
+  top: 0.25rem;
+  left: 0.25rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  background: #3b82f6;
+  color: white;
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.game-card.list .list-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .game-card.list .game-title {
-  font-size: 1rem;
-  color: var(--text-primary);
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex: 1;
-  min-width: 150px;
+  margin: 0 0 0.5rem;
+  font-size: 1.125rem;
 }
 
-.game-card.list .game-actions {
-  margin-top: 0;
-  min-width: 200px;
+.game-card.list .list-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  align-items: center;
 }
 
-.game-card.list .btn-add-to-collection,
-.game-card.list .in-collection-text {
-  font-size: 0.75rem;
-  padding: 0.4rem 0.6rem;
+.date-info {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 /* Compact View */
@@ -1103,9 +1117,14 @@
     gap: 1rem;
   }
   
-  .game-card.list .game-cover {
+  .game-card.list .list-cover {
     width: 80px;
     height: 106px;
+  }
+  
+  .game-card.list .list-details {
+    flex-direction: column;
+    gap: 0.5rem;
   }
   
   .view-btn {
@@ -1136,7 +1155,7 @@
     flex-direction: column;
   }
   
-  .game-card.list .game-cover {
+  .game-card.list .list-cover {
     width: 100%;
     height: auto;
     aspect-ratio: 3 / 4;

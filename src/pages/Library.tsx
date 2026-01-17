@@ -614,9 +614,6 @@ function GameCard({ game, viewMode, onDelete, onEdit, isOnline }: GameCardProps)
             <span className={`format-tag ${game.format.toLowerCase()}`}>
               {game.format}
             </span>
-            <span className={`completed-checkbox ${game.completed ? 'checked' : ''}`} title={game.completed ? 'Completed' : 'Not completed'}>
-              {game.completed && <FontAwesomeIcon icon={faCheck} />}
-            </span>
           </div>
           <div className="list-details">
             {game.purchaseDate && (
@@ -625,6 +622,9 @@ function GameCard({ game, viewMode, onDelete, onEdit, isOnline }: GameCardProps)
             {game.completedDate && (
               <span className="date-info"><FontAwesomeIcon icon={faTrophy} /> Completed: {formatDate(game.completedDate)}</span>
             )}
+            <span className={`completed-checkbox ${game.completed ? 'checked' : ''}`} title={game.completed ? 'Completed' : 'Not completed'}>
+              {game.completed && <FontAwesomeIcon icon={faCheck} />}
+            </span>
             {game.notes && (
               <p className="list-notes">{game.notes}</p>
             )}
@@ -659,11 +659,8 @@ function GameCard({ game, viewMode, onDelete, onEdit, isOnline }: GameCardProps)
           <span className={`format-tag ${game.format.toLowerCase()}`}>
             {game.format}
           </span>
-          <span className={`completed-checkbox ${game.completed ? 'checked' : ''}`} title={game.completed ? 'Completed' : 'Not completed'}>
-            {game.completed && <FontAwesomeIcon icon={faCheck} />}
-          </span>
         </div>
-        {(game.purchaseDate || game.completedDate) && (
+        {(game.purchaseDate || game.completedDate || game.completed) && (
           <div className="game-dates">
             {game.purchaseDate && (
               <span className="date-info" title="Purchase Date">
@@ -675,6 +672,9 @@ function GameCard({ game, viewMode, onDelete, onEdit, isOnline }: GameCardProps)
                 <FontAwesomeIcon icon={faTrophy} /> {formatDate(game.completedDate)}
               </span>
             )}
+            <span className={`completed-checkbox ${game.completed ? 'checked' : ''}`} title={game.completed ? 'Completed' : 'Not completed'}>
+              {game.completed && <FontAwesomeIcon icon={faCheck} />}
+            </span>
           </div>
         )}
         <div className="game-actions">

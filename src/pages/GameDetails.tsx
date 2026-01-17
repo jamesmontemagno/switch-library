@@ -187,9 +187,11 @@ export function GameDetails() {
                   {game.condition}
                 </span>
               )}
-              <span className={`completed-checkbox ${game.completed ? 'checked' : ''}`} title={game.completed ? 'Completed' : 'Not completed'}>
-                {game.completed && <FontAwesomeIcon icon={faCheck} />}
-              </span>
+              {game.completed && (
+                <span className="completed-checkbox checked" title="Completed">
+                  <FontAwesomeIcon icon={faCheck} />
+                </span>
+              )}
             </div>
 
             {apiData?.overview && (

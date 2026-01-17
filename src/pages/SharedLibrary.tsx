@@ -487,7 +487,7 @@ export function SharedLibrary() {
               if (viewMode === 'list') {
                 return (
                   <article key={game.id} className="game-card list">
-                    <div className="game-cover">
+                    <div className="list-cover">
                       {game.coverUrl ? (
                         <img src={game.coverUrl} alt={game.title} />
                       ) : (
@@ -501,7 +501,7 @@ export function SharedLibrary() {
                         </div>
                       )}
                     </div>
-                    <div className="game-info">
+                    <div className="list-info">
                       <h3 className="game-title">{game.title}</h3>
                       <div className="game-meta">
                         <span className={`platform-tag ${game.platform === 'Nintendo Switch' ? 'switch' : 'switch2'}`}>
@@ -510,6 +510,14 @@ export function SharedLibrary() {
                         <span className={`format-tag ${game.format.toLowerCase()}`}>
                           {game.format}
                         </span>
+                      </div>
+                      <div className="list-details">
+                        {game.purchaseDate && (
+                          <span className="date-info">🛒 Purchased: {new Date(game.purchaseDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                        )}
+                        {game.completedDate && (
+                          <span className="date-info">🏆 Completed: {new Date(game.completedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                        )}
                         <span className={`completed-checkbox ${game.completed ? 'checked' : ''}`} title={game.completed ? 'Completed' : 'Not completed'}>
                           {game.completed && <FontAwesomeIcon icon={faCheck} />}
                         </span>
