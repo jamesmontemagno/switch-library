@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { usePreferences } from '../hooks/usePreferences';
 import { useSEO } from '../hooks/useSEO';
@@ -8,12 +9,13 @@ import { ShareLibraryModal } from '../components/ShareLibraryModal';
 import { SegmentedControl } from '../components/SegmentedControl';
 import { Button } from '../components/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSun, faMoon, faDesktop, faShare } from '@fortawesome/free-solid-svg-icons';
+import { faSun, faMoon, faDesktop, faShare, faTrophy } from '@fortawesome/free-solid-svg-icons';
 import './Settings.css';
 
 export function Settings() {
   const { user, logout } = useAuth();
   const { theme, setTheme } = usePreferences();
+  const navigate = useNavigate();
   const isOnline = useOnlineStatus();
   const [displayName, setDisplayName] = useState(user?.displayName || '');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -107,6 +109,20 @@ export function Settings() {
           <div className="setting-item">
             <label>Email</label>
             <p className="setting-value">{user?.email || 'Not available'}</p>
+          </div>
+          <div className="setting-item">
+            <label>Achievements</label>
+            <p className="setting-description">
+              View your gaming achievements and unlock badges
+            </p>
+            <Button 
+              variant="primary" 
+              size="md"
+              icon={<FontAwesomeIcon icon={faTrophy} />}
+              onClick={() => navigate('/achievements')}
+            >
+              View Achievements
+            </Button>
           </div>
         </section>
 

@@ -259,3 +259,37 @@ comment on table public.game_additions is 'Anonymous tracking of game additions 
 
 -- Manual data pruning (run periodically if needed):
 -- DELETE FROM public.game_additions WHERE added_at < NOW() - INTERVAL '1 year';
+
+-- =============================================
+-- User Achievements Table (for Achievements feature)
+-- =============================================
+-- Tracks which achievements users have unlocked
+create table if not exists public.user_achievements (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users on delete cascade not null,
+  achievement_id text not null,
+  unlocked_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  progress integer,
+  unique(user_id, achievement_id)
+);
+
+-- Enable RLS for user_achievements
+alter table public.user_achievements enable row level security;
+
+-- User achievements policies
+create policy "Users can view their own achievements"
+  on public.user_achievements for select
+  using ((select auth.uid()) = user_id);
+
+create policy "Users can insert their own achievements"
+  on public.user_achievements for insert
+  with check ((select auth.uid()) = user_id);
+
+create policy "Users can update their own achievements"
+  on public.user_achievements for update
+  using ((select auth.uid()) = user_id);
+
+-- Indexes for achievement queries
+create index if not exists idx_user_achievements_user_id on public.user_achievements(user_id);
+create index if not exists idx_user_achievements_achievement_id on public.user_achievements(achievement_id);
+create index if not exists idx_user_achievements_unlocked_at on public.user_achievements(unlocked_at);
