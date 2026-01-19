@@ -18,6 +18,7 @@ A web app for tracking your Nintendo Switch and Nintendo Switch 2 game collectio
 - 📱 **Progressive Web App** - Install on mobile/desktop, works offline with service worker caching
 - 🔄 **Auto-Updates** - Get notified when new versions are available
 - 🌓 **Theme Support** - Light, dark, system, plus retro NES and Famicom themes
+- 📈 **Admin Dashboard** - View usage statistics and application insights (admin-only)
 - 📷 **Barcode Scanning** - Quickly add games by scanning barcodes (coming soon)
 
 ## Progressive Web App (PWA)
@@ -159,6 +160,9 @@ VITE_SUPABASE_KEY=your-publishable-key-or-anon-key
 
 # Optional: Enable debug logging for specific user
 # VITE_DEBUG_USER_ID=user-uuid-here
+
+# Optional: Configure admin user for dashboard access
+# VITE_ADMIN_USER_ID=admin-user-uuid-here
 ```
 
 > **Note:** Use a publishable key (format: `sb_publishable_...`) for better security, or an anon key for backward compatibility.
@@ -172,6 +176,16 @@ See [LOGGING-GUIDE.md](LOGGING-GUIDE.md) for complete documentation on:
 - Setting up debug logging
 - Examples and best practices
 - Security considerations
+
+#### Admin Dashboard
+
+The app includes an admin dashboard for viewing usage statistics and application insights. Configure access via the `VITE_ADMIN_USER_ID` environment variable set to the UUID of the admin user.
+
+See [docs/ADMIN-DASHBOARD.md](docs/ADMIN-DASHBOARD.md) for complete documentation on:
+- Setting up admin access
+- Available statistics and features
+- Security considerations
+- Troubleshooting
 
 ### 5. Configure Backend API Key
 
