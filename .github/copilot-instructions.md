@@ -125,15 +125,22 @@ type GameStatus = 'Owned' | 'Wishlist' | 'Borrowed' | 'Lent' | 'Sold';
 
 ### CSS Theme System ([src/index.css](src/index.css), [src/hooks/usePreferences.ts](src/hooks/usePreferences.ts))
 
-The app uses a centralized CSS variable system for light/dark theme support:
+The app uses a centralized CSS variable system for theme support:
 
 **Architecture**:
-- Theme controlled via `data-theme` attribute on `<html>` element (`light`, `dark`, or `system`)
+- Theme controlled via `data-theme` attribute on `<html>` element (`light`, `dark`, `nes`, `famicom`, or `system`)
 - [usePreferences](src/hooks/usePreferences.ts) hook manages theme state and persists to localStorage
-- CSS variables defined in [index.css](src/index.css) with three contexts:
+- CSS variables defined in [index.css](src/index.css) with contexts for each theme:
   1. `:root[data-theme="light"]` - Light theme values
-  2. `:root[data-theme="dark"]` - Dark theme values  
-  3. `@media (prefers-color-scheme: dark)` - System preference fallback (only in index.css)
+  2. `:root[data-theme="dark"]` - Dark theme values
+  3. `:root[data-theme="nes"]` - NES retro theme (cool grays, red accents)
+  4. `:root[data-theme="famicom"]` - Famicom retro theme (warm cream, gold accents)
+  5. `@media (prefers-color-scheme: dark)` - System preference fallback (only in index.css)
+
+**Retro Themes** (NES & Famicom):
+- Have component-specific overrides in Header.css, Button.css, BottomNavigation.css, Layout.css
+- Use chunky 3D button effects and striped header patterns
+- See [docs/Themes.md](docs/Themes.md) for full documentation
 
 **Available CSS Variables**:
 ```css
@@ -388,6 +395,7 @@ func azure functionapp publish <function-app-name>
 | [LOGGING-GUIDE.md](LOGGING-GUIDE.md) | Complete logger documentation |
 | [PWA-GUIDE.md](PWA-GUIDE.md) | Progressive Web App documentation |
 | [SEO-GUIDE.md](SEO-GUIDE.md) | SEO implementation guide |
+| [docs/Themes.md](docs/Themes.md) | Theme system documentation (NES, Famicom, etc.) |
 
 ## Quick Command Reference
 

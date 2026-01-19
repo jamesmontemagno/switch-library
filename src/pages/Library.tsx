@@ -413,7 +413,7 @@ export function Library() {
         >
           <option value="all">All Games</option>
           <option value="favorites_only">⭐ Favorites Only</option>
-          <option value="not_favorites">Not Favorites</option>
+          <option value="not_favorites">None Favorites</option>
         </select>
         <select
           value={sortBy}
