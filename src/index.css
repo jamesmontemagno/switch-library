@@ -323,6 +323,81 @@
   background-color: var(--bg-primary);
 }
 
+/* Famicom theme - Japanese Famicom red and white */
+:root[data-theme="famicom"] {
+  color-scheme: light;
+  
+  /* Background colors - White and cream palette */
+  --bg-primary: #fafafa;
+  --bg-secondary: #f0f0f0;
+  --bg-tertiary: #e0e0e0;
+  --bg-hover: #f5f5f5;
+  --bg-tooltip: rgba(50, 50, 50, 0.95);
+  
+  /* Text colors - Dark for contrast */
+  --text-primary: #1a1a1a;
+  --text-secondary: #3a3a3a;
+  --text-muted: #666666;
+  --text-inverse: #ffffff;
+  
+  /* Border colors */
+  --border-color: #d0d0d0;
+  --border: #d0d0d0;
+  --border-light: #e0e0e0;
+  --border-dark: #b0b0b0;
+  
+  /* Primary brand colors - Famicom Red and Maroon */
+  --primary: #d84437;
+  --primary-color: #d84437;
+  --primary-hover: #c03b2f;
+  --primary-light: rgba(216, 68, 55, 0.15);
+  
+  /* Accent colors - Famicom controller gold */
+  --accent: #d84437;
+  --accent-hover: #c03b2f;
+  --accent-light: rgba(216, 68, 55, 0.15);
+  
+  /* Status colors - Vibrant retro palette */
+  --success: #00cc44;
+  --success-bg: #d0ffdd;
+  --success-text: #008833;
+  --success-border: #88dd99;
+  --error: #d84437;
+  --error-bg: #ffe0dd;
+  --error-text: #a03328;
+  --error-border: #dd9988;
+  --warning: #ffaa00;
+  --warning-bg: rgba(255, 170, 0, 0.15);
+  --info: #0088ff;
+  --info-bg: rgba(0, 136, 255, 0.15);
+  --info-border: #88ccff;
+  
+  /* Button colors */
+  --btn-secondary-bg: #e8e8e8;
+  --btn-secondary-hover: #d0d0d0;
+  
+  /* Component-specific */
+  --card-bg: #ffffff;
+  --card-shadow: rgba(0, 0, 0, 0.1);
+  --card-shadow-hover: rgba(0, 0, 0, 0.15);
+  --modal-overlay: rgba(0, 0, 0, 0.6);
+  --input-bg: #ffffff;
+  --input-border: #d0d0d0;
+  --input-border-focus: #d84437;
+  
+  /* Tag colors - Famicom themed */
+  --tag-physical-bg: #ffe0dd;
+  --tag-physical-text: #8b2418;
+  --tag-digital-bg: #ffd0cc;
+  --tag-digital-text: #7a1410;
+  --tag-switch-bg: #d84437;
+  --tag-switch2-bg: #888888;
+  
+  /* Apply base colors */
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+}
+
 body {
   margin: 0;
   min-width: 320px;

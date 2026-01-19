@@ -8,6 +8,71 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
+/* NES theme header - Classic gray with red and black stripes */
+[data-theme="nes"] .header {
+  background: 
+    repeating-linear-gradient(
+      90deg,
+      #808080 0px,
+      #808080 4px,
+      #707070 4px,
+      #707070 8px
+    ),
+    linear-gradient(180deg, #909090 0%, #707070 50%, #606060 100%);
+  border-bottom: 3px solid #505050;
+  box-shadow: 
+    0 2px 0 #cc1100,
+    0 4px 0 #1a1a1a,
+    0 6px 8px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+/* NES theme - decorative stripes at top */
+[data-theme="nes"] .header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: repeating-linear-gradient(
+    90deg,
+    #cc1100 0px,
+    #cc1100 10px,
+    #1a1a1a 10px,
+    #1a1a1a 20px
+  );
+}
+
+/* Famicom theme header - Red and white with gold accents */
+[data-theme="famicom"] .header {
+  background: 
+    linear-gradient(135deg, #d84437 0%, #c03b2f 100%);
+  border-bottom: 3px solid #8b2418;
+  box-shadow: 
+    0 2px 0 #ffd700,
+    0 4px 0 #8b2418,
+    0 6px 8px rgba(0, 0, 0, 0.2);
+  position: relative;
+}
+
+/* Famicom theme - decorative gold stripes at top */
+[data-theme="famicom"] .header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: repeating-linear-gradient(
+    90deg,
+    #ffd700 0px,
+    #ffd700 12px,
+    #ffffff 12px,
+    #ffffff 24px
+  );
+}
+
 @media (max-width: 768px) {
   .header {
     padding: 0.5rem 1rem;

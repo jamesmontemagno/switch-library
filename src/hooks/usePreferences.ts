@@ -5,7 +5,7 @@ type SortOption = 'title_asc' | 'title_desc' | 'added_newest' | 'added_oldest' |
 type ViewMode = 'grid' | 'list' | 'compact';
 type SearchViewMode = 'grid' | 'list' | 'compact';
 type FormatFilter = 'all' | 'Physical' | 'Digital';
-type Theme = 'light' | 'dark' | 'nes' | 'system';
+type Theme = 'light' | 'dark' | 'nes' | 'famicom' | 'system';
 type SearchSortOption = 'relevance' | 'release_desc' | 'release_asc' | 'title_asc' | 'title_desc';
 
 export interface UserPreferences {
