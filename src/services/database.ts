@@ -701,6 +701,33 @@ export async function getUserProfile(userId: string): Promise<{ displayName: str
   return null;
 }
 
+/**
+ * Get full profile data including admin status for the authenticated user
+ */
+export async function getFullUserProfile(userId: string): Promise<{ displayName: string; avatarUrl: string; isAdmin: boolean } | null> {
+  if (useSupabase) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('display_name, avatar_url, is_admin')
+      .eq('id', userId)
+      .single();
+
+    if (error || !data) {
+      logger.error('Failed to fetch full user profile', error, { userId });
+      return null;
+    }
+
+    const profileData = data as Record<string, unknown>;
+    return {
+      displayName: profileData.display_name as string,
+      avatarUrl: profileData.avatar_url as string,
+      isAdmin: (profileData.is_admin as boolean) || false,
+    };
+  }
+
+  return null;
+}
+
 // ===== Follow List Functions =====
 
 // Mapping functions for follow entries

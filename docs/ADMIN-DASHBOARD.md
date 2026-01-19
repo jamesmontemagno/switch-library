@@ -16,34 +16,38 @@ The admin dashboard provides comprehensive statistics about the Switch Library a
 
 ### Setting the Admin User
 
-The admin user is configured via the `VITE_ADMIN_USER_ID` environment variable. This should be set to the UUID of the user in the Supabase `auth.users` table.
+Admin access is controlled by the `is_admin` field in the user's profile stored in the Supabase database. This provides better security than environment variables.
 
-**In `.env` file:**
-```bash
-VITE_ADMIN_USER_ID=your-admin-user-uuid-here
+**To grant admin access to a user:**
+
+1. Go to your Supabase project dashboard
+2. Navigate to **Table Editor** → **profiles**
+3. Find the user you want to make an admin
+4. Set the `is_admin` field to `true` for that user
+
+**Using SQL:**
+```sql
+UPDATE public.profiles 
+SET is_admin = true 
+WHERE id = 'user-uuid-here';
 ```
 
-**For GitHub Actions:**
-Add the `VITE_ADMIN_USER_ID` as a repository secret in Settings → Secrets and variables → Actions.
-
-**For Azure Static Web Apps or other hosting:**
-Add the `VITE_ADMIN_USER_ID` to your application settings or environment variables.
+Replace `'user-uuid-here'` with the actual UUID of the user from the `auth.users` table.
 
 ## Finding Your User ID
 
-To find your user ID for admin access:
+To find your user ID:
 
 1. Sign in to your Switch Library account
 2. Open your browser's Developer Console (F12)
 3. Run this command:
    ```javascript
-   localStorage.getItem('switch-library-auth')
+   JSON.parse(localStorage.getItem('switch-library-auth')).id
    ```
-4. Copy the `id` field from the JSON output
-5. Use this ID as your `VITE_ADMIN_USER_ID`
+4. Copy the UUID
 
-Alternatively, you can check your Supabase dashboard:
-1. Go to your Supabase project → Authentication → Users
+Alternatively, in Supabase dashboard:
+1. Go to your Supabase project → **Authentication** → **Users**
 2. Find your user and copy the UUID
 
 ## Access Control
@@ -51,9 +55,9 @@ Alternatively, you can check your Supabase dashboard:
 The admin dashboard is protected by the `AdminRoute` component, which:
 
 1. Requires the user to be authenticated
-2. Checks if the user's ID matches the configured `VITE_ADMIN_USER_ID`
+2. Checks if the user's `is_admin` field is set to `true` in their profile
 3. Redirects non-admin users to the home page
-4. Only shows the admin link in navigation to the admin user
+4. Only shows the admin link in navigation to admin users
 
 ## Navigation
 
@@ -141,27 +145,40 @@ export interface AdminStatistics {
 
 ### Security Considerations
 
-1. **Client-Side Protection**: The admin check happens on the client side, so determined users could potentially bypass the UI protection
-2. **Server-Side Protection**: For production use, consider implementing Row Level Security (RLS) policies in Supabase that restrict access to these aggregate queries
-3. **Rate Limiting**: Consider implementing rate limiting on statistics queries to prevent abuse
-4. **PII Protection**: The dashboard intentionally does not display personally identifiable information like email addresses
+1. **Database-Level Protection**: Admin status is stored in the database `profiles` table with the `is_admin` boolean field
+2. **Server-Side Protection**: Row Level Security (RLS) policies in Supabase protect access to data - only authenticated users can query statistics
+3. **No Environment Variables**: Unlike environment variables, database-stored admin flags cannot be accidentally exposed in client-side code
+4. **Rate Limiting**: Consider implementing rate limiting on statistics queries to prevent abuse
+5. **PII Protection**: The dashboard intentionally does not display personally identifiable information like email addresses
 
-### Supabase RLS Policies (Optional Enhancement)
+### Database Schema
 
-To add server-side protection, you could create a custom RLS policy or function in Supabase that checks if the requesting user is the admin:
+The `profiles` table includes the `is_admin` field:
 
 ```sql
--- Example: Create a function to check if user is admin
-CREATE OR REPLACE FUNCTION is_admin(user_id UUID)
-RETURNS BOOLEAN AS $$
-BEGIN
-  -- Replace with your actual admin user ID
-  RETURN user_id = 'your-admin-uuid'::UUID;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Then use in policies as needed
+create table if not exists public.profiles (
+  id uuid references auth.users on delete cascade primary key,
+  github_id bigint,
+  login text,
+  display_name text,
+  avatar_url text,
+  is_admin boolean default false not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
 ```
+
+### Migration from Environment Variables
+
+If you previously used `VITE_ADMIN_USER_ID`, you can migrate by:
+
+1. Running the migration SQL:
+   ```sql
+   ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_admin boolean DEFAULT false NOT NULL;
+   UPDATE public.profiles SET is_admin = true WHERE id = 'your-previous-admin-uuid';
+   ```
+
+2. Removing `VITE_ADMIN_USER_ID` from your `.env` file and deployment configuration
 
 ## Limitations
 
@@ -197,11 +214,14 @@ This error appears when:
 ### Cannot Access Admin Dashboard
 
 If you can't see the admin link or access the dashboard:
-- Verify `VITE_ADMIN_USER_ID` is set correctly
-- Ensure the user ID matches your authenticated user's ID exactly (UUIDs are case-sensitive)
-- Check that you're logged in
-- Restart the development server after changing environment variables
-- Clear browser cache and reload
+- Verify the `is_admin` field is set to `true` in your user's profile in the Supabase database
+- Check that you're logged in with the correct account
+- Run this SQL query in Supabase to verify:
+  ```sql
+  SELECT id, login, display_name, is_admin FROM profiles WHERE id = 'your-user-id';
+  ```
+- Clear browser cache and reload the page
+- Check browser console for any authentication errors
 
 ### Statistics Not Loading
 

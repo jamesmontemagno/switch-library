@@ -9,6 +9,7 @@ create table if not exists public.profiles (
   login text,
   display_name text,
   avatar_url text,
+  is_admin boolean default false not null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
@@ -260,3 +261,12 @@ comment on table public.game_additions is 'Anonymous tracking of game additions 
 
 -- Manual data pruning (run periodically if needed):
 -- DELETE FROM public.game_additions WHERE added_at < NOW() - INTERVAL '1 year';
+
+-- =============================================
+-- Migration: Add is_admin field to profiles
+-- =============================================
+-- If upgrading from a previous version, run this to add the is_admin field:
+-- ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_admin boolean DEFAULT false NOT NULL;
+
+-- To grant admin access to a specific user, run:
+-- UPDATE public.profiles SET is_admin = true WHERE id = 'user-uuid-here';

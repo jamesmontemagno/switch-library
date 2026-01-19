@@ -5,6 +5,7 @@ export interface User {
   displayName: string;
   avatarUrl: string;
   email?: string;
+  isAdmin?: boolean;
   createdAt: string;
 }
 

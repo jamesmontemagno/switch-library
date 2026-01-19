@@ -1,16 +1,15 @@
 import { useAuth } from './useAuth';
 
 /**
- * Hook to check if the current user is the admin user
- * Admin user ID is configured via VITE_ADMIN_USER_ID environment variable
+ * Hook to check if the current user is an admin user
+ * Admin status is stored in the user's profile in the database
  */
 export function useIsAdmin(): boolean {
   const { user } = useAuth();
-  const adminUserId = import.meta.env.VITE_ADMIN_USER_ID;
   
-  if (!adminUserId || !user) {
+  if (!user) {
     return false;
   }
   
-  return user.id === adminUserId;
+  return user.isAdmin || false;
 }

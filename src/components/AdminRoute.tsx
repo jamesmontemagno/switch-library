@@ -8,12 +8,11 @@ interface AdminRouteProps {
 
 /**
  * AdminRoute component protects routes that should only be accessible by admin users.
- * The admin user ID is configured via VITE_ADMIN_USER_ID environment variable.
- * If no admin is configured or user is not admin, redirects to home page.
+ * Admin status is determined by the is_admin field in the user's profile.
+ * If user is not admin, redirects to home page.
  */
 export function AdminRoute({ children }: AdminRouteProps) {
   const { user, isAuthenticated, isLoading } = useAuth();
-  const adminUserId = import.meta.env.VITE_ADMIN_USER_ID;
 
   // Show nothing while checking auth
   if (isLoading) {
@@ -25,11 +24,11 @@ export function AdminRoute({ children }: AdminRouteProps) {
     return <Navigate to="/auth" replace />;
   }
 
-  // Redirect if no admin configured or user is not the admin
-  if (!adminUserId || user.id !== adminUserId) {
+  // Redirect if user is not an admin
+  if (!user.isAdmin) {
     return <Navigate to="/" replace />;
   }
 
-  // User is authenticated and is the admin
+  // User is authenticated and is an admin
   return <>{children}</>;
 }

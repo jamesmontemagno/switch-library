@@ -160,9 +160,6 @@ VITE_SUPABASE_KEY=your-publishable-key-or-anon-key
 
 # Optional: Enable debug logging for specific user
 # VITE_DEBUG_USER_ID=user-uuid-here
-
-# Optional: Configure admin user for dashboard access
-# VITE_ADMIN_USER_ID=admin-user-uuid-here
 ```
 
 > **Note:** Use a publishable key (format: `sb_publishable_...`) for better security, or an anon key for backward compatibility.
@@ -179,7 +176,12 @@ See [LOGGING-GUIDE.md](LOGGING-GUIDE.md) for complete documentation on:
 
 #### Admin Dashboard
 
-The app includes an admin dashboard for viewing usage statistics and application insights. Configure access via the `VITE_ADMIN_USER_ID` environment variable set to the UUID of the admin user.
+The app includes an admin dashboard for viewing usage statistics and application insights. Admin access is controlled by the `is_admin` field in the user's profile in the Supabase database (not an environment variable).
+
+To grant admin access:
+```sql
+UPDATE public.profiles SET is_admin = true WHERE id = 'user-uuid-here';
+```
 
 See [docs/ADMIN-DASHBOARD.md](docs/ADMIN-DASHBOARD.md) for complete documentation on:
 - Setting up admin access
