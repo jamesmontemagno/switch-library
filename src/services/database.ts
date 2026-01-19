@@ -1460,3 +1460,193 @@ export function clearTrendingCache(): void {
   localStorage.removeItem(TRENDING_CACHE_KEY);
   logger.info('Trending cache cleared');
 }
+
+// ===== Admin Statistics Functions =====
+
+export interface AdminStatistics {
+  totalUsers: number;
+  totalGames: number;
+  gamesByPlatform: { platform: string; count: number }[];
+  gamesByFormat: { format: string; count: number }[];
+  activeSharers: number;
+  totalFollows: number;
+  apiUsageCount: number;
+  recentUsers: Array<{ displayName: string; createdAt: string }>;
+  topGames: Array<{ title: string; count: number }>;
+}
+
+/**
+ * Get comprehensive admin statistics (admin-only function)
+ * Only works with Supabase, returns empty stats for localStorage mode
+ */
+export async function getAdminStatistics(): Promise<AdminStatistics | null> {
+  if (!useSupabase) {
+    logger.warn('Admin statistics only available in Supabase mode');
+    return null;
+  }
+
+  try {
+    logger.database('getAdminStatistics', 'multiple', {});
+
+    // Get total users count
+    const { count: totalUsers, error: usersError } = await supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true });
+
+    if (usersError) {
+      logger.error('Failed to fetch users count', usersError);
+      throw usersError;
+    }
+
+    // Get total games count
+    const { count: totalGames, error: gamesError } = await supabase
+      .from('games')
+      .select('*', { count: 'exact', head: true });
+
+    if (gamesError) {
+      logger.error('Failed to fetch games count', gamesError);
+      throw gamesError;
+    }
+
+    // Get games by platform
+    const { data: platformData, error: platformError } = await supabase
+      .from('games')
+      .select('platform');
+
+    if (platformError) {
+      logger.error('Failed to fetch games by platform', platformError);
+      throw platformError;
+    }
+
+    const platformCounts = new Map<string, number>();
+    if (Array.isArray(platformData)) {
+      platformData.forEach((game: unknown) => {
+        const typedGame = game as { platform: string };
+        platformCounts.set(typedGame.platform, (platformCounts.get(typedGame.platform) || 0) + 1);
+      });
+    }
+
+    const gamesByPlatform = Array.from(platformCounts.entries())
+      .map(([platform, count]) => ({ platform, count }))
+      .sort((a, b) => b.count - a.count);
+
+    // Get games by format
+    const { data: formatData, error: formatError } = await supabase
+      .from('games')
+      .select('format');
+
+    if (formatError) {
+      logger.error('Failed to fetch games by format', formatError);
+      throw formatError;
+    }
+
+    const formatCounts = new Map<string, number>();
+    if (Array.isArray(formatData)) {
+      formatData.forEach((game: unknown) => {
+        const typedGame = game as { format: string };
+        formatCounts.set(typedGame.format, (formatCounts.get(typedGame.format) || 0) + 1);
+      });
+    }
+
+    const gamesByFormat = Array.from(formatCounts.entries())
+      .map(([format, count]) => ({ format, count }))
+      .sort((a, b) => b.count - a.count);
+
+    // Get active sharers count
+    const { count: activeSharers, error: sharersError } = await supabase
+      .from('share_profiles')
+      .select('*', { count: 'exact', head: true })
+      .eq('enabled', true);
+
+    if (sharersError) {
+      logger.error('Failed to fetch active sharers count', sharersError);
+      throw sharersError;
+    }
+
+    // Get total follows count
+    const { count: totalFollows, error: followsError } = await supabase
+      .from('friend_lists')
+      .select('*', { count: 'exact', head: true });
+
+    if (followsError) {
+      logger.error('Failed to fetch follows count', followsError);
+      throw followsError;
+    }
+
+    // Get API usage count
+    const { count: apiUsageCount, error: apiUsageError } = await supabase
+      .from('api_usage')
+      .select('*', { count: 'exact', head: true });
+
+    if (apiUsageError) {
+      logger.error('Failed to fetch API usage count', apiUsageError);
+      throw apiUsageError;
+    }
+
+    // Get recent users (last 10)
+    const { data: recentUsersData, error: recentUsersError } = await supabase
+      .from('profiles')
+      .select('display_name, created_at')
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    if (recentUsersError) {
+      logger.error('Failed to fetch recent users', recentUsersError);
+      throw recentUsersError;
+    }
+
+    const recentUsers = Array.isArray(recentUsersData) 
+      ? recentUsersData.map((user: unknown) => {
+          const typedUser = user as { display_name: string; created_at: string };
+          return {
+            displayName: typedUser.display_name,
+            createdAt: typedUser.created_at,
+          };
+        })
+      : [];
+
+    // Get top games by count
+    const { data: gamesData, error: topGamesError } = await supabase
+      .from('games')
+      .select('title');
+
+    if (topGamesError) {
+      logger.error('Failed to fetch games for top games', topGamesError);
+      throw topGamesError;
+    }
+
+    const gameCounts = new Map<string, number>();
+    if (Array.isArray(gamesData)) {
+      gamesData.forEach((game: unknown) => {
+        const typedGame = game as { title: string };
+        gameCounts.set(typedGame.title, (gameCounts.get(typedGame.title) || 0) + 1);
+      });
+    }
+
+    const topGames = Array.from(gameCounts.entries())
+      .map(([title, count]) => ({ title, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+
+    const stats: AdminStatistics = {
+      totalUsers: totalUsers || 0,
+      totalGames: totalGames || 0,
+      gamesByPlatform,
+      gamesByFormat,
+      activeSharers: activeSharers || 0,
+      totalFollows: totalFollows || 0,
+      apiUsageCount: apiUsageCount || 0,
+      recentUsers,
+      topGames,
+    };
+
+    logger.info('Admin statistics loaded', { 
+      totalUsers: stats.totalUsers, 
+      totalGames: stats.totalGames 
+    });
+    return stats;
+  } catch (error) {
+    logger.error('Failed to fetch admin statistics', error);
+    return null;
+  }
+}

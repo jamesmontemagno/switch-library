@@ -1,10 +1,12 @@
 import { Link, useLocation } from 'react-router-dom';
+import { useIsAdmin } from '../hooks/useIsAdmin';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMagnifyingGlass, faBookOpen, faUserGroup } from '@fortawesome/free-solid-svg-icons';
+import { faMagnifyingGlass, faBookOpen, faUserGroup, faChartLine } from '@fortawesome/free-solid-svg-icons';
 import './BottomNavigation.css';
 
 export function BottomNavigation() {
   const location = useLocation();
+  const isAdmin = useIsAdmin();
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -34,6 +36,16 @@ export function BottomNavigation() {
         <FontAwesomeIcon icon={faUserGroup} />
         <span>Following</span>
       </Link>
+      {isAdmin && (
+        <Link 
+          to="/admin" 
+          className={`bottom-nav-item ${isActive('/admin') ? 'active' : ''}`}
+          aria-label="Admin"
+        >
+          <FontAwesomeIcon icon={faChartLine} />
+          <span>Admin</span>
+        </Link>
+      )}
     </nav>
   );
 }

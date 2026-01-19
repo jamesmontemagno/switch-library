@@ -4,6 +4,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { Layout } from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { AdminRoute } from './components/AdminRoute';
 import { Home } from './pages/Home';
 import { Auth } from './pages/Auth';
 import { Library } from './pages/Library';
@@ -13,6 +14,7 @@ import { GameDetails } from './pages/GameDetails';
 import { SharedLibrary } from './pages/SharedLibrary';
 import { Compare } from './pages/Compare';
 import { Settings } from './pages/Settings';
+import { AdminDashboard } from './pages/AdminDashboard';
 import { NotFound } from './pages/NotFound';
 import { usePreferences } from './hooks/usePreferences';
 
@@ -73,6 +75,14 @@ function AppContent() {
                 <ProtectedRoute>
                   <GameDetails />
                 </ProtectedRoute>
+              }
+            />
+            <Route
+              path="admin"
+              element={
+                <AdminRoute>
+                  <AdminDashboard />
+                </AdminRoute>
               }
             />
             <Route path="*" element={<NotFound />} />

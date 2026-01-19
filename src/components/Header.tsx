@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useIsAdmin } from '../hooks/useIsAdmin';
 import { getShareProfile } from '../services/database';
 import { ShareLibraryModal } from './ShareLibraryModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMagnifyingGlass, faBookOpen, faUserGroup, faUser, faLink } from '@fortawesome/free-solid-svg-icons';
+import { faMagnifyingGlass, faBookOpen, faUserGroup, faUser, faLink, faChartLine } from '@fortawesome/free-solid-svg-icons';
 import type { ShareProfile } from '../types';
 import './Header.css';
 
@@ -31,6 +32,7 @@ async function getGravatarUrl(email: string | undefined): Promise<string> {
 
 export function Header() {
   const { user, isAuthenticated, isLoading } = useAuth();
+  const isAdmin = useIsAdmin();
   const location = useLocation();
   const navigate = useNavigate();
   const [avatarError, setAvatarError] = useState(false);
@@ -106,6 +108,12 @@ export function Header() {
                 <FontAwesomeIcon icon={faUserGroup} />
                 <span>Following</span>
               </Link>
+              {isAdmin && (
+                <Link to="/admin" className={`nav-link ${isActive('/admin') ? 'active' : ''}`}>
+                  <FontAwesomeIcon icon={faChartLine} />
+                  <span>Admin</span>
+                </Link>
+              )}
               <button 
                 onClick={handleShareClick} 
                 className={`nav-link nav-link-button ${shareProfile?.enabled ? 'share-active' : ''}`}
