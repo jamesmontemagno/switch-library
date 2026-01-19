@@ -16,19 +16,30 @@ The admin dashboard provides comprehensive statistics about the Switch Library a
 
 ### Setting the Admin User
 
-Admin access is controlled by the `is_admin` field in the user's profile stored in the Supabase database. This provides better security than environment variables.
+Admin access is controlled by the `account_level` field in the user's profile stored in the Supabase database. This provides better security and extensibility than environment variables.
+
+**Account Levels:**
+- `standard` - Default level for all users (no admin access)
+- `admin` - Full admin access including dashboard
 
 **To grant admin access to a user:**
 
 1. Go to your Supabase project dashboard
 2. Navigate to **Table Editor** → **profiles**
 3. Find the user you want to make an admin
-4. Set the `is_admin` field to `true` for that user
+4. Set the `account_level` field to `'admin'` for that user
 
 **Using SQL:**
 ```sql
 UPDATE public.profiles 
-SET is_admin = true 
+SET account_level = 'admin' 
+WHERE id = 'user-uuid-here';
+```
+
+**To revoke admin access:**
+```sql
+UPDATE public.profiles 
+SET account_level = 'standard' 
 WHERE id = 'user-uuid-here';
 ```
 
@@ -55,7 +66,7 @@ Alternatively, in Supabase dashboard:
 The admin dashboard is protected by the `AdminRoute` component, which:
 
 1. Requires the user to be authenticated
-2. Checks if the user's `is_admin` field is set to `true` in their profile
+2. Checks if the user's `account_level` field is set to `'admin'` in their profile
 3. Redirects non-admin users to the home page
 4. Only shows the admin link in navigation to admin users
 
@@ -145,15 +156,16 @@ export interface AdminStatistics {
 
 ### Security Considerations
 
-1. **Database-Level Protection**: Admin status is stored in the database `profiles` table with the `is_admin` boolean field
+1. **Database-Level Protection**: Admin status is stored in the database `profiles` table with the `account_level` text field
 2. **Server-Side Protection**: Row Level Security (RLS) policies in Supabase protect access to data - only authenticated users can query statistics
-3. **No Environment Variables**: Unlike environment variables, database-stored admin flags cannot be accidentally exposed in client-side code
-4. **Rate Limiting**: Consider implementing rate limiting on statistics queries to prevent abuse
-5. **PII Protection**: The dashboard intentionally does not display personally identifiable information like email addresses
+3. **Extensibility**: The account level system can be easily extended to support additional levels (e.g., 'moderator', 'premium') in the future
+4. **No Environment Variables**: Unlike environment variables, database-stored account levels cannot be accidentally exposed in client-side code
+5. **Rate Limiting**: Consider implementing rate limiting on statistics queries to prevent abuse
+6. **PII Protection**: The dashboard intentionally does not display personally identifiable information like email addresses
 
 ### Database Schema
 
-The `profiles` table includes the `is_admin` field:
+The `profiles` table includes the `account_level` field:
 
 ```sql
 create table if not exists public.profiles (
@@ -162,23 +174,30 @@ create table if not exists public.profiles (
   login text,
   display_name text,
   avatar_url text,
-  is_admin boolean default false not null,
+  account_level text default 'standard' not null check (account_level in ('standard', 'admin')),
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 ```
 
-### Migration from Environment Variables
+### Migration from is_admin
 
-If you previously used `VITE_ADMIN_USER_ID`, you can migrate by:
+If you previously used `is_admin` boolean field, you can migrate with these SQL commands:
 
-1. Running the migration SQL:
-   ```sql
-   ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_admin boolean DEFAULT false NOT NULL;
-   UPDATE public.profiles SET is_admin = true WHERE id = 'your-previous-admin-uuid';
-   ```
+```sql
+-- 1. Add the account_level column
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS account_level text DEFAULT 'standard' NOT NULL;
 
-2. Removing `VITE_ADMIN_USER_ID` from your `.env` file and deployment configuration
+-- 2. Migrate existing is_admin data
+UPDATE public.profiles SET account_level = 'admin' WHERE is_admin = true;
+UPDATE public.profiles SET account_level = 'standard' WHERE is_admin = false;
+
+-- 3. Add the CHECK constraint
+ALTER TABLE public.profiles ADD CONSTRAINT profiles_account_level_check CHECK (account_level IN ('standard', 'admin'));
+
+-- 4. Drop the old is_admin column (after verifying migration)
+ALTER TABLE public.profiles DROP COLUMN IF EXISTS is_admin;
+```
 
 ## Limitations
 
@@ -214,11 +233,11 @@ This error appears when:
 ### Cannot Access Admin Dashboard
 
 If you can't see the admin link or access the dashboard:
-- Verify the `is_admin` field is set to `true` in your user's profile in the Supabase database
+- Verify the `account_level` field is set to `'admin'` in your user's profile in the Supabase database
 - Check that you're logged in with the correct account
 - Run this SQL query in Supabase to verify:
   ```sql
-  SELECT id, login, display_name, is_admin FROM profiles WHERE id = 'your-user-id';
+  SELECT id, login, display_name, account_level FROM profiles WHERE id = 'your-user-id';
   ```
 - Clear browser cache and reload the page
 - Check browser console for any authentication errors

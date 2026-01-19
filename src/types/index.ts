@@ -1,3 +1,5 @@
+export type AccountLevel = 'standard' | 'admin';
+
 export interface User {
   id: string;
   githubId?: number;
@@ -5,7 +7,7 @@ export interface User {
   displayName: string;
   avatarUrl: string;
   email?: string;
-  isAdmin?: boolean;
+  accountLevel?: AccountLevel;
   createdAt: string;
 }
 

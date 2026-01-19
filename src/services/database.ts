@@ -702,13 +702,13 @@ export async function getUserProfile(userId: string): Promise<{ displayName: str
 }
 
 /**
- * Get full profile data including admin status for the authenticated user
+ * Get full profile data including account level for the authenticated user
  */
-export async function getFullUserProfile(userId: string): Promise<{ displayName: string; avatarUrl: string; isAdmin: boolean } | null> {
+export async function getFullUserProfile(userId: string): Promise<{ displayName: string; avatarUrl: string; accountLevel: string } | null> {
   if (useSupabase) {
     const { data, error } = await supabase
       .from('profiles')
-      .select('display_name, avatar_url, is_admin')
+      .select('display_name, avatar_url, account_level')
       .eq('id', userId)
       .single();
 
@@ -721,7 +721,7 @@ export async function getFullUserProfile(userId: string): Promise<{ displayName:
     return {
       displayName: profileData.display_name as string,
       avatarUrl: profileData.avatar_url as string,
-      isAdmin: (profileData.is_admin as boolean) || false,
+      accountLevel: (profileData.account_level as string) || 'standard',
     };
   }
 

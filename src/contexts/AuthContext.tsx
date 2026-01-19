@@ -1,5 +1,5 @@
 import { useReducer, useEffect, type ReactNode } from 'react';
-import type { User, AuthState } from '../types';
+import type { User, AuthState, AccountLevel } from '../types';
 import { AuthContext } from './AuthContextType';
 import { supabase, isSupabaseConfigured } from '../services/supabase';
 import { getFullUserProfile } from '../services/database';
@@ -61,9 +61,9 @@ async function mapSupabaseUser(supabaseUser: { id: string; email?: string; user_
   const metadata = supabaseUser.user_metadata || {};
   const email = supabaseUser.email || '';
   
-  // Fetch profile data including is_admin field
+  // Fetch profile data including account_level field
   const profile = await getFullUserProfile(supabaseUser.id);
-  const isAdmin = profile?.isAdmin || false;
+  const accountLevel = (profile?.accountLevel as AccountLevel) || 'standard';
   
   // For GitHub OAuth users
   if (metadata.provider_id) {
@@ -74,7 +74,7 @@ async function mapSupabaseUser(supabaseUser: { id: string; email?: string; user_
       displayName: (metadata.full_name as string) || (metadata.name as string) || 'User',
       avatarUrl: (metadata.avatar_url as string) || '',
       email,
-      isAdmin,
+      accountLevel,
       createdAt: supabaseUser.created_at || new Date().toISOString(),
     };
   }
@@ -87,7 +87,7 @@ async function mapSupabaseUser(supabaseUser: { id: string; email?: string; user_
     displayName: (metadata.display_name as string) || username,
     avatarUrl: '',
     email,
-    isAdmin,
+    accountLevel,
     createdAt: supabaseUser.created_at || new Date().toISOString(),
   };
 }

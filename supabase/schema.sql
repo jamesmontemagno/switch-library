@@ -9,7 +9,7 @@ create table if not exists public.profiles (
   login text,
   display_name text,
   avatar_url text,
-  is_admin boolean default false not null,
+  account_level text default 'standard' not null check (account_level in ('standard', 'admin')),
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
@@ -263,10 +263,28 @@ comment on table public.game_additions is 'Anonymous tracking of game additions 
 -- DELETE FROM public.game_additions WHERE added_at < NOW() - INTERVAL '1 year';
 
 -- =============================================
--- Migration: Add is_admin field to profiles
+-- Migration: Account Level System
 -- =============================================
--- If upgrading from a previous version, run this to add the is_admin field:
--- ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_admin boolean DEFAULT false NOT NULL;
+-- If upgrading from a previous version with is_admin field, run these migrations:
 
--- To grant admin access to a specific user, run:
--- UPDATE public.profiles SET is_admin = true WHERE id = 'user-uuid-here';
+-- For new installations (already using is_admin):
+-- 1. Add the account_level column
+-- ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS account_level text DEFAULT 'standard' NOT NULL;
+-- 
+-- 2. Migrate existing is_admin data
+-- UPDATE public.profiles SET account_level = 'admin' WHERE is_admin = true;
+-- UPDATE public.profiles SET account_level = 'standard' WHERE is_admin = false;
+--
+-- 3. Add the CHECK constraint
+-- ALTER TABLE public.profiles ADD CONSTRAINT profiles_account_level_check CHECK (account_level IN ('standard', 'admin'));
+--
+-- 4. Drop the old is_admin column (after verifying migration)
+-- ALTER TABLE public.profiles DROP COLUMN IF EXISTS is_admin;
+
+-- For fresh installations: The schema above already includes account_level
+
+-- To grant admin access to a specific user:
+-- UPDATE public.profiles SET account_level = 'admin' WHERE id = 'user-uuid-here';
+
+-- To revoke admin access:
+-- UPDATE public.profiles SET account_level = 'standard' WHERE id = 'user-uuid-here';

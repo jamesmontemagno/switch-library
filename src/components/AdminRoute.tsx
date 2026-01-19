@@ -8,8 +8,8 @@ interface AdminRouteProps {
 
 /**
  * AdminRoute component protects routes that should only be accessible by admin users.
- * Admin status is determined by the is_admin field in the user's profile.
- * If user is not admin, redirects to home page.
+ * Admin status is determined by the account_level field in the user's profile.
+ * If user is not admin level, redirects to home page.
  */
 export function AdminRoute({ children }: AdminRouteProps) {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -25,7 +25,7 @@ export function AdminRoute({ children }: AdminRouteProps) {
   }
 
   // Redirect if user is not an admin
-  if (!user.isAdmin) {
+  if (user.accountLevel !== 'admin') {
     return <Navigate to="/" replace />;
   }
 

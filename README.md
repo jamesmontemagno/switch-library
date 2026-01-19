@@ -176,11 +176,15 @@ See [LOGGING-GUIDE.md](LOGGING-GUIDE.md) for complete documentation on:
 
 #### Admin Dashboard
 
-The app includes an admin dashboard for viewing usage statistics and application insights. Admin access is controlled by the `is_admin` field in the user's profile in the Supabase database (not an environment variable).
+The app includes an admin dashboard for viewing usage statistics and application insights. Admin access is controlled by the `account_level` field in the user's profile in the Supabase database.
+
+**Account Levels:**
+- `standard` - Default level for all users
+- `admin` - Admin access with dashboard access
 
 To grant admin access:
 ```sql
-UPDATE public.profiles SET is_admin = true WHERE id = 'user-uuid-here';
+UPDATE public.profiles SET account_level = 'admin' WHERE id = 'user-uuid-here';
 ```
 
 See [docs/ADMIN-DASHBOARD.md](docs/ADMIN-DASHBOARD.md) for complete documentation on:
