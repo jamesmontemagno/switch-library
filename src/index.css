@@ -173,7 +173,7 @@
 
 /* System theme - matches OS preference when no explicit theme is set */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]):not([data-theme="dark"]) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]):not([data-theme="nes"]):not([data-theme="famicom"]) {
     color-scheme: dark;
     
     /* Background colors */
