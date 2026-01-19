@@ -288,3 +288,63 @@ comment on table public.game_additions is 'Anonymous tracking of game additions 
 
 -- To revoke admin access:
 -- UPDATE public.profiles SET account_level = 'standard' WHERE id = 'user-uuid-here';
+
+-- =============================================
+-- Admin Security: RLS Policies for Admin Dashboard
+-- =============================================
+-- These policies ensure only users with account_level = 'admin' can access
+-- aggregate statistics from the database, providing server-side security
+-- even if client-side checks are bypassed.
+
+-- Helper function to check if current user is admin
+CREATE OR REPLACE FUNCTION is_admin()
+RETURNS boolean AS $$
+BEGIN
+  RETURN (
+    SELECT account_level = 'admin' 
+    FROM public.profiles 
+    WHERE id = auth.uid()
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Policy: Allow admins to count all profiles (for user statistics)
+-- This is in addition to the existing "Select own or shared profiles" policy
+CREATE POLICY "Admins can view all profile counts"
+  ON public.profiles FOR SELECT
+  USING (
+    is_admin()
+  );
+
+-- Policy: Allow admins to count all games (for game statistics)
+-- This is in addition to the existing "Select own or shared games" policy
+CREATE POLICY "Admins can view all game statistics"
+  ON public.games FOR SELECT
+  USING (
+    is_admin()
+  );
+
+-- Policy: Allow admins to view all share profiles (for active sharers count)
+CREATE POLICY "Admins can view all share profiles"
+  ON public.share_profiles FOR SELECT
+  USING (
+    is_admin()
+  );
+
+-- Policy: Allow admins to view all friend lists (for follows statistics)
+CREATE POLICY "Admins can view all friend lists"
+  ON public.friend_lists FOR SELECT
+  USING (
+    is_admin()
+  );
+
+-- Policy: Allow admins to view all API usage (for API statistics)
+CREATE POLICY "Admins can view all API usage"
+  ON public.api_usage FOR SELECT
+  USING (
+    is_admin()
+  );
+
+-- Note: These policies work in conjunction with existing RLS policies
+-- Users can still access their own data through the original policies
+-- Admins get additional access to aggregate all data for statistics

@@ -2,6 +2,8 @@
 
 This document describes the admin dashboard feature that allows a designated admin user to view usage statistics and application insights.
 
+> 🔒 **Security Note:** For production deployments, see [ADMIN-SECURITY.md](ADMIN-SECURITY.md) for comprehensive security implementation including database RLS policies and environment variable allowlists.
+
 ## Overview
 
 The admin dashboard provides comprehensive statistics about the Switch Library application, including:

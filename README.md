@@ -187,6 +187,17 @@ To grant admin access:
 UPDATE public.profiles SET account_level = 'admin' WHERE id = 'user-uuid-here';
 ```
 
+**Optional Security Enhancement:**
+For production deployments, configure an admin allowlist via environment variable for additional security:
+```bash
+VITE_ADMIN_ALLOWLIST=uuid-1,uuid-2,uuid-3
+```
+
+See [docs/ADMIN-SECURITY.md](docs/ADMIN-SECURITY.md) for complete security documentation including:
+- Database RLS policies for server-side protection
+- Environment variable allowlist configuration
+- Security best practices and testing
+
 See [docs/ADMIN-DASHBOARD.md](docs/ADMIN-DASHBOARD.md) for complete documentation on:
 - Setting up admin access
 - Available statistics and features
