@@ -67,7 +67,8 @@ export function Friends() {
         sortBy,
       },
     });
-  }, [sortBy, updatePreferences]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sortBy]);
 
   // Load following, followers, and requests on mount
   const fetchData = useCallback(async () => {

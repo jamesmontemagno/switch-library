@@ -75,7 +75,8 @@ export function Library() {
         viewMode,
       },
     });
-  }, [filterPlatform, filterFormat, filterCompleted, filterBestPick, sortBy, viewMode, updatePreferences]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterPlatform, filterFormat, filterCompleted, filterBestPick, sortBy, viewMode]);
 
   // Load games on mount
   const fetchGames = useCallback(async () => {

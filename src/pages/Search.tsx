@@ -202,7 +202,8 @@ export function Search() {
         viewMode,
       },
     });
-  }, [platform, region, sortBy, viewMode, updatePreferences]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [platform, region, sortBy, viewMode]);
 
   // Load user's games on mount (for demo mode)
   useEffect(() => {
