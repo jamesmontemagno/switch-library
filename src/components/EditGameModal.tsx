@@ -22,6 +22,7 @@ export function EditGameModal({ game, onClose, onSave }: EditGameModalProps) {
   const [purchaseDate, setPurchaseDate] = useState(game.purchaseDate || '');
   const [completed, setCompleted] = useState(game.completed || false);
   const [completedDate, setCompletedDate] = useState(game.completedDate || '');
+  const [isBestPick, setIsBestPick] = useState(game.isBestPick || false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,6 +39,7 @@ export function EditGameModal({ game, onClose, onSave }: EditGameModalProps) {
       purchaseDate: purchaseDate || undefined,
       completed: completed || undefined,
       completedDate: completedDate || undefined,
+      isBestPick: isBestPick || undefined,
       updatedAt: new Date().toISOString(),
     };
 
@@ -95,6 +97,18 @@ export function EditGameModal({ game, onClose, onSave }: EditGameModalProps) {
               />
             </div>
           )}
+
+          {/* Best Pick checkbox */}
+          <div className="form-group">
+            <label className="checkbox-label checkbox-label-improved">
+              <input
+                type="checkbox"
+                checked={isBestPick}
+                onChange={(e) => setIsBestPick(e.target.checked)}
+              />
+              <span className="checkbox-text">⭐ Mark as Best Pick</span>
+            </label>
+          </div>
 
           {/* Notes under completed checkbox */}
           <div className="form-group">

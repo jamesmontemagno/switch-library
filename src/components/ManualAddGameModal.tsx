@@ -20,6 +20,7 @@ export function ManualAddGameModal({ onClose, onAdd }: ManualAddGameModalProps) 
   const [purchaseDate, setPurchaseDate] = useState('');
   const [completed, setCompleted] = useState(false);
   const [completedDate, setCompletedDate] = useState('');
+  const [isBestPick, setIsBestPick] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +32,7 @@ export function ManualAddGameModal({ onClose, onAdd }: ManualAddGameModalProps) 
       purchaseDate: purchaseDate || undefined,
       completed: completed || undefined,
       completedDate: completedDate || undefined,
+      isBestPick: isBestPick || undefined,
       format,
       status: 'Owned',
     });
@@ -140,6 +142,17 @@ export function ManualAddGameModal({ onClose, onAdd }: ManualAddGameModalProps) 
                     />
                   </div>
                 )}
+
+                <div className="form-group">
+                  <label className="checkbox-label checkbox-label-improved">
+                    <input
+                      type="checkbox"
+                      checked={isBestPick}
+                      onChange={(e) => setIsBestPick(e.target.checked)}
+                    />
+                    <span className="checkbox-text">⭐ Mark as Best Pick</span>
+                  </label>
+                </div>
               </div>
             )}
           </div>

@@ -14,7 +14,7 @@ import { SegmentedControl } from '../components/SegmentedControl';
 import { Button } from '../components/Button';
 import { logger } from '../services/logger';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faPenToSquare, faGamepad, faTrash, faCartShopping, faTrophy, faLink, faMagnifyingGlass, faTableCells, faList, faGripLines, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faPenToSquare, faGamepad, faTrash, faCartShopping, faTrophy, faLink, faMagnifyingGlass, faTableCells, faList, faGripLines, faPlus, faStar } from '@fortawesome/free-solid-svg-icons';
 import './Library.css';
 
 const DISMISSED_SHARE_PROMPT_KEY = 'dismissedSharePrompt';
@@ -44,6 +44,7 @@ export function Library() {
   const [filterPlatform, setFilterPlatform] = useState<Platform | 'all'>(preferences.library?.filterPlatform || 'all');
   const [filterFormat, setFilterFormat] = useState<FormatFilter>(preferences.library?.filterFormat || 'all');
   const [filterCompleted, setFilterCompleted] = useState<'all' | 'completed' | 'not_completed'>(preferences.library?.filterCompleted || 'all');
+  const [filterBestPick, setFilterBestPick] = useState<'all' | 'best_picks_only' | 'not_best_picks'>(preferences.library?.filterBestPick || 'all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>(preferences.library?.sortBy || 'added_newest');
   const [viewMode, setViewMode] = useState<ViewMode>(preferences.library?.viewMode || 'grid');
@@ -69,11 +70,12 @@ export function Library() {
         filterPlatform,
         filterFormat,
         filterCompleted,
+        filterBestPick,
         sortBy,
         viewMode,
       },
     });
-  }, [filterPlatform, filterFormat, filterCompleted, sortBy, viewMode, updatePreferences]);
+  }, [filterPlatform, filterFormat, filterCompleted, filterBestPick, sortBy, viewMode, updatePreferences]);
 
   // Load games on mount
   const fetchGames = useCallback(async () => {
@@ -142,8 +144,11 @@ export function Library() {
       const matchesCompleted = filterCompleted === 'all' || 
         (filterCompleted === 'completed' && game.completed) || 
         (filterCompleted === 'not_completed' && !game.completed);
+      const matchesBestPick = filterBestPick === 'all' ||
+        (filterBestPick === 'best_picks_only' && game.isBestPick) ||
+        (filterBestPick === 'not_best_picks' && !game.isBestPick);
       const matchesSearch = game.title.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesPlatform && matchesFormat && matchesCompleted && matchesSearch;
+      return matchesPlatform && matchesFormat && matchesCompleted && matchesBestPick && matchesSearch;
     })
     .sort((a, b) => {
       switch (sortBy) {
@@ -400,6 +405,16 @@ export function Library() {
           <option value="not_completed">Not Completed</option>
         </select>
         <select
+          value={filterBestPick}
+          onChange={(e) => setFilterBestPick(e.target.value as 'all' | 'best_picks_only' | 'not_best_picks')}
+          className="filter-select"
+          aria-label="Filter by best pick"
+        >
+          <option value="all">All Games</option>
+          <option value="best_picks_only">⭐ Best Picks Only</option>
+          <option value="not_best_picks">Not Best Picks</option>
+        </select>
+        <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as SortOption)}
           className="filter-select sort-select"
@@ -569,9 +584,17 @@ function GameCard({ game, viewMode, onDelete, onEdit, isOnline }: GameCardProps)
           ) : (
             <div className="cover-placeholder-small"><FontAwesomeIcon icon={faGamepad} /></div>
           )}
+          {game.isBestPick && (
+            <div className="best-pick-badge small" title="Best Pick">
+              <FontAwesomeIcon icon={faStar} />
+            </div>
+          )}
         </div>
         <div className="compact-info">
-          <h3 className="compact-title">{game.title}</h3>
+          <h3 className="compact-title">
+            {game.isBestPick && <FontAwesomeIcon icon={faStar} style={{ color: '#fbbf24', marginRight: '0.3rem', fontSize: '0.85em' }} />}
+            {game.title}
+          </h3>
           <div className="compact-meta">
             <span className={`platform-tag small ${game.platform === 'Nintendo Switch' ? 'switch' : 'switch2'}`}>
               {game.platform === 'Nintendo Switch' ? 'Switch' : 'Switch 2'}
@@ -604,9 +627,17 @@ function GameCard({ game, viewMode, onDelete, onEdit, isOnline }: GameCardProps)
               <FontAwesomeIcon icon={faGamepad} />
             </div>
           )}
+          {game.isBestPick && (
+            <div className="best-pick-badge" title="Best Pick">
+              <FontAwesomeIcon icon={faStar} />
+            </div>
+          )}
         </div>
         <div className="list-info">
-          <h3 className="game-title">{game.title}</h3>
+          <h3 className="game-title">
+            {game.isBestPick && <FontAwesomeIcon icon={faStar} style={{ color: '#fbbf24', marginRight: '0.5rem' }} />}
+            {game.title}
+          </h3>
           <div className="game-meta">
             <span className={`platform-tag ${game.platform === 'Nintendo Switch' ? 'switch' : 'switch2'}`}>
               {game.platform === 'Nintendo Switch' ? 'Switch' : 'Switch 2'}
@@ -647,6 +678,11 @@ function GameCard({ game, viewMode, onDelete, onEdit, isOnline }: GameCardProps)
         ) : (
           <div className="cover-placeholder">
             <FontAwesomeIcon icon={faGamepad} />
+          </div>
+        )}
+        {game.isBestPick && (
+          <div className="best-pick-badge" title="Best Pick">
+            <FontAwesomeIcon icon={faStar} />
           </div>
         )}
       </div>
