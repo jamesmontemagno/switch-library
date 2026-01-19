@@ -20,7 +20,7 @@ export function ManualAddGameModal({ onClose, onAdd }: ManualAddGameModalProps) 
   const [purchaseDate, setPurchaseDate] = useState('');
   const [completed, setCompleted] = useState(false);
   const [completedDate, setCompletedDate] = useState('');
-  const [isBestPick, setIsBestPick] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +32,7 @@ export function ManualAddGameModal({ onClose, onAdd }: ManualAddGameModalProps) 
       purchaseDate: purchaseDate || undefined,
       completed: completed || undefined,
       completedDate: completedDate || undefined,
-      isBestPick: isBestPick || undefined,
+      isFavorite: isFavorite || undefined,
       format,
       status: 'Owned',
     });
@@ -147,10 +147,10 @@ export function ManualAddGameModal({ onClose, onAdd }: ManualAddGameModalProps) 
                   <label className="checkbox-label checkbox-label-improved">
                     <input
                       type="checkbox"
-                      checked={isBestPick}
-                      onChange={(e) => setIsBestPick(e.target.checked)}
+                      checked={isFavorite}
+                      onChange={(e) => setIsFavorite(e.target.checked)}
                     />
-                    <span className="checkbox-text">⭐ Mark as Best Pick</span>
+                    <span className="checkbox-text">⭐ Mark as Favorite</span>
                   </label>
                 </div>
               </div>

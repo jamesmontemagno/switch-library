@@ -28,7 +28,7 @@ create table if not exists public.games (
   purchase_date date,
   completed boolean default false,
   completed_date date,
-  best_pick boolean default false,
+  favorite boolean default false,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );

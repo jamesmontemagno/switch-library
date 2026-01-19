@@ -109,7 +109,7 @@ function mapSupabaseGameToEntry(row: Record<string, unknown>): GameEntry {
     purchaseDate: row.purchase_date as string | undefined,
     completed: row.completed as boolean | undefined,
     completedDate: row.completed_date as string | undefined,
-    isBestPick: row.best_pick as boolean | undefined,
+    isFavorite: row.favorite as boolean | undefined,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };
@@ -131,7 +131,7 @@ function mapEntryToSupabaseGame(entry: GameEntry): Record<string, unknown> {
     purchase_date: entry.purchaseDate,
     completed: entry.completed,
     completed_date: entry.completedDate,
-    best_pick: entry.isBestPick,
+    favorite: entry.isFavorite,
     created_at: entry.createdAt,
     updated_at: entry.updatedAt,
   };

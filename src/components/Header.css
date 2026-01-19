@@ -8,68 +8,59 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* NES theme header - Classic gray with red and black stripes */
+/* NES theme header - Iconic gray console with bold red/black stripes */
 [data-theme="nes"] .header {
-  background: 
-    repeating-linear-gradient(
-      90deg,
-      #808080 0px,
-      #808080 4px,
-      #707070 4px,
-      #707070 8px
-    ),
-    linear-gradient(180deg, #909090 0%, #707070 50%, #606060 100%);
-  border-bottom: 3px solid #505050;
+  background: linear-gradient(180deg, #a8a8b0 0%, #888890 50%, #707078 100%);
+  border-bottom: 4px solid #e40521;
   box-shadow: 
-    0 2px 0 #cc1100,
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
     0 4px 0 #1a1a1a,
-    0 6px 8px rgba(0, 0, 0, 0.3);
+    0 8px 12px rgba(0, 0, 0, 0.4);
   position: relative;
 }
 
-/* NES theme - decorative stripes at top */
+/* NES theme - Bold red and black stripe at top */
 [data-theme="nes"] .header::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 3px;
+  height: 6px;
   background: repeating-linear-gradient(
     90deg,
-    #cc1100 0px,
-    #cc1100 10px,
-    #1a1a1a 10px,
-    #1a1a1a 20px
+    #e40521 0px,
+    #e40521 16px,
+    #1a1a1a 16px,
+    #1a1a1a 32px
   );
 }
 
-/* Famicom theme header - Red and white with gold accents */
+/* Famicom theme header - Rich red shell with gold accents */
 [data-theme="famicom"] .header {
-  background: 
-    linear-gradient(135deg, #d84437 0%, #c03b2f 100%);
-  border-bottom: 3px solid #8b2418;
+  background: linear-gradient(180deg, #d82828 0%, #ce2029 50%, #b01820 100%);
+  border-bottom: 4px solid #6b1010;
   box-shadow: 
-    0 2px 0 #ffd700,
-    0 4px 0 #8b2418,
-    0 6px 8px rgba(0, 0, 0, 0.2);
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 4px 0 #d4a520,
+    0 8px 12px rgba(107, 16, 16, 0.4);
   position: relative;
 }
 
-/* Famicom theme - decorative gold stripes at top */
+/* Famicom theme - Gold and cream stripes at top */
 [data-theme="famicom"] .header::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 3px;
+  height: 6px;
   background: repeating-linear-gradient(
     90deg,
-    #ffd700 0px,
-    #ffd700 12px,
-    #ffffff 12px,
-    #ffffff 24px
+    #d4a520 0px,
+    #d4a520 16px,
+    #faf5ec 16px,
+    #faf5ec 32px
   );
 }
 

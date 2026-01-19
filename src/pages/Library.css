@@ -707,8 +707,8 @@
   object-fit: cover;
 }
 
-/* Best Pick Badge */
-.best-pick-badge {
+/* Favorite Badge */
+.favorite-badge {
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;

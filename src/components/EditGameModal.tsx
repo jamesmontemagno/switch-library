@@ -22,7 +22,7 @@ export function EditGameModal({ game, onClose, onSave }: EditGameModalProps) {
   const [purchaseDate, setPurchaseDate] = useState(game.purchaseDate || '');
   const [completed, setCompleted] = useState(game.completed || false);
   const [completedDate, setCompletedDate] = useState(game.completedDate || '');
-  const [isBestPick, setIsBestPick] = useState(game.isBestPick || false);
+  const [isFavorite, setIsFavorite] = useState(game.isFavorite || false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +39,7 @@ export function EditGameModal({ game, onClose, onSave }: EditGameModalProps) {
       purchaseDate: purchaseDate || undefined,
       completed: completed || undefined,
       completedDate: completedDate || undefined,
-      isBestPick: isBestPick || undefined,
+      isFavorite: isFavorite || undefined,
       updatedAt: new Date().toISOString(),
     };
 
@@ -98,15 +98,15 @@ export function EditGameModal({ game, onClose, onSave }: EditGameModalProps) {
             </div>
           )}
 
-          {/* Best Pick checkbox */}
+          {/* Favorite checkbox */}
           <div className="form-group">
             <label className="checkbox-label checkbox-label-improved">
               <input
                 type="checkbox"
-                checked={isBestPick}
-                onChange={(e) => setIsBestPick(e.target.checked)}
+                checked={isFavorite}
+                onChange={(e) => setIsFavorite(e.target.checked)}
               />
-              <span className="checkbox-text">⭐ Mark as Best Pick</span>
+              <span className="checkbox-text">⭐ Mark as Favorite</span>
             </label>
           </div>
 

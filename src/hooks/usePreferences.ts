@@ -14,7 +14,7 @@ export interface UserPreferences {
     filterPlatform: Platform | 'all';
     filterFormat: FormatFilter;
     filterCompleted: 'all' | 'completed' | 'not_completed';
-    filterBestPick: 'all' | 'best_picks_only' | 'not_best_picks';
+    filterFavorite: 'all' | 'favorites_only' | 'not_favorites';
     sortBy: SortOption;
     viewMode: ViewMode;
   };
@@ -37,7 +37,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
     filterPlatform: 'all',
     filterFormat: 'all',
     filterCompleted: 'all',
-    filterBestPick: 'all',
+    filterFavorite: 'all',
     sortBy: 'added_newest',
     viewMode: 'grid',
   },
