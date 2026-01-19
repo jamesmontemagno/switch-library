@@ -408,7 +408,7 @@ export function Library() {
         <select
           value={filterFavorite}
           onChange={(e) => setFilterFavorite(e.target.value as 'all' | 'favorites_only' | 'not_favorites')}
-          className="select"
+          className="filter-select"
           aria-label="Filter by favorite"
         >
           <option value="all">All Games</option>
