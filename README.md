@@ -17,7 +17,7 @@ A web app for tracking your Nintendo Switch and Nintendo Switch 2 game collectio
 - 💾 **Dual-Mode Operation** - Full Supabase cloud sync OR localStorage fallback (works offline)
 - 📱 **Progressive Web App** - Install on mobile/desktop, works offline with service worker caching
 - 🔄 **Auto-Updates** - Get notified when new versions are available
-- 🌓 **Dark Mode** - Full theme support with light, dark, and system preference modes
+- 🌓 **Theme Support** - Light, dark, system, plus retro NES and Famicom themes
 - 📷 **Barcode Scanning** - Quickly add games by scanning barcodes (coming soon)
 
 ## Progressive Web App (PWA)
@@ -38,6 +38,22 @@ See PWA documentation:
 - [PWA-FIXES-CHECKLIST.md](docs/PWA-FIXES-CHECKLIST.md) - Actionable fixes with code examples
 - [PWA-GUIDE.md](docs/PWA-GUIDE.md) - Implementation guide and usage docs
 - [OFFLINE-MODE-TESTING.md](docs/OFFLINE-MODE-TESTING.md) - Offline mode testing guide
+
+## Themes
+
+The app includes multiple themes to customize your experience:
+
+| Theme | Description |
+|-------|-------------|
+| **Light** | Clean white background with Nintendo Red accents |
+| **Dark** | Dark gray background for low-light environments |
+| **System** | Automatically matches your OS preference |
+| **NES** 🎮 | Retro gray inspired by the Nintendo Entertainment System |
+| **Famicom** 🇯🇵 | Warm cream with gold accents from the Japanese Famicom |
+
+Change themes in **Settings** from the user menu.
+
+See [Themes.md](docs/Themes.md) for detailed documentation including color palettes and implementation details.
 
 ## Tech Stack
 

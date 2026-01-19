@@ -75,3 +75,65 @@
   color: rgba(255, 255, 255, 0.5);
   font-style: italic;
 }
+
+/* ==============================================
+   NES THEME - Gray controller style footer
+   ============================================== */
+
+[data-theme="nes"] .footer {
+  background: linear-gradient(180deg, #606068 0%, #484850 100%);
+  color: rgba(255, 255, 255, 0.85);
+  border-top: 4px solid #e40521;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    0 -2px 0 #1a1a1a;
+}
+
+[data-theme="nes"] .footer-links a,
+[data-theme="nes"] .footer-attribution a {
+  color: #f0f0f0;
+}
+
+[data-theme="nes"] .footer-links a:hover,
+[data-theme="nes"] .footer-attribution a:hover {
+  color: #e40521;
+}
+
+[data-theme="nes"] .footer-attribution {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+[data-theme="nes"] .footer-version {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ==============================================
+   FAMICOM THEME - Warm cream with accents
+   ============================================== */
+
+[data-theme="famicom"] .footer {
+  background: linear-gradient(180deg, #6b1010 0%, #4a0808 100%);
+  color: rgba(250, 245, 236, 0.9);
+  border-top: 4px solid #d4a520;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 -2px 0 #ce2029;
+}
+
+[data-theme="famicom"] .footer-links a,
+[data-theme="famicom"] .footer-attribution a {
+  color: #faf5ec;
+}
+
+[data-theme="famicom"] .footer-links a:hover,
+[data-theme="famicom"] .footer-attribution a:hover {
+  color: #d4a520;
+}
+
+[data-theme="famicom"] .footer-attribution {
+  color: rgba(250, 245, 236, 0.75);
+}
+
+[data-theme="famicom"] .footer-version {
+  color: rgba(250, 245, 236, 0.55);
+}

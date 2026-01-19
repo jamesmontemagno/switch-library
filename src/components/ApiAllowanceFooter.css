@@ -55,3 +55,61 @@
     opacity: 0.5;
   }
 }
+
+/* ==============================================
+   NES THEME - Retro styled indicator
+   ============================================== */
+
+[data-theme="nes"] .api-allowance-indicator {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+[data-theme="nes"] .api-allowance-indicator .allowance-label {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+[data-theme="nes"] .api-allowance-indicator .allowance-value {
+  color: #f0f0f0;
+}
+
+[data-theme="nes"] .api-allowance-indicator.good .allowance-value {
+  color: #00cc00;
+}
+
+[data-theme="nes"] .api-allowance-indicator.low .allowance-value,
+[data-theme="nes"] .api-allowance-indicator.exhausted .allowance-value {
+  color: #e40521;
+}
+
+/* ==============================================
+   FAMICOM THEME - Warm styled indicator
+   ============================================== */
+
+[data-theme="famicom"] .api-allowance-indicator {
+  background: rgba(250, 245, 236, 0.12);
+  border: 1px solid rgba(212, 165, 32, 0.3);
+  border-radius: 6px;
+}
+
+[data-theme="famicom"] .api-allowance-indicator .allowance-label {
+  color: rgba(250, 245, 236, 0.7);
+}
+
+[data-theme="famicom"] .api-allowance-indicator .allowance-value {
+  color: #faf5ec;
+}
+
+[data-theme="famicom"] .api-allowance-indicator.good .allowance-value {
+  color: #88cc88;
+}
+
+[data-theme="famicom"] .api-allowance-indicator.moderate .allowance-value {
+  color: #d4a520;
+}
+
+[data-theme="famicom"] .api-allowance-indicator.low .allowance-value,
+[data-theme="famicom"] .api-allowance-indicator.exhausted .allowance-value {
+  color: #ce2029;
+}

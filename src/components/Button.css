@@ -248,3 +248,85 @@
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 150, 214, 0.3);
 }
+
+/* ==============================================
+   NES THEME - Chunky retro button style
+   ============================================== */
+
+[data-theme="nes"] .btn {
+  border-radius: 4px;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 3px 0 rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="nes"] .btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 5px 0 rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="nes"] .btn:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 1px 0 rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="nes"] .btn-primary {
+  background: linear-gradient(180deg, #e84038 0%, #e40521 50%, #c90419 100%);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 3px 0 #8c0310;
+}
+
+[data-theme="nes"] .btn-secondary {
+  background: linear-gradient(180deg, #b0b0b8 0%, #9898a0 50%, #808088 100%);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 3px 0 #505058;
+}
+
+/* ==============================================
+   FAMICOM THEME - Warm retro with gold accents
+   ============================================== */
+
+[data-theme="famicom"] .btn {
+  border-radius: 6px;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 3px 0 rgba(107, 16, 16, 0.25);
+  border: 2px solid rgba(107, 16, 16, 0.15);
+}
+
+[data-theme="famicom"] .btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 5px 0 rgba(107, 16, 16, 0.25);
+}
+
+[data-theme="famicom"] .btn:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 1px 0 rgba(107, 16, 16, 0.25);
+}
+
+[data-theme="famicom"] .btn-primary {
+  background: linear-gradient(180deg, #d83030 0%, #ce2029 50%, #b01820 100%);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 3px 0 #6b1010;
+}
+
+[data-theme="famicom"] .btn-secondary {
+  background: linear-gradient(180deg, #f0e8dc 0%, #e8dcd0 50%, #d8c8b8 100%);
+  color: #2a1010;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    0 3px 0 #b8a494;
+  border: 2px solid #d4a520;
+}

@@ -29,6 +29,8 @@ export interface GameEntry {
   purchaseDate?: string;
   completed?: boolean;
   completedDate?: string;
+  // Favorite marking
+  isFavorite?: boolean;
   createdAt: string;
   updatedAt: string;
 }

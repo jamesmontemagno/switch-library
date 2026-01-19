@@ -248,6 +248,156 @@
   }
 }
 
+/* NES theme - Retro Nintendo Entertainment System inspired */
+:root[data-theme="nes"] {
+  color-scheme: light;
+  
+  /* Background colors - Authentic NES cool gray plastic */
+  --bg-primary: #c8c8cc;
+  --bg-secondary: #aeaeb4;
+  --bg-tertiary: #9696a0;
+  --bg-hover: #babac0;
+  --bg-tooltip: rgba(26, 26, 26, 0.95);
+  
+  /* Text colors - High contrast for retro feel */
+  --text-primary: #101010;
+  --text-secondary: #2a2a2a;
+  --text-muted: #555555;
+  --text-inverse: #f0f0f0;
+  
+  /* Border colors - Darker grays for boxy retro depth */
+  --border-color: #707078;
+  --border: #707078;
+  --border-light: #9898a0;
+  --border-dark: #484850;
+  
+  /* Primary brand colors - Bold NES Red (Nintendo Red) */
+  --primary: #e40521;
+  --primary-color: #e40521;
+  --primary-hover: #c90419;
+  --primary-light: rgba(228, 5, 33, 0.18);
+  
+  /* Accent colors - NES controller button inspired */
+  --accent: #e40521;
+  --accent-hover: #c90419;
+  --accent-light: rgba(228, 5, 33, 0.18);
+  
+  /* Status colors - Retro game palette */
+  --success: #00aa00;
+  --success-bg: #c8f0c8;
+  --success-text: #005500;
+  --success-border: #66bb66;
+  --error: #e40521;
+  --error-bg: #ffc8c8;
+  --error-text: #880000;
+  --error-border: #cc6666;
+  --warning: #ff8800;
+  --warning-bg: rgba(255, 136, 0, 0.2);
+  --info: #0055cc;
+  --info-bg: rgba(0, 85, 204, 0.18);
+  --info-border: #5588cc;
+  
+  /* Button colors - Gray controller buttons */
+  --btn-secondary-bg: #9898a0;
+  --btn-secondary-hover: #808088;
+  
+  /* Component-specific - Chunky retro feel */
+  --card-bg: #b8b8c0;
+  --card-shadow: rgba(0, 0, 0, 0.3);
+  --card-shadow-hover: rgba(0, 0, 0, 0.4);
+  --modal-overlay: rgba(0, 0, 0, 0.7);
+  --input-bg: #d8d8dc;
+  --input-border: #707078;
+  --input-border-focus: #e40521;
+  
+  /* Tag colors - NES cartridge inspired */
+  --tag-physical-bg: #6060c0;
+  --tag-physical-text: #ffffff;
+  --tag-digital-bg: #e40521;
+  --tag-digital-text: #ffffff;
+  --tag-switch-bg: #e40521;
+  --tag-switch2-bg: #404048;
+  
+  /* Apply base colors */
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+}
+
+/* Famicom theme - Japanese Famicom iconic red, cream, and gold */
+:root[data-theme="famicom"] {
+  color-scheme: light;
+  
+  /* Background colors - Warm cream/ivory like Famicom shell */
+  --bg-primary: #faf5ec;
+  --bg-secondary: #f0e8dc;
+  --bg-tertiary: #e5dacc;
+  --bg-hover: #f5efe4;
+  --bg-tooltip: rgba(107, 16, 16, 0.95);
+  
+  /* Text colors - Deep maroon for contrast */
+  --text-primary: #2a1010;
+  --text-secondary: #4a2020;
+  --text-muted: #785050;
+  --text-inverse: #faf5ec;
+  
+  /* Border colors - Warm tones */
+  --border-color: #d4c4b0;
+  --border: #d4c4b0;
+  --border-light: #e8dcd0;
+  --border-dark: #b8a494;
+  
+  /* Primary brand colors - Authentic Famicom Red */
+  --primary: #ce2029;
+  --primary-color: #ce2029;
+  --primary-hover: #b01820;
+  --primary-light: rgba(206, 32, 41, 0.15);
+  
+  /* Accent colors - Famicom gold trim */
+  --accent: #d4a520;
+  --accent-hover: #b88c18;
+  --accent-light: rgba(212, 165, 32, 0.2);
+  
+  /* Status colors - Warm retro palette */
+  --success: #2d8c2d;
+  --success-bg: #d8f0d8;
+  --success-text: #1a5c1a;
+  --success-border: #88c488;
+  --error: #ce2029;
+  --error-bg: #fce0dc;
+  --error-text: #8c1818;
+  --error-border: #e09090;
+  --warning: #d4a520;
+  --warning-bg: rgba(212, 165, 32, 0.2);
+  --info: #2060a8;
+  --info-bg: rgba(32, 96, 168, 0.15);
+  --info-border: #7098c8;
+  
+  /* Button colors - Cream and gold tones */
+  --btn-secondary-bg: #e8dcd0;
+  --btn-secondary-hover: #d8c8b8;
+  
+  /* Component-specific */
+  --card-bg: #fffcf7;
+  --card-shadow: rgba(107, 16, 16, 0.12);
+  --card-shadow-hover: rgba(107, 16, 16, 0.2);
+  --modal-overlay: rgba(42, 16, 16, 0.7);
+  --input-bg: #fffdf9;
+  --input-border: #d4c4b0;
+  --input-border-focus: #d4a520;
+  
+  /* Tag colors - Famicom red and gold inspired */
+  --tag-physical-bg: #ce2029;
+  --tag-physical-text: #ffffff;
+  --tag-digital-bg: #d4a520;
+  --tag-digital-text: #2a1010;
+  --tag-switch-bg: #ce2029;
+  --tag-switch2-bg: #6b4020;
+  
+  /* Apply base colors */
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+}
+
 body {
   margin: 0;
   min-width: 320px;

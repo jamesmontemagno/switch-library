@@ -65,3 +65,50 @@
     padding-bottom: 70px;
   }
 }
+
+/* ==============================================
+   NES THEME - Chunky gray controller style
+   ============================================== */
+
+@media (max-width: 768px) {
+  [data-theme="nes"] .bottom-navigation {
+    background: linear-gradient(180deg, #a8a8b0 0%, #9090a0 100%);
+    border-top: 3px solid #e40521;
+    box-shadow: 
+      inset 0 1px 0 rgba(255, 255, 255, 0.3),
+      0 -2px 0 #1a1a1a,
+      0 -4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  [data-theme="nes"] .bottom-nav-item {
+    color: #2a2a2a;
+  }
+
+  [data-theme="nes"] .bottom-nav-item.active {
+    color: #e40521;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  }
+}
+
+/* ==============================================
+   FAMICOM THEME - Warm cream with gold accents
+   ============================================== */
+
+@media (max-width: 768px) {
+  [data-theme="famicom"] .bottom-navigation {
+    background: linear-gradient(180deg, #faf5ec 0%, #f0e8dc 100%);
+    border-top: 3px solid #d4a520;
+    box-shadow: 
+      inset 0 1px 0 rgba(255, 255, 255, 0.5),
+      0 -2px 0 #ce2029,
+      0 -4px 12px rgba(107, 16, 16, 0.2);
+  }
+
+  [data-theme="famicom"] .bottom-nav-item {
+    color: #4a2020;
+  }
+
+  [data-theme="famicom"] .bottom-nav-item.active {
+    color: #ce2029;
+  }
+}

@@ -5,7 +5,7 @@ type SortOption = 'title_asc' | 'title_desc' | 'added_newest' | 'added_oldest' |
 type ViewMode = 'grid' | 'list' | 'compact';
 type SearchViewMode = 'grid' | 'list' | 'compact';
 type FormatFilter = 'all' | 'Physical' | 'Digital';
-type Theme = 'light' | 'dark' | 'system';
+type Theme = 'light' | 'dark' | 'nes' | 'famicom' | 'system';
 type SearchSortOption = 'relevance' | 'release_desc' | 'release_asc' | 'title_asc' | 'title_desc';
 
 export interface UserPreferences {
@@ -14,6 +14,7 @@ export interface UserPreferences {
     filterPlatform: Platform | 'all';
     filterFormat: FormatFilter;
     filterCompleted: 'all' | 'completed' | 'not_completed';
+    filterFavorite: 'all' | 'favorites_only' | 'not_favorites';
     sortBy: SortOption;
     viewMode: ViewMode;
   };
@@ -36,6 +37,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
     filterPlatform: 'all',
     filterFormat: 'all',
     filterCompleted: 'all',
+    filterFavorite: 'all',
     sortBy: 'added_newest',
     viewMode: 'grid',
   },

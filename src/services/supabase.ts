@@ -6,7 +6,13 @@ const supabaseKey = import.meta.env.VITE_SUPABASE_KEY || import.meta.env.VITE_SU
 
 // Check if Supabase is configured
 export const isSupabaseConfigured = () => {
-  return Boolean(supabaseUrl && supabaseKey);
+  const configured = Boolean(supabaseUrl && supabaseKey);
+  console.log('[Supabase Config]', { 
+    configured, 
+    hasUrl: !!supabaseUrl, 
+    hasKey: !!supabaseKey 
+  });
+  return configured;
 };
 
 // Only create client if configured

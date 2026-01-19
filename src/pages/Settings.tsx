@@ -8,7 +8,7 @@ import { ShareLibraryModal } from '../components/ShareLibraryModal';
 import { SegmentedControl } from '../components/SegmentedControl';
 import { Button } from '../components/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSun, faMoon, faDesktop, faShare } from '@fortawesome/free-solid-svg-icons';
+import { faSun, faMoon, faDesktop, faShare, faGamepad, faTv } from '@fortawesome/free-solid-svg-icons';
 import './Settings.css';
 
 export function Settings() {
@@ -40,7 +40,7 @@ export function Settings() {
     loadShareProfile();
   }, [user]);
 
-  const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
+  const handleThemeChange = (newTheme: 'light' | 'dark' | 'nes' | 'famicom' | 'system') => {
     setTheme(newTheme);
   };
 
@@ -119,6 +119,8 @@ export function Settings() {
               options={[
                 { value: 'light', label: 'Light', icon: <FontAwesomeIcon icon={faSun} /> },
                 { value: 'dark', label: 'Dark', icon: <FontAwesomeIcon icon={faMoon} /> },
+                { value: 'nes', label: 'NES', icon: <FontAwesomeIcon icon={faGamepad} /> },
+                { value: 'famicom', label: 'Famicom', icon: <FontAwesomeIcon icon={faTv} /> },
                 { value: 'system', label: 'System', icon: <FontAwesomeIcon icon={faDesktop} /> },
               ]}
               value={theme}
