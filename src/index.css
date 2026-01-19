@@ -248,6 +248,81 @@
   }
 }
 
+/* NES theme - Retro Nintendo Entertainment System inspired */
+:root[data-theme="nes"] {
+  color-scheme: light;
+  
+  /* Background colors - Classic NES gray palette */
+  --bg-primary: #d4d4d4;
+  --bg-secondary: #b0b0b0;
+  --bg-tertiary: #909090;
+  --bg-hover: #c0c0c0;
+  --bg-tooltip: rgba(50, 50, 50, 0.95);
+  
+  /* Text colors - High contrast for retro feel */
+  --text-primary: #1a1a1a;
+  --text-secondary: #3a3a3a;
+  --text-muted: #666666;
+  --text-inverse: #d4d4d4;
+  
+  /* Border colors - Darker grays for depth */
+  --border-color: #808080;
+  --border: #808080;
+  --border-light: #a0a0a0;
+  --border-dark: #606060;
+  
+  /* Primary brand colors - NES Red */
+  --primary: #cc1100;
+  --primary-color: #cc1100;
+  --primary-hover: #aa0e00;
+  --primary-light: rgba(204, 17, 0, 0.15);
+  
+  /* Accent colors - NES controller buttons inspired */
+  --accent: #cc1100;
+  --accent-hover: #aa0e00;
+  --accent-light: rgba(204, 17, 0, 0.15);
+  
+  /* Status colors - Retro game palette */
+  --success: #00aa00;
+  --success-bg: #d0ffd0;
+  --success-text: #006600;
+  --success-border: #88cc88;
+  --error: #cc1100;
+  --error-bg: #ffd0d0;
+  --error-text: #880000;
+  --error-border: #cc8888;
+  --warning: #ff8800;
+  --warning-bg: rgba(255, 136, 0, 0.15);
+  --info: #0066cc;
+  --info-bg: rgba(0, 102, 204, 0.15);
+  --info-border: #6699cc;
+  
+  /* Button colors - Gray controller inspired */
+  --btn-secondary-bg: #a0a0a0;
+  --btn-secondary-hover: #888888;
+  
+  /* Component-specific - Retro boxy feel */
+  --card-bg: #c0c0c0;
+  --card-shadow: rgba(0, 0, 0, 0.25);
+  --card-shadow-hover: rgba(0, 0, 0, 0.35);
+  --modal-overlay: rgba(0, 0, 0, 0.6);
+  --input-bg: #e0e0e0;
+  --input-border: #808080;
+  --input-border-focus: #cc1100;
+  
+  /* Tag colors - NES themed */
+  --tag-physical-bg: #d0d0ff;
+  --tag-physical-text: #000066;
+  --tag-digital-bg: #ffd0d0;
+  --tag-digital-text: #660000;
+  --tag-switch-bg: #cc1100;
+  --tag-switch2-bg: #606060;
+  
+  /* Apply base colors */
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+}
+
 body {
   margin: 0;
   min-width: 320px;

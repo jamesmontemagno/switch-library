@@ -29,6 +29,8 @@ export interface GameEntry {
   purchaseDate?: string;
   completed?: boolean;
   completedDate?: string;
+  // Best pick marking
+  isBestPick?: boolean;
   createdAt: string;
   updatedAt: string;
 }
