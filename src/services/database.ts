@@ -525,7 +525,7 @@ export async function getSharedProfileByShareId(shareId: string): Promise<ShareP
       .select('*')
       .eq('share_id', shareId)
       .eq('enabled', true)
-      .single();
+      .maybeSingle();
 
     if (error || !data) {
       return null;
@@ -583,7 +583,7 @@ export async function getSharedUserProfile(shareId: string): Promise<{ displayNa
       .from('profiles')
       .select('display_name, avatar_url')
       .eq('id', shareProfile.userId)
-      .single();
+      .maybeSingle();
 
     if (error || !data) {
       return null;
@@ -685,7 +685,7 @@ export async function getUserProfile(userId: string): Promise<{ displayName: str
       .from('profiles')
       .select('display_name, avatar_url')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
 
     if (error || !data) {
       return null;
@@ -764,7 +764,7 @@ export async function isFollowing(userId: string, shareId: string): Promise<bool
       .select('id')
       .eq('user_id', userId)
       .eq('friend_share_id', shareId)
-      .single();
+      .maybeSingle();
 
     if (error || !data) {
       return false;
@@ -988,7 +988,7 @@ async function isFollowingShareId(userId: string, shareId: string): Promise<bool
       .select('id')
       .eq('user_id', userId)
       .eq('friend_share_id', shareId)
-      .single();
+      .maybeSingle();
 
     return !error && !!data;
   }
@@ -1116,7 +1116,7 @@ async function getShareProfileByUserId(userId: string): Promise<ShareProfile | n
       .from('share_profiles')
       .select('*')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
 
     if (error || !data) {
       return null;
