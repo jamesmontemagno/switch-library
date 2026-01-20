@@ -80,14 +80,6 @@ export function AdminDashboard() {
     );
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
   const calculateGrowthPercent = (recent: number, total: number): string => {
     if (total === 0) return '0.0';
     return ((recent / total) * 100).toFixed(1);
