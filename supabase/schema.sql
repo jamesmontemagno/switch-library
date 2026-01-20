@@ -290,11 +290,14 @@ comment on table public.game_additions is 'Anonymous tracking of game additions 
 -- UPDATE public.profiles SET account_level = 'standard' WHERE id = 'user-uuid-here';
 
 -- =============================================
--- Admin Security: RLS Policies for Admin Dashboard
+-- Admin Security: Database Function for Admin Dashboard
 -- =============================================
--- These policies ensure only users with account_level = 'admin' can access
--- aggregate statistics from the database, providing server-side security
--- even if client-side checks are bypassed.
+-- Performance-optimized admin statistics using a SECURITY DEFINER function
+-- This approach:
+-- 1. Checks admin status once at function entry
+-- 2. Bypasses RLS for aggregate queries (faster than policy-based checks)
+-- 3. Returns all basic stats in a single query
+-- 4. Only called when admin dashboard is accessed (lazy-loaded)
 
 -- Helper function to check if current user is admin
 CREATE OR REPLACE FUNCTION is_admin()
@@ -308,43 +311,42 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Policy: Allow admins to count all profiles (for user statistics)
--- This is in addition to the existing "Select own or shared profiles" policy
-CREATE POLICY "Admins can view all profile counts"
-  ON public.profiles FOR SELECT
-  USING (
-    is_admin()
-  );
+-- Fast admin statistics function (bypasses RLS efficiently)
+CREATE OR REPLACE FUNCTION get_admin_statistics()
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  result jsonb;
+  is_user_admin boolean;
+BEGIN
+  -- Check if caller is admin
+  SELECT account_level = 'admin' INTO is_user_admin
+  FROM profiles
+  WHERE id = auth.uid();
+  
+  IF NOT is_user_admin THEN
+    RAISE EXCEPTION 'Access denied: Admin privileges required';
+  END IF;
+  
+  -- Build statistics JSON (single query, bypasses RLS)
+  SELECT jsonb_build_object(
+    'totalUsers', (SELECT COUNT(*) FROM profiles),
+    'totalGames', (SELECT COUNT(*) FROM games),
+    'activeSharers', (SELECT COUNT(*) FROM share_profiles WHERE enabled = true),
+    'totalFollows', (SELECT COUNT(*) FROM friend_lists),
+    'apiUsageCount', (SELECT COUNT(*) FROM api_usage)
+  ) INTO result;
+  
+  RETURN result;
+END;
+$$;
 
--- Policy: Allow admins to count all games (for game statistics)
--- This is in addition to the existing "Select own or shared games" policy
-CREATE POLICY "Admins can view all game statistics"
-  ON public.games FOR SELECT
-  USING (
-    is_admin()
-  );
+-- Grant execute to authenticated users (function checks admin internally)
+GRANT EXECUTE ON FUNCTION get_admin_statistics() TO authenticated;
 
--- Policy: Allow admins to view all share profiles (for active sharers count)
-CREATE POLICY "Admins can view all share profiles"
-  ON public.share_profiles FOR SELECT
-  USING (
-    is_admin()
-  );
-
--- Policy: Allow admins to view all friend lists (for follows statistics)
-CREATE POLICY "Admins can view all friend lists"
-  ON public.friend_lists FOR SELECT
-  USING (
-    is_admin()
-  );
-
--- Policy: Allow admins to view all API usage (for API statistics)
-CREATE POLICY "Admins can view all API usage"
-  ON public.api_usage FOR SELECT
-  USING (
-    is_admin()
-  );
-
--- Note: These policies work in conjunction with existing RLS policies
--- Users can still access their own data through the original policies
--- Admins get additional access to aggregate all data for statistics
+-- Note: No admin-specific RLS policies needed
+-- The get_admin_statistics() function is more efficient than policy-based checks
+-- account_level is only fetched when user visits admin page (lazy-loaded)

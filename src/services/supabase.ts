@@ -7,11 +7,11 @@ const supabaseKey = import.meta.env.VITE_SUPABASE_KEY || import.meta.env.VITE_SU
 // Check if Supabase is configured
 export const isSupabaseConfigured = () => {
   const configured = Boolean(supabaseUrl && supabaseKey);
-  console.log('[Supabase Config]', { 
+  /*console.log('[Supabase Config]', { 
     configured, 
     hasUrl: !!supabaseUrl, 
     hasKey: !!supabaseKey 
-  });
+  });*/
   return configured;
 };
 
@@ -145,5 +145,11 @@ export const supabase = {
       };
     }
     return supabaseClient.from(table);
+  },
+  rpc: async (functionName: string, params?: Record<string, unknown>) => {
+    if (!supabaseClient) {
+      return { data: null, error: new Error('Supabase not configured') };
+    }
+    return supabaseClient.rpc(functionName, params);
   },
 };

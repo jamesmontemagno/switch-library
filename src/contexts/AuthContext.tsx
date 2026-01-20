@@ -1,8 +1,7 @@
 import { useReducer, useEffect, type ReactNode } from 'react';
-import type { User, AuthState, AccountLevel } from '../types';
+import type { User, AuthState } from '../types';
 import { AuthContext } from './AuthContextType';
 import { supabase, isSupabaseConfigured } from '../services/supabase';
-import { getFullUserProfile } from '../services/database';
 import { logger } from '../services/logger';
 
 const STORAGE_KEY = 'switch-library-auth';
@@ -61,22 +60,8 @@ async function mapSupabaseUser(supabaseUser: { id: string; email?: string; user_
   const metadata = supabaseUser.user_metadata || {};
   const email = supabaseUser.email || '';
   
-  // Fetch profile data including account_level field with timeout
-  let accountLevel: AccountLevel = 'standard';
-  try {
-    // Add timeout to prevent hanging
-    const profilePromise = getFullUserProfile(supabaseUser.id);
-    const timeoutPromise = new Promise<null>((_, reject) => 
-      setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
-    );
-    
-    const profile = await Promise.race([profilePromise, timeoutPromise]);
-    accountLevel = (profile?.accountLevel as AccountLevel) || 'standard';
-  } catch (error) {
-    // Log error but continue with default 'standard' level
-    logger.error('Failed to fetch account level, defaulting to standard', error, { userId: supabaseUser.id });
-    console.warn('Failed to fetch account level, using default:', error);
-  }
+  // Don't fetch account_level here - it's only needed on the admin page
+  // The useIsAdmin hook will fetch it lazily when needed
   
   // For GitHub OAuth users
   if (metadata.provider_id) {
@@ -87,7 +72,7 @@ async function mapSupabaseUser(supabaseUser: { id: string; email?: string; user_
       displayName: (metadata.full_name as string) || (metadata.name as string) || 'User',
       avatarUrl: (metadata.avatar_url as string) || '',
       email,
-      accountLevel,
+      // accountLevel will be fetched lazily if needed (admin page only)
       createdAt: supabaseUser.created_at || new Date().toISOString(),
     };
   }
@@ -100,7 +85,7 @@ async function mapSupabaseUser(supabaseUser: { id: string; email?: string; user_
     displayName: (metadata.display_name as string) || username,
     avatarUrl: '',
     email,
-    accountLevel,
+    // accountLevel will be fetched lazily if needed (admin page only)
     createdAt: supabaseUser.created_at || new Date().toISOString(),
   };
 }

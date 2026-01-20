@@ -1515,25 +1515,25 @@ export async function getAdminStatistics(): Promise<AdminStatistics | null> {
   try {
     logger.database('getAdminStatistics', 'multiple', {});
 
-    // Get total users count
-    const { count: totalUsers, error: usersError } = await supabase
-      .from('profiles')
-      .select('*', { count: 'exact', head: true });
+    // Use the database function for fast aggregate stats (bypasses RLS efficiently)
+    const { data: statsData, error: statsError } = await supabase
+      .rpc('get_admin_statistics');
 
-    if (usersError) {
-      logger.error('Failed to fetch users count', usersError);
-      throw usersError;
+    if (statsError) {
+      logger.error('Failed to fetch admin statistics', statsError);
+      throw statsError;
     }
 
-    // Get total games count
-    const { count: totalGames, error: gamesError } = await supabase
-      .from('games')
-      .select('*', { count: 'exact', head: true });
+    const basicStats = statsData as { 
+      totalUsers: number; 
+      totalGames: number; 
+      activeSharers: number; 
+      totalFollows: number; 
+      apiUsageCount: number; 
+    };
 
-    if (gamesError) {
-      logger.error('Failed to fetch games count', gamesError);
-      throw gamesError;
-    }
+    const totalUsers = basicStats.totalUsers;
+    const totalGames = basicStats.totalGames;
 
     // Get games by platform
     const { data: platformData, error: platformError } = await supabase
@@ -1579,36 +1579,10 @@ export async function getAdminStatistics(): Promise<AdminStatistics | null> {
       .map(([format, count]) => ({ format, count }))
       .sort((a, b) => b.count - a.count);
 
-    // Get active sharers count
-    const { count: activeSharers, error: sharersError } = await supabase
-      .from('share_profiles')
-      .select('*', { count: 'exact', head: true })
-      .eq('enabled', true);
-
-    if (sharersError) {
-      logger.error('Failed to fetch active sharers count', sharersError);
-      throw sharersError;
-    }
-
-    // Get total follows count
-    const { count: totalFollows, error: followsError } = await supabase
-      .from('friend_lists')
-      .select('*', { count: 'exact', head: true });
-
-    if (followsError) {
-      logger.error('Failed to fetch follows count', followsError);
-      throw followsError;
-    }
-
-    // Get API usage count
-    const { count: apiUsageCount, error: apiUsageError } = await supabase
-      .from('api_usage')
-      .select('*', { count: 'exact', head: true });
-
-    if (apiUsageError) {
-      logger.error('Failed to fetch API usage count', apiUsageError);
-      throw apiUsageError;
-    }
+    // Use counts from the fast RPC call
+    const activeSharers = basicStats.activeSharers;
+    const totalFollows = basicStats.totalFollows;
+    const apiUsageCount = basicStats.apiUsageCount;
 
     // Get recent users (last 10)
     const { data: recentUsersData, error: recentUsersError } = await supabase

@@ -1,5 +1,7 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useIsAdmin } from '../hooks/useIsAdmin';
+import { logger } from '../services/logger';
 import type { ReactNode } from 'react';
 
 interface AdminRouteProps {
@@ -13,22 +15,35 @@ interface AdminRouteProps {
  */
 export function AdminRoute({ children }: AdminRouteProps) {
   const { user, isAuthenticated, isLoading } = useAuth();
+  const isAdmin = useIsAdmin();
+
+  logger.debug('AdminRoute: Checking access', { 
+    isLoading, 
+    isAuthenticated, 
+    hasUser: !!user, 
+    isAdmin,
+    userId: user?.id 
+  });
 
   // Show nothing while checking auth
   if (isLoading) {
+    logger.debug('AdminRoute: Auth still loading');
     return null;
   }
 
   // Redirect if not authenticated
   if (!isAuthenticated || !user) {
+    logger.info('AdminRoute: User not authenticated, redirecting to /auth');
     return <Navigate to="/auth" replace />;
   }
 
   // Redirect if user is not an admin
-  if (user.accountLevel !== 'admin') {
+  if (!isAdmin) {
+    logger.info('AdminRoute: User is not admin, redirecting to home', { userId: user.id });
     return <Navigate to="/" replace />;
   }
 
   // User is authenticated and is an admin
+  logger.info('AdminRoute: Access granted', { userId: user.id });
   return <>{children}</>;
 }

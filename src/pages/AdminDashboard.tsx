@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSEO } from '../hooks/useSEO';
 import { getAdminStatistics, type AdminStatistics } from '../services/database';
+import { logger } from '../services/logger';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faUsers, 
@@ -26,17 +27,25 @@ export function AdminDashboard() {
 
   useEffect(() => {
     const loadStatistics = async () => {
+      logger.info('AdminDashboard: Starting to load statistics');
       setLoading(true);
       setError(null);
       
       try {
+        logger.debug('AdminDashboard: Calling getAdminStatistics()');
         const data = await getAdminStatistics();
         if (data) {
+          logger.info('AdminDashboard: Statistics loaded successfully', { 
+            totalUsers: data.totalUsers, 
+            totalGames: data.totalGames 
+          });
           setStats(data);
         } else {
+          logger.error('AdminDashboard: getAdminStatistics returned null');
           setError('Failed to load statistics. Admin dashboard only works with Supabase mode.');
         }
       } catch (err) {
+        logger.error('AdminDashboard: Error loading statistics', err);
         console.error('Error loading admin statistics:', err);
         setError('An error occurred while loading statistics.');
       } finally {
