@@ -11,7 +11,7 @@ import {
   faSearch,
   faChartBar,
   faTrophy,
-  faClock
+  faChartLine
 } from '@fortawesome/free-solid-svg-icons';
 import './AdminDashboard.css';
 
@@ -335,29 +335,46 @@ export function AdminDashboard() {
           </div>
         )}
 
-        {/* Recent Users */}
-        {stats.recentUsers.length > 0 && (
+        {/* Signups Per Day Chart */}
+        {stats.signupsPerDay.length > 0 && (
           <div className="dashboard-section">
             <h2>
-              <FontAwesomeIcon icon={faClock} /> Recent User Registrations
+              <FontAwesomeIcon icon={faChartLine} /> User Signups (Last 30 Days)
             </h2>
-            <div className="data-table">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Display Name</th>
-                    <th>Registered On</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {stats.recentUsers.map((user, index) => (
-                    <tr key={`${user.displayName}-${index}`}>
-                      <td>{user.displayName}</td>
-                      <td>{formatDate(user.createdAt)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="signup-chart">
+              <div className="chart-container">
+                {stats.signupsPerDay.map((day) => {
+                  const maxCount = Math.max(...stats.signupsPerDay.map(d => d.count));
+                  const heightPercent = maxCount > 0 ? (day.count / maxCount) * 100 : 0;
+                  return (
+                    <div key={day.date} className="chart-bar-wrapper">
+                      <div className="chart-bar-label">{day.count}</div>
+                      <div className="chart-bar" style={{ height: `${heightPercent}%` }}>
+                        <span className="chart-bar-count">{day.count}</span>
+                      </div>
+                      <div className="chart-date-label">
+                        {new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="chart-summary">
+                <div className="summary-item">
+                  <span className="summary-label">Total Signups:</span>
+                  <span className="summary-value">{stats.signupsPerDay.reduce((sum, d) => sum + d.count, 0)}</span>
+                </div>
+                <div className="summary-item">
+                  <span className="summary-label">Peak Day:</span>
+                  <span className="summary-value">{Math.max(...stats.signupsPerDay.map(d => d.count))} signups</span>
+                </div>
+                <div className="summary-item">
+                  <span className="summary-label">Average/Day:</span>
+                  <span className="summary-value">
+                    {(stats.signupsPerDay.reduce((sum, d) => sum + d.count, 0) / stats.signupsPerDay.length).toFixed(1)}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         )}

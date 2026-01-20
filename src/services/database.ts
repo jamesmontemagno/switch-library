@@ -1498,7 +1498,7 @@ export interface AdminStatistics {
   activeSharers: number;
   totalFollows: number;
   apiUsageCount: number;
-  recentUsers: Array<{ displayName: string; createdAt: string }>;
+  signupsPerDay: Array<{ date: string; count: number }>;
   topGames: Array<{ title: string; count: number }>;
   weeklyStats?: {
     newUsers: number;
@@ -1608,27 +1608,34 @@ export async function getAdminStatistics(): Promise<AdminStatistics | null> {
     const totalFollows = basicStats.totalFollows;
     const apiUsageCount = basicStats.apiUsageCount;
 
-    // Get recent users (last 10)
-    const { data: recentUsersData, error: recentUsersError } = await supabase
+    // Get signups per day (last 30 days) - No PII, just aggregated counts
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const { data: signupsData, error: signupsError } = await supabase
       .from('profiles')
-      .select('display_name, created_at')
-      .order('created_at', { ascending: false })
-      .limit(10);
+      .select('created_at')
+      .gte('created_at', thirtyDaysAgo.toISOString())
+      .order('created_at', { ascending: true });
 
-    if (recentUsersError) {
-      logger.error('Failed to fetch recent users', recentUsersError);
-      throw recentUsersError;
+    if (signupsError) {
+      logger.error('Failed to fetch signups data', signupsError);
+      throw signupsError;
     }
 
-    const recentUsers = Array.isArray(recentUsersData) 
-      ? recentUsersData.map((user: unknown) => {
-          const typedUser = user as { display_name: string; created_at: string };
-          return {
-            displayName: typedUser.display_name,
-            createdAt: typedUser.created_at,
-          };
-        })
-      : [];
+    // Aggregate signups by day
+    const signupsByDay = new Map<string, number>();
+    if (Array.isArray(signupsData)) {
+      signupsData.forEach((record: unknown) => {
+        const typedRecord = record as { created_at: string };
+        const date = new Date(typedRecord.created_at).toISOString().split('T')[0];
+        signupsByDay.set(date, (signupsByDay.get(date) || 0) + 1);
+      });
+    }
+
+    const signupsPerDay = Array.from(signupsByDay.entries())
+      .map(([date, count]) => ({ date, count }))
+      .sort((a, b) => a.date.localeCompare(b.date));
 
     // Get top games by count
     const { data: gamesData, error: topGamesError } = await supabase
@@ -1661,7 +1668,7 @@ export async function getAdminStatistics(): Promise<AdminStatistics | null> {
       activeSharers: activeSharers || 0,
       totalFollows: totalFollows || 0,
       apiUsageCount: apiUsageCount || 0,
-      recentUsers,
+      signupsPerDay,
       topGames,
       weeklyStats: basicStats.weeklyStats,
       monthlyStats: basicStats.monthlyStats,
