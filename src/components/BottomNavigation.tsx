@@ -6,7 +6,7 @@ import './BottomNavigation.css';
 
 export function BottomNavigation() {
   const location = useLocation();
-  const isAdmin = useIsAdmin();
+  const { isAdmin } = useIsAdmin();
 
   const isActive = (path: string) => location.pathname === path;
 

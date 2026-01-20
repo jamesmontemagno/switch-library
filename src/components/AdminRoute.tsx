@@ -15,19 +15,20 @@ interface AdminRouteProps {
  */
 export function AdminRoute({ children }: AdminRouteProps) {
   const { user, isAuthenticated, isLoading } = useAuth();
-  const isAdmin = useIsAdmin();
+  const { isAdmin, isChecking } = useIsAdmin();
 
   logger.debug('AdminRoute: Checking access', { 
     isLoading, 
     isAuthenticated, 
     hasUser: !!user, 
     isAdmin,
+    isChecking,
     userId: user?.id 
   });
 
-  // Show nothing while checking auth
-  if (isLoading) {
-    logger.debug('AdminRoute: Auth still loading');
+  // Show nothing while checking auth OR admin status
+  if (isLoading || isChecking) {
+    logger.debug('AdminRoute: Auth or admin check still loading', { isLoading, isChecking });
     return null;
   }
 

@@ -32,7 +32,7 @@ async function getGravatarUrl(email: string | undefined): Promise<string> {
 
 export function Header() {
   const { user, isAuthenticated, isLoading } = useAuth();
-  const isAdmin = useIsAdmin();
+  const { isAdmin } = useIsAdmin();
   const location = useLocation();
   const navigate = useNavigate();
   const [avatarError, setAvatarError] = useState(false);

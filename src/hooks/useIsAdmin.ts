@@ -16,7 +16,7 @@ import { logger } from '../services/logger';
  * This hook only fetches account_level when the component using it mounts,
  * avoiding unnecessary database queries during login.
  */
-export function useIsAdmin(): boolean {
+export function useIsAdmin(): { isAdmin: boolean; isChecking: boolean } {
   const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
@@ -82,6 +82,6 @@ export function useIsAdmin(): boolean {
     checkAdminStatus();
   }, [user]);
   
-  // Return false while checking to avoid flash of admin UI
-  return isChecking ? false : isAdmin;
+  // Return both the status and checking state so components can wait
+  return { isAdmin, isChecking };
 }
