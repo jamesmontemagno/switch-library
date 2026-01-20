@@ -61,9 +61,22 @@ async function mapSupabaseUser(supabaseUser: { id: string; email?: string; user_
   const metadata = supabaseUser.user_metadata || {};
   const email = supabaseUser.email || '';
   
-  // Fetch profile data including account_level field
-  const profile = await getFullUserProfile(supabaseUser.id);
-  const accountLevel = (profile?.accountLevel as AccountLevel) || 'standard';
+  // Fetch profile data including account_level field with timeout
+  let accountLevel: AccountLevel = 'standard';
+  try {
+    // Add timeout to prevent hanging
+    const profilePromise = getFullUserProfile(supabaseUser.id);
+    const timeoutPromise = new Promise<null>((_, reject) => 
+      setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
+    );
+    
+    const profile = await Promise.race([profilePromise, timeoutPromise]);
+    accountLevel = (profile?.accountLevel as AccountLevel) || 'standard';
+  } catch (error) {
+    // Log error but continue with default 'standard' level
+    logger.error('Failed to fetch account level, defaulting to standard', error, { userId: supabaseUser.id });
+    console.warn('Failed to fetch account level, using default:', error);
+  }
   
   // For GitHub OAuth users
   if (metadata.provider_id) {
