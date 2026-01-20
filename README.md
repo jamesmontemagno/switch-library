@@ -18,6 +18,7 @@ A web app for tracking your Nintendo Switch and Nintendo Switch 2 game collectio
 - 📱 **Progressive Web App** - Install on mobile/desktop, works offline with service worker caching
 - 🔄 **Auto-Updates** - Get notified when new versions are available
 - 🌓 **Theme Support** - Light, dark, system, plus retro NES and Famicom themes
+- 📈 **Admin Dashboard** - View usage statistics and application insights (admin-only)
 - 📷 **Barcode Scanning** - Quickly add games by scanning barcodes (coming soon)
 
 ## Progressive Web App (PWA)
@@ -172,6 +173,36 @@ See [LOGGING-GUIDE.md](LOGGING-GUIDE.md) for complete documentation on:
 - Setting up debug logging
 - Examples and best practices
 - Security considerations
+
+#### Admin Dashboard
+
+The app includes an admin dashboard for viewing usage statistics and application insights. Admin access is controlled by the `account_level` field in the user's profile in the Supabase database.
+
+**Account Levels:**
+- `standard` - Default level for all users
+- `admin` - Admin access with dashboard access
+
+To grant admin access:
+```sql
+UPDATE public.profiles SET account_level = 'admin' WHERE id = 'user-uuid-here';
+```
+
+**Optional Security Enhancement:**
+For production deployments, configure an admin allowlist via environment variable for additional security:
+```bash
+VITE_ADMIN_ALLOWLIST=uuid-1,uuid-2,uuid-3
+```
+
+See [docs/ADMIN-SECURITY.md](docs/ADMIN-SECURITY.md) for complete security documentation including:
+- Database RLS policies for server-side protection
+- Environment variable allowlist configuration
+- Security best practices and testing
+
+See [docs/ADMIN-DASHBOARD.md](docs/ADMIN-DASHBOARD.md) for complete documentation on:
+- Setting up admin access
+- Available statistics and features
+- Security considerations
+- Troubleshooting
 
 ### 5. Configure Backend API Key
 

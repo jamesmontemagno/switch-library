@@ -1,7 +1,8 @@
 import { useReducer, useEffect, type ReactNode } from 'react';
-import type { User, AuthState } from '../types';
+import type { User, AuthState, AccountLevel } from '../types';
 import { AuthContext } from './AuthContextType';
 import { supabase, isSupabaseConfigured } from '../services/supabase';
+import { getFullUserProfile } from '../services/database';
 import { logger } from '../services/logger';
 
 const STORAGE_KEY = 'switch-library-auth';
@@ -56,9 +57,13 @@ interface AuthProviderProps {
 }
 
 // Map Supabase user to our User type
-function mapSupabaseUser(supabaseUser: { id: string; email?: string; user_metadata?: Record<string, unknown>; created_at?: string }): User {
+async function mapSupabaseUser(supabaseUser: { id: string; email?: string; user_metadata?: Record<string, unknown>; created_at?: string }): Promise<User> {
   const metadata = supabaseUser.user_metadata || {};
   const email = supabaseUser.email || '';
+  
+  // Fetch profile data including account_level field
+  const profile = await getFullUserProfile(supabaseUser.id);
+  const accountLevel = (profile?.accountLevel as AccountLevel) || 'standard';
   
   // For GitHub OAuth users
   if (metadata.provider_id) {
@@ -69,6 +74,7 @@ function mapSupabaseUser(supabaseUser: { id: string; email?: string; user_metada
       displayName: (metadata.full_name as string) || (metadata.name as string) || 'User',
       avatarUrl: (metadata.avatar_url as string) || '',
       email,
+      accountLevel,
       createdAt: supabaseUser.created_at || new Date().toISOString(),
     };
   }
@@ -81,6 +87,7 @@ function mapSupabaseUser(supabaseUser: { id: string; email?: string; user_metada
     displayName: (metadata.display_name as string) || username,
     avatarUrl: '',
     email,
+    accountLevel,
     createdAt: supabaseUser.created_at || new Date().toISOString(),
   };
 }
@@ -97,7 +104,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         try {
           const { data: { session } } = await supabase.auth.getSession();
           if (session?.user) {
-            const user = mapSupabaseUser(session.user);
+            const user = await mapSupabaseUser(session.user);
             dispatch({ type: 'LOGIN_SUCCESS', payload: user });
           } else {
             dispatch({ type: 'LOGIN_ERROR' });
@@ -131,7 +138,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (useSupabase) {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
         if (session?.user) {
-          const user = mapSupabaseUser(session.user);
+          const user = await mapSupabaseUser(session.user);
           dispatch({ type: 'LOGIN_SUCCESS', payload: user });
         } else {
           dispatch({ type: 'LOGOUT' });
@@ -188,7 +195,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
       if (data.user) {
         try {
-          const user = mapSupabaseUser(data.user);
+          const user = await mapSupabaseUser(data.user);
           dispatch({ type: 'LOGIN_SUCCESS', payload: user });
         } catch (mappingError) {
           console.error('User mapping error:', mappingError);
@@ -245,7 +252,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (data.user) {
         try {
           // User is authenticated immediately (email confirmation disabled)
-          const user = mapSupabaseUser(data.user);
+          const user = await mapSupabaseUser(data.user);
           dispatch({ type: 'LOGIN_SUCCESS', payload: user });
         } catch (mappingError) {
           console.error('User mapping error:', mappingError);
