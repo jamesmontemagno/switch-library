@@ -1500,6 +1500,18 @@ export interface AdminStatistics {
   apiUsageCount: number;
   recentUsers: Array<{ displayName: string; createdAt: string }>;
   topGames: Array<{ title: string; count: number }>;
+  weeklyStats?: {
+    newUsers: number;
+    newGames: number;
+    newFollows: number;
+    apiSearches: number;
+  };
+  monthlyStats?: {
+    newUsers: number;
+    newGames: number;
+    newFollows: number;
+    apiSearches: number;
+  };
 }
 
 /**
@@ -1529,7 +1541,19 @@ export async function getAdminStatistics(): Promise<AdminStatistics | null> {
       totalGames: number; 
       activeSharers: number; 
       totalFollows: number; 
-      apiUsageCount: number; 
+      apiUsageCount: number;
+      weeklyStats?: {
+        newUsers: number;
+        newGames: number;
+        newFollows: number;
+        apiSearches: number;
+      };
+      monthlyStats?: {
+        newUsers: number;
+        newGames: number;
+        newFollows: number;
+        apiSearches: number;
+      };
     };
 
     const totalUsers = basicStats.totalUsers;
@@ -1639,6 +1663,8 @@ export async function getAdminStatistics(): Promise<AdminStatistics | null> {
       apiUsageCount: apiUsageCount || 0,
       recentUsers,
       topGames,
+      weeklyStats: basicStats.weeklyStats,
+      monthlyStats: basicStats.monthlyStats,
     };
 
     logger.info('Admin statistics loaded', { 

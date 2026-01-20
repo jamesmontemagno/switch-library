@@ -88,8 +88,105 @@ export function AdminDashboard() {
     });
   };
 
+  const calculateGrowthPercent = (recent: number, total: number): string => {
+    if (total === 0) return '0.0';
+    return ((recent / total) * 100).toFixed(1);
+  };
+
   return (
     <div className="admin-dashboard">
+      <div className="admin-content">
+        <h1>Admin Dashboard</h1>
+        <p className="dashboard-subtitle">Usage statistics and application insights</p>
+
+        {/* Growth Metrics */}
+        {(stats.weeklyStats || stats.monthlyStats) && (
+          <div className="dashboard-section">
+            <h2>
+              <FontAwesomeIcon icon={faChartBar} /> Growth Metrics
+            </h2>
+            <div className="growth-grid">
+              {stats.weeklyStats && (
+                <div className="growth-card">
+                  <h3>Last 7 Days</h3>
+                  <div className="growth-stats">
+                    <div className="growth-item">
+                      <span className="growth-label">New Users</span>
+                      <span className="growth-value">
+                        +{stats.weeklyStats.newUsers}
+                        <span className="growth-percent">
+                          ({calculateGrowthPercent(stats.weeklyStats.newUsers, stats.totalUsers)}% of total)
+                        </span>
+                      </span>
+                    </div>
+                    <div className="growth-item">
+                      <span className="growth-label">Games Added</span>
+                      <span className="growth-value">
+                        +{stats.weeklyStats.newGames}
+                        <span className="growth-percent">
+                          ({calculateGrowthPercent(stats.weeklyStats.newGames, stats.totalGames)}% of total)
+                        </span>
+                      </span>
+                    </div>
+                    <div className="growth-item">
+                      <span className="growth-label">New Follows</span>
+                      <span className="growth-value">
+                        +{stats.weeklyStats.newFollows}
+                        <span className="growth-percent">
+                          ({calculateGrowthPercent(stats.weeklyStats.newFollows, stats.totalFollows)}% of total)
+                        </span>
+                      </span>
+                    </div>
+                    <div className="growth-item">
+                      <span className="growth-label">API Searches</span>
+                      <span className="growth-value">+{stats.weeklyStats.apiSearches}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {stats.monthlyStats && (
+                <div className="growth-card">
+                  <h3>Last 30 Days</h3>
+                  <div className="growth-stats">
+                    <div className="growth-item">
+                      <span className="growth-label">New Users</span>
+                      <span className="growth-value">
+                        +{stats.monthlyStats.newUsers}
+                        <span className="growth-percent">
+                          ({calculateGrowthPercent(stats.monthlyStats.newUsers, stats.totalUsers)}% of total)
+                        </span>
+                      </span>
+                    </div>
+                    <div className="growth-item">
+                      <span className="growth-label">Games Added</span>
+                      <span className="growth-value">
+                        +{stats.monthlyStats.newGames}
+                        <span className="growth-percent">
+                          ({calculateGrowthPercent(stats.monthlyStats.newGames, stats.totalGames)}% of total)
+                        </span>
+                      </span>
+                    </div>
+                    <div className="growth-item">
+                      <span className="growth-label">New Follows</span>
+                      <span className="growth-value">
+                        +{stats.monthlyStats.newFollows}
+                        <span className="growth-percent">
+                          ({calculateGrowthPercent(stats.monthlyStats.newFollows, stats.totalFollows)}% of total)
+                        </span>
+                      </span>
+                    </div>
+                    <div className="growth-item">
+                      <span className="growth-label">API Searches</span>
+                      <span className="growth-value">+{stats.monthlyStats.apiSearches}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ssName="admin-dashboard">
       <div className="admin-content">
         <h1>Admin Dashboard</h1>
         <p className="dashboard-subtitle">Usage statistics and application insights</p>
