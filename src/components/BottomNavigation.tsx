@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useIsAdmin } from '../hooks/useIsAdmin';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMagnifyingGlass, faBookOpen, faUserGroup, faChartLine } from '@fortawesome/free-solid-svg-icons';
+import { faMagnifyingGlass, faBookOpen, faUserGroup, faChartLine, faCalendarDays } from '@fortawesome/free-solid-svg-icons';
 import './BottomNavigation.css';
 
 export function BottomNavigation() {
@@ -35,6 +35,14 @@ export function BottomNavigation() {
       >
         <FontAwesomeIcon icon={faUserGroup} />
         <span>Following</span>
+      </Link>
+      <Link 
+        to="/calendar" 
+        className={`bottom-nav-item ${isActive('/calendar') ? 'active' : ''}`}
+        aria-label="Upcoming releases"
+      >
+        <FontAwesomeIcon icon={faCalendarDays} />
+        <span>Upcoming</span>
       </Link>
       {isAdmin && (
         <Link 

@@ -1,12 +1,10 @@
-// TheGamesDB API Service
-// API Documentation: https://api.thegamesdb.net/
+// Game Search Service
+// Data source: Azure SQL Database (synced from TheGamesDB)
+// Note: All user-facing queries now use SQL database, not TheGamesDB API directly
 
 import { logger } from './logger';
 
-// Always use proxy to avoid CORS issues in both development and production
-// Development: Proxy configured in vite.config.ts to http://localhost:7071
-// Production: Can be either relative path (integrated) or full Azure Functions URL
-// Note: API key is now managed by the backend proxy, not the frontend
+// Backend API base URL - proxied in development, full URL in production
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 export interface TheGamesDBGame {
@@ -32,7 +30,7 @@ export interface TheGamesDBGame {
   video?: string;
   sound?: string;
   alternates?: string[];
-  // Boxart data when included in search results
+  // Boxart URLs
   boxart?: {
     filename: string;
     original: string;
@@ -47,17 +45,10 @@ export interface TheGamesDBGame {
 export interface TheGamesDBSearchResult {
   count: number;
   games: TheGamesDBGame[];
-  debugUrl?: string; // For debugging purposes
-  remaining_monthly_allowance?: number;
-  extra_allowance?: number;
-  base_url?: {
-    original: string;
-    small: string;
-    thumb: string;
-    cropped_center_thumb: string;
-    medium: string;
-    large: string;
-  };
+  totalCount?: number;
+  page?: number;
+  pageSize?: number;
+  totalPages?: number;
 }
 
 export interface TheGamesDBImage {
@@ -80,7 +71,7 @@ export interface TheGamesDBGameImages {
   images: Record<string, TheGamesDBImage[]>;
 }
 
-// Nintendo Switch platform IDs in TheGamesDB
+// Nintendo Switch platform IDs
 export const PLATFORM_IDS = {
   NINTENDO_SWITCH: 4971,
   NINTENDO_SWITCH_2: 5021,
@@ -94,66 +85,48 @@ export const SWITCH_PLATFORM_IDS = [
 
 export interface SearchOptions {
   platformId?: number;        // Specific platform (defaults to Switch)
-  includeFields?: string[];   // Additional fields to include (boxart, platform, etc.)
+  genreIds?: number[];        // Filter by genres
+  developerIds?: number[];    // Filter by developers
+  publisherIds?: number[];    // Filter by publishers
+  releaseYear?: number;       // Filter by release year
+  coop?: boolean;             // Filter by co-op support
+  minPlayers?: number;        // Filter by minimum player count
   page?: number;              // Page number for pagination (1-based)
+  pageSize?: number;          // Results per page (default: 20, max: 50)
 }
 
 export const isTheGamesDBConfigured = () => {
-  // API key is now managed by the backend, so this is always true
+  // SQL database is always available (no API key needed for user queries)
   return true;
 };
 
-// API Allowance tracking
-const ALLOWANCE_STORAGE_KEY = 'thegamesdb_allowance';
-const ALLOWANCE_TIMESTAMP_KEY = 'thegamesdb_allowance_timestamp';
-
-interface AllowanceInfo {
-  remaining: number;
-  extra: number;
-  timestamp: number;
+// Legacy API allowance functions - kept for backwards compatibility but return unlimited
+// Since we now use SQL database, there are no API rate limits
+export function getStoredAllowance(): { remaining: number; extra: number; timestamp: number } | null {
+  // Return unlimited allowance since SQL has no limits
+  return { remaining: 999999, extra: 0, timestamp: Date.now() };
 }
 
-export function getStoredAllowance(): AllowanceInfo | null {
-  try {
-    const stored = localStorage.getItem(ALLOWANCE_STORAGE_KEY);
-    const timestamp = localStorage.getItem(ALLOWANCE_TIMESTAMP_KEY);
-    if (stored && timestamp) {
-      return {
-        remaining: parseInt(stored),
-        extra: 0,
-        timestamp: parseInt(timestamp)
-      };
-    }
-  } catch (error) {
-    console.error('Failed to get stored allowance:', error);
-  }
-  return null;
-}
-
-export function storeAllowance(remaining: number): void {
-  try {
-    localStorage.setItem(ALLOWANCE_STORAGE_KEY, remaining.toString());
-    localStorage.setItem(ALLOWANCE_TIMESTAMP_KEY, Date.now().toString());
-  } catch (error) {
-    console.error('Failed to store allowance:', error);
-  }
+export function storeAllowance(): void {
+  // No-op: SQL database has no allowance limits
 }
 
 export function isAllowanceLow(): boolean {
-  const allowance = getStoredAllowance();
-  return allowance ? allowance.remaining < 50 : false;
+  // Always false - SQL has no limits
+  return false;
 }
 
 export function isAllowanceExhausted(): boolean {
-  const allowance = getStoredAllowance();
-  return allowance ? allowance.remaining === 0 : false;
+  // Always false - SQL has no limits
+  return false;
 }
 
 // API Response Caching
-const SEARCH_CACHE_KEY = 'thegamesdb_search_cache';
-const GAME_CACHE_KEY = 'thegamesdb_game_cache';
-const SEARCH_CACHE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7 days (extended from 1 hour)
-const GAME_CACHE_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30 days (extended from 24 hours)
+// Reduced TTL since SQL queries are fast, but still cache to reduce redundant network calls
+const SEARCH_CACHE_KEY = 'sql_search_cache';
+const GAME_CACHE_KEY = 'sql_game_cache';
+const SEARCH_CACHE_EXPIRY_MS = 1 * 60 * 60 * 1000; // 1 hour (reduced from 7 days)
+const GAME_CACHE_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours (reduced from 30 days)
 
 interface CachedResponse<T> {
   data: T;
@@ -239,105 +212,140 @@ export function clearApiCache(): void {
   console.log('API cache cleared');
 }
 
+// SQL database response types
+interface SqlGameDto {
+  id: number;
+  gameTitle: string;
+  releaseDate?: string;
+  platform: number;
+  platformName: string;
+  regionId?: number;
+  players?: number;
+  overview?: string;
+  rating?: string;
+  coop?: string;
+  youtube?: string;
+  alternates?: string[];
+  genres: { id: number; name: string }[];
+  developers: { id: number; name: string }[];
+  publishers: { id: number; name: string }[];
+  boxart?: {
+    filename: string;
+    original: string;
+    small: string;
+    thumb: string;
+    croppedCenterThumb: string;
+    medium: string;
+    large: string;
+  };
+}
+
+interface SqlSearchResult {
+  games: SqlGameDto[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+// Convert SQL DTO to our standard game format
+function mapSqlGameToStandard(sqlGame: SqlGameDto): TheGamesDBGame {
+  return {
+    id: sqlGame.id,
+    game_title: sqlGame.gameTitle,
+    release_date: sqlGame.releaseDate,
+    platform: sqlGame.platform,
+    players: sqlGame.players,
+    overview: sqlGame.overview,
+    developers: sqlGame.developers?.map(d => d.id),
+    publishers: sqlGame.publishers?.map(p => p.id),
+    genres: sqlGame.genres?.map(g => g.id),
+    rating: sqlGame.rating,
+    region_id: sqlGame.regionId,
+    coop: sqlGame.coop,
+    youtube: sqlGame.youtube,
+    alternates: sqlGame.alternates,
+    boxart: sqlGame.boxart ? {
+      filename: sqlGame.boxart.filename,
+      original: sqlGame.boxart.original,
+      small: sqlGame.boxart.small,
+      thumb: sqlGame.boxart.thumb,
+      cropped_center_thumb: sqlGame.boxart.croppedCenterThumb,
+      medium: sqlGame.boxart.medium,
+      large: sqlGame.boxart.large,
+    } : undefined,
+  };
+}
+
 export async function searchGames(
   query: string, 
   options: SearchOptions = {}
 ): Promise<TheGamesDBSearchResult> {
   const {
-    platformId = PLATFORM_IDS.NINTENDO_SWITCH,
-    includeFields = ['boxart', 'platform'],
+    platformId,
+    genreIds,
+    developerIds,
+    publisherIds,
+    releaseYear,
+    coop,
+    minPlayers,
     page = 1,
+    pageSize = 20,
   } = options;
 
   // Create cache key from query parameters
-  const cacheKey = `${query.toLowerCase().trim()}_${platformId}_${page}`;
+  const cacheKey = `${query.toLowerCase().trim()}_${platformId || 'all'}_${page}_${pageSize}`;
   
   // Check cache first
   const cachedResult = getCachedSearch(cacheKey);
   if (cachedResult) {
-    // Cache hit - no API call, no tracking needed
     logger.cache('hit', `search:${cacheKey}`, { query, gameCount: cachedResult.count });
     return cachedResult;
   }
 
   logger.cache('miss', `search:${cacheKey}`, { query });
-  logger.apiUsage('TheGamesDB.searchGames', { query, platformId, page });
-  // API key is now added by the backend proxy
-  // Request all available fields to get complete game information
-  const params = new URLSearchParams({
-    name: query,
-    fields: 'players,publishers,genres,overview,last_updated,rating,platform,coop,youtube,os,processor,ram,hdd,video,sound,alternates',
-    include: includeFields.join(','),
-  });
+  logger.apiUsage('SQL.searchGames', { query, platformId, page });
 
-  // Always filter by platform (Nintendo Switch by default)
-  if (platformId) {
-    params.set('filter[platform]', platformId.toString());
-  }
-
-  // Add pagination
-  if (page > 1) {
-    params.set('page', page.toString());
-  }
+  // Build query parameters for SQL endpoint
+  const params = new URLSearchParams();
+  if (query) params.set('query', query);
+  if (platformId) params.set('platformId', platformId.toString());
+  if (genreIds?.length) params.set('genreIds', genreIds.join(','));
+  if (developerIds?.length) params.set('developerIds', developerIds.join(','));
+  if (publisherIds?.length) params.set('publisherIds', publisherIds.join(','));
+  if (releaseYear) params.set('releaseYear', releaseYear.toString());
+  if (coop !== undefined) params.set('coop', coop.toString());
+  if (minPlayers) params.set('minPlayers', minPlayers.toString());
+  params.set('page', page.toString());
+  params.set('pageSize', Math.min(pageSize, 50).toString());
 
   try {
-    const url = `${API_BASE_URL}/thegamesdb/Games/ByGameName?${params}`;
+    const url = `${API_BASE_URL}/sql/search?${params}`;
     const response = await fetch(url);
+    
     if (!response.ok) {
-      logger.error('TheGamesDB API error', new Error(`Status ${response.status}`), { query, url });
-      throw new Error(`TheGamesDB API error: ${response.status}`);
-    }
-    const data = await response.json();
-    
-    // Store API allowance if available
-    if (data.remaining_monthly_allowance !== undefined) {
-      storeAllowance(data.remaining_monthly_allowance);
-      logger.info('API allowance updated', { 
-        remaining: data.remaining_monthly_allowance, 
-        extra: data.extra_allowance 
-      });
+      logger.error('SQL search error', new Error(`Status ${response.status}`), { query, url });
+      throw new Error(`SQL search error: ${response.status}`);
     }
     
-    const games = data.data?.games || [];
+    const data: SqlSearchResult = await response.json();
     
-    // Extract base_url for constructing image URLs
-    const baseUrl = data.include?.boxart?.base_url;
-    const boxartData = data.include?.boxart?.data || {};
-    
-    // Enhance games with constructed boxart URLs
-    const gamesWithBoxart = games.map((game: TheGamesDBGame) => {
-      const gameBoxart = boxartData[game.id];
-      if (baseUrl && gameBoxart && gameBoxart.length > 0) {
-        // Find front boxart
-        const frontBoxart = gameBoxart.find((img: TheGamesDBImage) => img.type === 'boxart' && img.side === 'front');
-        if (frontBoxart && frontBoxart.filename) {
-          game.boxart = {
-            filename: frontBoxart.filename,
-            original: `${baseUrl.original}${frontBoxart.filename}`,
-            small: `${baseUrl.small}${frontBoxart.filename}`,
-            thumb: `${baseUrl.thumb}${frontBoxart.filename}`,
-            cropped_center_thumb: `${baseUrl.cropped_center_thumb}${frontBoxart.filename}`,
-            medium: `${baseUrl.medium}${frontBoxart.filename}`,
-            large: `${baseUrl.large}${frontBoxart.filename}`,
-          };
-        }
-      }
-      return game;
-    });
+    // Convert SQL results to standard format
+    const games = data.games.map(mapSqlGameToStandard);
     
     const result: TheGamesDBSearchResult = {
-      count: gamesWithBoxart.length,
-      games: gamesWithBoxart,
-      debugUrl: url,
-      remaining_monthly_allowance: data.remaining_monthly_allowance,
-      extra_allowance: data.extra_allowance,
-      base_url: baseUrl,
+      count: games.length,
+      games,
+      totalCount: data.totalCount,
+      page: data.page,
+      pageSize: data.pageSize,
+      totalPages: data.totalPages,
     };
     
     // Cache the result
     setSearchCache(cacheKey, result);
     logger.cache('set', `search:${cacheKey}`, { query, gameCount: result.count });
-    logger.info('Games search completed', { query, count: result.count, remaining: result.remaining_monthly_allowance });
+    logger.info('Games search completed', { query, count: result.count, totalCount: data.totalCount });
     
     return result;
   } catch (error) {
@@ -356,71 +364,27 @@ export async function getGameById(gameId: number): Promise<TheGamesDBGame | null
   }
 
   logger.cache('miss', `game:${gameId}`, { gameId });
-  logger.apiUsage('TheGamesDB.getGameById', { gameId });
+  logger.apiUsage('SQL.getGameById', { gameId });
 
   try {
-    // Call the backend caching endpoint which handles blob storage and API calls
-    const response = await fetch(`${API_BASE_URL}/games/${gameId}`);
+    const response = await fetch(`${API_BASE_URL}/sql/games/${gameId}`);
     
     if (!response.ok) {
       if (response.status === 404) {
         logger.warn('Game not found', { gameId });
-        console.log(`Game ${gameId} not found`);
         return null;
       }
-      logger.error('Backend API error', new Error(`Status ${response.status}`), { gameId });
-      throw new Error(`Backend API error: ${response.status}`);
+      logger.error('SQL API error', new Error(`Status ${response.status}`), { gameId });
+      throw new Error(`SQL API error: ${response.status}`);
     }
     
-    const data = await response.json();
-    console.log('getGameById raw response:', data);
-    
-    // Store API allowance if available
-    if (data.remaining_monthly_allowance !== undefined) {
-      storeAllowance(data.remaining_monthly_allowance);
-    }
-    
-    const games = data.data?.games;
-    let game: TheGamesDBGame | null = null;
-    
-    // games is an array, find the game by ID
-    if (Array.isArray(games)) {
-      game = games.find((g: TheGamesDBGame) => g.id === gameId) || null;
-    } else if (games && games[gameId]) {
-      // Fallback: if games is an object keyed by ID
-      game = games[gameId];
-    }
-    
-    // Construct boxart URLs if available
-    if (game) {
-      const baseUrl = data.include?.boxart?.base_url;
-      const boxartData = data.include?.boxart?.data?.[gameId];
-      
-      if (baseUrl && boxartData && boxartData.length > 0) {
-        // Find front boxart
-        const frontBoxart = boxartData.find((img: TheGamesDBImage) => img.type === 'boxart' && img.side === 'front');
-        if (frontBoxart && frontBoxart.filename) {
-          game.boxart = {
-            filename: frontBoxart.filename,
-            original: `${baseUrl.original}${frontBoxart.filename}`,
-            small: `${baseUrl.small}${frontBoxart.filename}`,
-            thumb: `${baseUrl.thumb}${frontBoxart.filename}`,
-            cropped_center_thumb: `${baseUrl.cropped_center_thumb}${frontBoxart.filename}`,
-            medium: `${baseUrl.medium}${frontBoxart.filename}`,
-            large: `${baseUrl.large}${frontBoxart.filename}`,
-          };
-        }
-      }
-    }
+    const data: SqlGameDto = await response.json();
+    const game = mapSqlGameToStandard(data);
     
     // Cache the result
-    if (game) {
-      setGameCache(gameId, game);
-      logger.cache('set', `game:${gameId}`, { gameId, title: game.game_title });
-      logger.info('Game loaded by ID', { gameId, title: game.game_title });
-    } else {
-      logger.warn('Game not found in response', { gameId });
-    }
+    setGameCache(gameId, game);
+    logger.cache('set', `game:${gameId}`, { gameId, title: game.game_title });
+    logger.info('Game loaded by ID', { gameId, title: game.game_title });
     
     return game;
   } catch (error) {
@@ -430,46 +394,24 @@ export async function getGameById(gameId: number): Promise<TheGamesDBGame | null
   }
 }
 
-export async function getGameImages(gameId: number): Promise<TheGamesDBGameImages | null> {
-  // API key is now added by the backend proxy
-  const params = new URLSearchParams({
-    games_id: gameId.toString(),
-  });
-
-  try {
-    const response = await fetch(`${API_BASE_URL}/Games/Images?${params}`);
-    if (!response.ok) {
-      throw new Error(`TheGamesDB API error: ${response.status}`);
-    }
-    const data = await response.json();
-    return data.data || null;
-  } catch (error) {
-    console.error('Failed to get game images:', error);
-    return null;
-  }
+export async function getGameImages(): Promise<TheGamesDBGameImages | null> {
+  // Images are now included in game details from SQL
+  // This function is kept for backwards compatibility
+  return null;
 }
 
-export function getBoxartUrl(images: TheGamesDBGameImages | null, gameId: number, size: 'small' | 'medium' | 'large' | 'original' = 'medium'): string | null {
-  if (!images || !images.images[gameId]) {
+export function getBoxartUrl(images: TheGamesDBGameImages | null): string | null {
+  if (!images) {
     return null;
   }
-
-  const gameImages = images.images[gameId];
-  const boxart = gameImages.find(img => img.type === 'boxart' && img.side === 'front');
-  
-  if (!boxart) {
-    return null;
-  }
-
-  const baseUrl = images.base_url[size] || images.base_url.original;
-  return `${baseUrl}${boxart.filename}`;
+  return null;
 }
 
 // Lookup data caching
-const GENRES_CACHE_KEY = 'thegamesdb_genres';
-const DEVELOPERS_CACHE_KEY = 'thegamesdb_developers';
-const PUBLISHERS_CACHE_KEY = 'thegamesdb_publishers';
-const CACHE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const GENRES_CACHE_KEY = 'sql_genres';
+const DEVELOPERS_CACHE_KEY = 'sql_developers';
+const PUBLISHERS_CACHE_KEY = 'sql_publishers';
+const LOOKUP_CACHE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 interface CachedLookup {
   data: Record<number, string>;
@@ -481,7 +423,7 @@ function getCachedLookup(key: string): Record<number, string> | null {
     const cached = localStorage.getItem(key);
     if (cached) {
       const parsed: CachedLookup = JSON.parse(cached);
-      if (Date.now() - parsed.timestamp < CACHE_EXPIRY_MS) {
+      if (Date.now() - parsed.timestamp < LOOKUP_CACHE_EXPIRY_MS) {
         return parsed.data;
       }
     }
@@ -505,19 +447,14 @@ export async function getGenres(): Promise<Record<number, string>> {
   if (cached) return cached;
 
   try {
-    // API key is now added by the backend proxy
-    const response = await fetch(`${API_BASE_URL}/thegamesdb/Genres`);
+    const response = await fetch(`${API_BASE_URL}/sql/lookup/genres`);
     if (!response.ok) throw new Error(`API error: ${response.status}`);
-    const data = await response.json();
-    
-    if (data.remaining_monthly_allowance !== undefined) {
-      storeAllowance(data.remaining_monthly_allowance);
-    }
+    const result = await response.json();
     
     const genres: Record<number, string> = {};
-    if (data.data?.genres) {
-      for (const [id, genre] of Object.entries(data.data.genres)) {
-        genres[parseInt(id)] = (genre as { name: string }).name;
+    if (result.data && Array.isArray(result.data)) {
+      for (const item of result.data) {
+        genres[item.id] = item.name;
       }
     }
     setCachedLookup(GENRES_CACHE_KEY, genres);
@@ -533,19 +470,14 @@ export async function getDevelopers(): Promise<Record<number, string>> {
   if (cached) return cached;
 
   try {
-    // API key is now added by the backend proxy
-    const response = await fetch(`${API_BASE_URL}/thegamesdb/Developers`);
+    const response = await fetch(`${API_BASE_URL}/sql/lookup/developers`);
     if (!response.ok) throw new Error(`API error: ${response.status}`);
-    const data = await response.json();
-    
-    if (data.remaining_monthly_allowance !== undefined) {
-      storeAllowance(data.remaining_monthly_allowance);
-    }
+    const result = await response.json();
     
     const developers: Record<number, string> = {};
-    if (data.data?.developers) {
-      for (const [id, dev] of Object.entries(data.data.developers)) {
-        developers[parseInt(id)] = (dev as { name: string }).name;
+    if (result.data && Array.isArray(result.data)) {
+      for (const item of result.data) {
+        developers[item.id] = item.name;
       }
     }
     setCachedLookup(DEVELOPERS_CACHE_KEY, developers);
@@ -561,19 +493,14 @@ export async function getPublishers(): Promise<Record<number, string>> {
   if (cached) return cached;
 
   try {
-    // API key is now added by the backend proxy
-    const response = await fetch(`${API_BASE_URL}/thegamesdb/Publishers`);
+    const response = await fetch(`${API_BASE_URL}/sql/lookup/publishers`);
     if (!response.ok) throw new Error(`API error: ${response.status}`);
-    const data = await response.json();
-    
-    if (data.remaining_monthly_allowance !== undefined) {
-      storeAllowance(data.remaining_monthly_allowance);
-    }
+    const result = await response.json();
     
     const publishers: Record<number, string> = {};
-    if (data.data?.publishers) {
-      for (const [id, pub] of Object.entries(data.data.publishers)) {
-        publishers[parseInt(id)] = (pub as { name: string }).name;
+    if (result.data && Array.isArray(result.data)) {
+      for (const item of result.data) {
+        publishers[item.id] = item.name;
       }
     }
     setCachedLookup(PUBLISHERS_CACHE_KEY, publishers);
@@ -603,27 +530,26 @@ export interface BulkGameResult {
 }
 
 export async function getGamesByIds(
-  ids: number[], 
-  includeUncached: boolean = false
+  ids: number[]
 ): Promise<{ found: BulkGameResult[]; notFound: number[] }> {
   if (ids.length === 0) {
     return { found: [], notFound: [] };
   }
 
-  logger.apiUsage('TheGamesDB.getGamesByIds', { count: ids.length, includeUncached });
+  logger.apiUsage('SQL.getGamesByIds', { count: ids.length });
 
   try {
-    const response = await fetch(`${API_BASE_URL}/games/bulk`, {
+    const response = await fetch(`${API_BASE_URL}/sql/games/bulk`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ ids, includeUncached }),
+      body: JSON.stringify({ ids }),
     });
 
     if (!response.ok) {
       logger.error('Bulk games fetch error', new Error(`Status ${response.status}`), { ids });
-      throw new Error(`Bulk games API error: ${response.status}`);
+      throw new Error(`Bulk games SQL error: ${response.status}`);
     }
 
     const data = await response.json();
@@ -633,64 +559,28 @@ export async function getGamesByIds(
     });
 
     // Parse the found games into a consistent format
-    const foundGames: BulkGameResult[] = [];
-    
-    for (const gameData of data.found || []) {
-      try {
-        // The API returns the full TheGamesDB response structure
-        const games = gameData.data?.games;
-        const baseUrl = gameData.include?.boxart?.base_url;
-        const boxartData = gameData.include?.boxart?.data || {};
+    const foundGames: BulkGameResult[] = (data.found || []).map((game: SqlGameDto) => {
+      const coverUrl = game.boxart?.thumb || game.boxart?.small || game.boxart?.medium;
+      
+      return {
+        id: game.id,
+        title: game.gameTitle,
+        releaseDate: game.releaseDate,
+        platform: game.platformName || (game.platform === PLATFORM_IDS.NINTENDO_SWITCH_2 ? 'Nintendo Switch 2' : 'Nintendo Switch'),
+        platformId: game.platform,
+        region_id: game.regionId,
+        coverUrl,
+        overview: game.overview,
+      };
+    });
 
-        if (Array.isArray(games)) {
-          for (const game of games) {
-            const gameBoxart = boxartData[game.id];
-            let coverUrl: string | undefined;
-
-            if (baseUrl && gameBoxart && gameBoxart.length > 0) {
-              const frontBoxart = gameBoxart.find(
-                (img: { type: string; side?: string; filename: string }) => 
-                  img.type === 'boxart' && img.side === 'front'
-              );
-              if (frontBoxart?.filename) {
-                coverUrl = `${baseUrl.thumb || baseUrl.small || baseUrl.medium}${frontBoxart.filename}`;
-              }
-            }
-
-            const platformName = game.platform === PLATFORM_IDS.NINTENDO_SWITCH_2
-              ? 'Nintendo Switch 2'
-              : 'Nintendo Switch';
-
-            foundGames.push({
-              id: game.id,
-              title: game.game_title,
-              releaseDate: game.release_date,
-              platform: platformName,
-              platformId: game.platform,
-              region_id: game.region_id,
-              coverUrl,
-              overview: game.overview,
-            });
-
-            // Cache the game for future single lookups
-            setGameCache(game.id, {
-              ...game,
-              boxart: coverUrl ? {
-                filename: '',
-                original: coverUrl,
-                small: coverUrl,
-                thumb: coverUrl,
-                cropped_center_thumb: coverUrl,
-                medium: coverUrl,
-                large: coverUrl,
-              } : undefined,
-            });
-          }
-        }
-      } catch (parseError) {
-        logger.error('Error parsing bulk game result', parseError, { gameData });
+    // Cache found games for future single lookups
+    foundGames.forEach(game => {
+      const fullGame = (data.found || []).find((g: SqlGameDto) => g.id === game.id);
+      if (fullGame) {
+        setGameCache(game.id, mapSqlGameToStandard(fullGame));
       }
-    }
+    });
 
     return {
       found: foundGames,
@@ -699,6 +589,123 @@ export async function getGamesByIds(
   } catch (error) {
     logger.error('Failed to get games by IDs', error, { ids });
     return { found: [], notFound: ids };
+  }
+}
+
+// Get upcoming game releases
+export interface UpcomingGamesResult {
+  games: BulkGameResult[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export async function getUpcomingGames(
+  days: number = 90,
+  platformId?: number,
+  page: number = 1,
+  pageSize: number = 20
+): Promise<UpcomingGamesResult> {
+  logger.apiUsage('SQL.getUpcomingGames', { days, platformId, page });
+
+  try {
+    const params = new URLSearchParams();
+    params.set('days', days.toString());
+    if (platformId) params.set('platformId', platformId.toString());
+    params.set('page', page.toString());
+    params.set('pageSize', pageSize.toString());
+
+    const response = await fetch(`${API_BASE_URL}/sql/upcoming?${params}`);
+    
+    if (!response.ok) {
+      logger.error('Upcoming games fetch error', new Error(`Status ${response.status}`));
+      throw new Error(`Upcoming games error: ${response.status}`);
+    }
+
+    const data: SqlSearchResult = await response.json();
+    
+    const games: BulkGameResult[] = data.games.map((game: SqlGameDto) => ({
+      id: game.id,
+      title: game.gameTitle,
+      releaseDate: game.releaseDate,
+      platform: game.platformName || (game.platform === PLATFORM_IDS.NINTENDO_SWITCH_2 ? 'Nintendo Switch 2' : 'Nintendo Switch'),
+      platformId: game.platform,
+      region_id: game.regionId,
+      coverUrl: game.boxart?.thumb || game.boxart?.small || game.boxart?.medium,
+      overview: game.overview,
+    }));
+
+    return {
+      games,
+      totalCount: data.totalCount,
+      page: data.page,
+      pageSize: data.pageSize,
+      totalPages: data.totalPages,
+    };
+  } catch (error) {
+    logger.error('Failed to get upcoming games', error);
+    return { games: [], totalCount: 0, page: 1, pageSize, totalPages: 0 };
+  }
+}
+
+// Get game recommendations
+export async function getGameRecommendations(
+  gameId: number,
+  limit: number = 10
+): Promise<BulkGameResult[]> {
+  logger.apiUsage('SQL.getRecommendations', { gameId, limit });
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/sql/recommendations/${gameId}?limit=${limit}`);
+    
+    if (!response.ok) {
+      logger.error('Recommendations fetch error', new Error(`Status ${response.status}`), { gameId });
+      throw new Error(`Recommendations error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    return (data.recommendations || []).map((game: SqlGameDto) => ({
+      id: game.id,
+      title: game.gameTitle,
+      releaseDate: game.releaseDate,
+      platform: game.platformName || (game.platform === PLATFORM_IDS.NINTENDO_SWITCH_2 ? 'Nintendo Switch 2' : 'Nintendo Switch'),
+      platformId: game.platform,
+      region_id: game.regionId,
+      coverUrl: game.boxart?.thumb || game.boxart?.small || game.boxart?.medium,
+      overview: game.overview,
+    }));
+  } catch (error) {
+    logger.error('Failed to get recommendations', error, { gameId });
+    return [];
+  }
+}
+
+// Get database statistics
+export interface DatabaseStats {
+  totalGames: number;
+  switchGames: number;
+  switch2Games: number;
+  totalGenres: number;
+  totalDevelopers: number;
+  totalPublishers: number;
+  lastSyncTime?: string;
+}
+
+export async function getDatabaseStats(): Promise<DatabaseStats | null> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/sql/stats`);
+    
+    if (!response.ok) {
+      logger.error('Stats fetch error', new Error(`Status ${response.status}`));
+      return null;
+    }
+
+    return await response.json();
+  } catch (error) {
+    logger.error('Failed to get database stats', error);
+    return null;
   }
 }
 

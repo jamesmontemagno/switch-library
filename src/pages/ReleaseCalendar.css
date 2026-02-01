@@ -1,0 +1,537 @@
+/* Release Calendar Page Styles */
+
+.release-calendar-page {
+  padding: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.offline-banner {
+  background: var(--warning);
+  color: white;
+  padding: 1rem;
+  text-align: center;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.calendar-header {
+  margin-bottom: 1.5rem;
+}
+
+.calendar-header h1 {
+  font-size: 1.75rem;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.calendar-header h1 svg {
+  color: var(--primary);
+  margin-right: 0.5rem;
+}
+
+.calendar-header p {
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+}
+
+/* Filters */
+.calendar-filters {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.filter-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 150px;
+}
+
+.filter-item label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.filter-item select {
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-size: 0.9375rem;
+  cursor: pointer;
+}
+
+/* Content area */
+.calendar-content {
+  min-height: 300px;
+}
+
+.calendar-loading,
+.calendar-error,
+.calendar-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.calendar-loading .loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.calendar-error {
+  color: var(--error);
+}
+
+.calendar-empty .empty-icon {
+  font-size: 3rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.results-summary {
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+  margin-bottom: 1rem;
+}
+
+/* Month groups */
+.month-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.month-group {
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+.month-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 1rem 1.25rem;
+  background: var(--bg-tertiary);
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: background-color 0.2s;
+}
+
+.month-header:hover {
+  background: var(--bg-hover);
+}
+
+.month-header h2 {
+  font-size: 1.25rem;
+  color: var(--text-primary);
+  margin: 0;
+  flex: 1;
+}
+
+.month-count {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  padding: 0.25rem 0.75rem;
+  background: var(--bg-secondary);
+  border-radius: 999px;
+}
+
+.collapse-icon {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+/* Game cards */
+.month-games {
+  display: flex;
+  flex-direction: column;
+}
+
+.upcoming-game-card {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.2s;
+}
+
+.upcoming-game-card:last-child {
+  border-bottom: none;
+}
+
+.upcoming-game-card:hover {
+  background: var(--bg-hover);
+}
+
+.game-cover {
+  flex-shrink: 0;
+  position: relative;
+  width: 60px;
+  height: 80px;
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.game-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.game-cover .cover-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  font-size: 1.5rem;
+}
+
+.game-cover .in-library-badge {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--success);
+  color: white;
+  font-size: 0.625rem;
+  padding: 0.125rem;
+  text-align: center;
+}
+
+.game-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.game-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem;
+  line-height: 1.3;
+}
+
+.game-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.platform-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.platform-badge.switch {
+  background: var(--tag-switch-bg);
+  color: var(--tag-switch-text);
+}
+
+.platform-badge.switch2 {
+  background: var(--tag-switch2-bg);
+  color: var(--tag-switch2-text);
+}
+
+.release-date {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.release-date svg {
+  margin-right: 0.25rem;
+}
+
+.game-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-add-wishlist {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: var(--primary);
+  color: white;
+  transition: background-color 0.2s;
+}
+
+.btn-add-wishlist:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.btn-add-wishlist:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.btn-view-library {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 6px;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.btn-view-library:hover {
+  background: var(--bg-hover);
+}
+
+.login-hint {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+/* Pagination */
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding: 1rem;
+}
+
+.btn-pagination {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-pagination:hover:not(:disabled) {
+  background: var(--bg-hover);
+}
+
+.btn-pagination:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-indicator {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+/* Quick Add Modal (shared styles) */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.quick-add-modal {
+  background: var(--bg-primary);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h2 {
+  font-size: 1.125rem;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.25rem;
+}
+
+.modal-close:hover {
+  color: var(--text-primary);
+}
+
+.quick-add-content {
+  padding: 1.25rem;
+}
+
+.quick-add-game-info {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.quick-add-cover {
+  width: 60px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.quick-add-details h3 {
+  font-size: 1rem;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem;
+}
+
+.quick-add-details .release-date {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.quick-add-options {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.quick-add-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.btn-cancel {
+  padding: 0.625rem 1.25rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-cancel:hover {
+  background: var(--bg-hover);
+}
+
+.btn-confirm-add {
+  padding: 0.625rem 1.25rem;
+  border: none;
+  border-radius: 6px;
+  background: var(--primary);
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-confirm-add:hover {
+  background: var(--primary-hover);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .release-calendar-page {
+    padding: 0.75rem;
+  }
+
+  .calendar-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .calendar-filters {
+    flex-direction: column;
+  }
+
+  .filter-item {
+    min-width: auto;
+    width: 100%;
+  }
+
+  .upcoming-game-card {
+    padding: 0.75rem 1rem;
+  }
+
+  .game-cover {
+    width: 50px;
+    height: 67px;
+  }
+
+  .game-title {
+    font-size: 0.9375rem;
+  }
+
+  .game-meta {
+    font-size: 0.8125rem;
+  }
+
+  .btn-add-wishlist,
+  .btn-view-library {
+    font-size: 0.8125rem;
+    padding: 0.375rem 0.75rem;
+  }
+}

@@ -8,6 +8,7 @@ import { loadGames, saveGame } from '../services/database';
 import { getGameById, getGenres, getDevelopers, getPublishers, mapIdsToNames } from '../services/thegamesdb';
 import type { TheGamesDBGame } from '../services/thegamesdb';
 import { EditGameModal } from '../components/EditGameModal';
+import { GameRecommendations } from '../components/GameRecommendations';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPenToSquare, faGamepad, faCheck } from '@fortawesome/free-solid-svg-icons';
 import './GameDetails.css';
@@ -367,6 +368,14 @@ export function GameDetails() {
                 </div>
               )}
             </section>
+          )}
+
+          {/* Game Recommendations - show if we have a TheGamesDB ID */}
+          {game.thegamesdbId && (
+            <GameRecommendations 
+              gameId={game.thegamesdbId} 
+              gameTitle={game.title} 
+            />
           )}
         </div>
       </div>

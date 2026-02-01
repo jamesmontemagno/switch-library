@@ -9,7 +9,6 @@ The My Switch Library database uses these main tables:
 - **games** - User game collections
 - **share_profiles** - User sharing settings and share IDs
 - **friend_lists** - Following/follower relationships (instant follow model)
-- **api_usage** - API usage tracking for rate limiting
 - **game_additions** - Anonymous game addition tracking for trending feature
 
 ## Follow System (Instant Follow Model)
@@ -55,26 +54,11 @@ WHERE added_at < now() - interval '90 days';
 
 **Recommended Schedule**: Run quarterly (every 3 months)
 
-## API Usage Cleanup
-
-The `api_usage` table tracks search queries for rate limiting (50 searches/month per user).
-
-### Cleanup Old Usage Data
-
-```sql
--- Delete API usage records older than 12 months
-DELETE FROM public.api_usage
-WHERE timestamp < now() - interval '12 months';
-```
-
-**Recommended Schedule**: Run annually or when the table grows large
-
 ## Maintenance Schedule
 
 | Task | Frequency | SQL Command | Purpose |
 |------|-----------|-------------|---------|
 | Game additions cleanup | Quarterly | `DELETE FROM game_additions WHERE added_at < now() - interval '90 days';` | Keep trending data fresh |
-| API usage cleanup | Annually | `DELETE FROM api_usage WHERE timestamp < now() - interval '12 months';` | Prevent table bloat |
 
 ## Monitoring Queries
 
@@ -89,8 +73,6 @@ UNION ALL
 SELECT 'share_profiles', count(*) FROM share_profiles
 UNION ALL
 SELECT 'friend_lists', count(*) FROM friend_lists
-UNION ALL
-SELECT 'api_usage', count(*) FROM api_usage
 UNION ALL
 SELECT 'game_additions', count(*) FROM game_additions;
 ```
@@ -125,30 +107,6 @@ WHERE added_at > now() - interval '7 days'
 GROUP BY thegamesdb_id
 ORDER BY addition_count DESC
 LIMIT 10;
-```
-
-### Check API Usage
-
-```sql
--- Users approaching or exceeding monthly limit
-WITH monthly_usage AS (
-  SELECT 
-    user_id,
-    count(*) as search_count,
-    max(timestamp) as last_search
-  FROM api_usage
-  WHERE timestamp > date_trunc('month', now())
-  GROUP BY user_id
-)
-SELECT 
-  mu.user_id,
-  p.display_name,
-  mu.search_count,
-  mu.last_search
-FROM monthly_usage mu
-LEFT JOIN profiles p ON p.id = mu.user_id
-WHERE mu.search_count >= 40  -- Approaching 50 limit
-ORDER BY mu.search_count DESC;
 ```
 
 ## Troubleshooting

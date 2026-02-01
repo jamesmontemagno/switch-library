@@ -1,0 +1,209 @@
+/* Game Recommendations Component Styles */
+
+.game-recommendations {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.recommendations-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.recommendations-header h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.recommendations-icon {
+  color: var(--accent);
+}
+
+.scroll-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.scroll-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.scroll-btn:hover:not(:disabled) {
+  background: var(--bg-hover);
+  border-color: var(--text-secondary);
+}
+
+.scroll-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.recommendations-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  color: var(--text-secondary);
+}
+
+.recommendations-loading .loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-color);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.recommendations-error {
+  color: var(--error);
+  text-align: center;
+  padding: 1rem;
+}
+
+.recommendations-scroll {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding-bottom: 0.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) transparent;
+}
+
+.recommendations-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.recommendations-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.recommendations-scroll::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+.recommendation-card {
+  flex-shrink: 0;
+  width: 120px;
+  text-decoration: none;
+  transition: transform 0.2s;
+}
+
+.recommendation-card:hover {
+  transform: translateY(-4px);
+}
+
+.recommendation-cover {
+  position: relative;
+  width: 120px;
+  height: 160px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg-tertiary);
+  margin-bottom: 0.5rem;
+}
+
+.recommendation-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.recommendation-cover .cover-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  font-size: 2rem;
+}
+
+.recommendation-cover .platform-badge {
+  position: absolute;
+  top: 0.375rem;
+  right: 0.375rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.recommendation-cover .platform-badge.switch {
+  background: var(--tag-switch-bg);
+  color: var(--tag-switch-text);
+}
+
+.recommendation-cover .platform-badge.switch2 {
+  background: var(--tag-switch2-bg);
+  color: var(--tag-switch2-text);
+}
+
+.recommendation-info {
+  padding: 0 0.25rem;
+}
+
+.recommendation-title {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0 0 0.125rem;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.recommendation-year {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .recommendations-header h2 {
+    font-size: 1rem;
+  }
+
+  .recommendation-card {
+    width: 100px;
+  }
+
+  .recommendation-cover {
+    width: 100px;
+    height: 133px;
+  }
+
+  .recommendation-title {
+    font-size: 0.75rem;
+  }
+}

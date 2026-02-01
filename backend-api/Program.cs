@@ -6,13 +6,20 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using SwitchLibraryApi;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 
 builder.ConfigureFunctionsWebApplication();
 
-// Add HttpClient for proxying requests and TheGamesDB API calls
+// Add in-memory caching for SQL query results
+builder.Services.AddMemoryCache();
+
+// Add HttpClient for proxying requests and TheGamesDB API calls (sync only)
 builder.Services.AddHttpClient();
+
+// Register SqlGameService for SQL database queries (primary data source for user queries)
+builder.Services.AddScoped<SqlGameService>();
 
 // Configure Application Insights
 builder.Services

@@ -5,7 +5,7 @@ import { useIsAdmin } from '../hooks/useIsAdmin';
 import { getShareProfile } from '../services/database';
 import { ShareLibraryModal } from './ShareLibraryModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMagnifyingGlass, faBookOpen, faUserGroup, faUser, faLink, faChartLine } from '@fortawesome/free-solid-svg-icons';
+import { faMagnifyingGlass, faBookOpen, faUserGroup, faUser, faLink, faChartLine, faCalendarDays } from '@fortawesome/free-solid-svg-icons';
 import type { ShareProfile } from '../types';
 import './Header.css';
 
@@ -107,6 +107,10 @@ export function Header() {
               <Link to="/friends" className={`nav-link ${isActive('/friends') ? 'active' : ''}`}>
                 <FontAwesomeIcon icon={faUserGroup} />
                 <span>Following</span>
+              </Link>
+              <Link to="/calendar" className={`nav-link ${isActive('/calendar') ? 'active' : ''}`}>
+                <FontAwesomeIcon icon={faCalendarDays} />
+                <span>Upcoming</span>
               </Link>
               {isAdmin && (
                 <Link to="/admin" className={`nav-link ${isActive('/admin') ? 'active' : ''}`}>

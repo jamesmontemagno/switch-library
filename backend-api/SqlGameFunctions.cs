@@ -1,0 +1,322 @@
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.Logging;
+using System.Net;
+using System.Text.Json;
+
+namespace SwitchLibraryApi;
+
+/// <summary>
+/// Azure Functions for SQL database game queries.
+/// These replace the TheGamesDB API proxy for all user-facing queries.
+/// </summary>
+public class SqlGameFunctions
+{
+    private readonly ILogger<SqlGameFunctions> _logger;
+    private readonly SqlGameService _gameService;
+
+    public SqlGameFunctions(ILogger<SqlGameFunctions> logger, SqlGameService gameService)
+    {
+        _logger = logger;
+        _gameService = gameService;
+    }
+
+    /// <summary>
+    /// Search games from SQL database with filters and pagination
+    /// Route: GET /api/sql/search
+    /// Query params: query, platformId, genreIds, developerIds, publisherIds, releaseYear, coop, minPlayers, page, pageSize
+    /// </summary>
+    [Function("SearchGamesFromSql")]
+    public async Task<IActionResult> SearchGames(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "sql/search")] HttpRequest req)
+    {
+        try
+        {
+            // Parse query parameters
+            var query = req.Query["query"].ToString();
+            
+            int? platformId = int.TryParse(req.Query["platformId"], out var pId) ? pId : null;
+            int? releaseYear = int.TryParse(req.Query["releaseYear"], out var ry) ? ry : null;
+            bool? coop = req.Query.ContainsKey("coop") ? bool.Parse(req.Query["coop"].ToString()) : null;
+            int? minPlayers = int.TryParse(req.Query["minPlayers"], out var mp) ? mp : null;
+            int page = int.TryParse(req.Query["page"], out var p) ? p : 1;
+            int pageSize = int.TryParse(req.Query["pageSize"], out var ps) ? Math.Min(ps, 50) : 20;
+
+            // Parse array parameters
+            int[]? genreIds = ParseIntArray(req.Query["genreIds"]);
+            int[]? developerIds = ParseIntArray(req.Query["developerIds"]);
+            int[]? publisherIds = ParseIntArray(req.Query["publisherIds"]);
+
+            _logger.LogInformation("SQL Search: query={Query}, platform={Platform}, page={Page}", 
+                query, platformId, page);
+
+            var result = await _gameService.SearchGamesAsync(
+                query,
+                platformId,
+                genreIds,
+                developerIds,
+                publisherIds,
+                releaseYear,
+                coop,
+                minPlayers,
+                page,
+                pageSize
+            );
+
+            return new OkObjectResult(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching games from SQL");
+            return new ObjectResult(new { error = "Search failed", message = ex.Message })
+            {
+                StatusCode = (int)HttpStatusCode.InternalServerError
+            };
+        }
+    }
+
+    /// <summary>
+    /// Get single game details by ID from SQL database
+    /// Route: GET /api/sql/games/{gameId}
+    /// </summary>
+    [Function("GetGameFromSql")]
+    public async Task<IActionResult> GetGame(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "sql/games/{gameId:int}")] HttpRequest req,
+        int gameId)
+    {
+        try
+        {
+            _logger.LogInformation("SQL GetGame: gameId={GameId}", gameId);
+
+            var game = await _gameService.GetGameByIdAsync(gameId);
+
+            if (game == null)
+            {
+                return new NotFoundObjectResult(new { error = $"Game {gameId} not found" });
+            }
+
+            return new OkObjectResult(game);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting game {GameId} from SQL", gameId);
+            return new ObjectResult(new { error = "Failed to get game", message = ex.Message })
+            {
+                StatusCode = (int)HttpStatusCode.InternalServerError
+            };
+        }
+    }
+
+    /// <summary>
+    /// Get multiple games by IDs from SQL database
+    /// Route: POST /api/sql/games/bulk
+    /// Body: { "ids": [123, 456, ...] }
+    /// </summary>
+    [Function("GetGamesFromSql")]
+    public async Task<IActionResult> GetGamesBulk(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "sql/games/bulk")] HttpRequest req)
+    {
+        try
+        {
+            using var reader = new StreamReader(req.Body);
+            var body = await reader.ReadToEndAsync();
+            var request = JsonSerializer.Deserialize<BulkIdsRequest>(body, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            if (request?.Ids == null || request.Ids.Length == 0)
+            {
+                return new BadRequestObjectResult(new { error = "Request body must contain an 'ids' array" });
+            }
+
+            // Limit to 50 games per request
+            var ids = request.Ids.Take(50).Distinct().ToArray();
+            
+            _logger.LogInformation("SQL GetGamesBulk: count={Count}", ids.Length);
+
+            var games = await _gameService.GetGamesByIdsAsync(ids);
+            var foundIds = games.Select(g => g.Id).ToHashSet();
+            var notFoundIds = ids.Where(id => !foundIds.Contains(id)).ToArray();
+
+            return new OkObjectResult(new
+            {
+                found = games,
+                notFound = notFoundIds,
+                foundCount = games.Count,
+                notFoundCount = notFoundIds.Length
+            });
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogError(ex, "Invalid JSON in bulk request");
+            return new BadRequestObjectResult(new { error = "Invalid JSON", message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting bulk games from SQL");
+            return new ObjectResult(new { error = "Bulk fetch failed", message = ex.Message })
+            {
+                StatusCode = (int)HttpStatusCode.InternalServerError
+            };
+        }
+    }
+
+    /// <summary>
+    /// Get upcoming game releases from SQL database
+    /// Route: GET /api/sql/upcoming
+    /// Query params: days (30/60/90), platformId, page, pageSize
+    /// </summary>
+    [Function("GetUpcomingGames")]
+    public async Task<IActionResult> GetUpcomingGames(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "sql/upcoming")] HttpRequest req)
+    {
+        try
+        {
+            int days = int.TryParse(req.Query["days"], out var d) ? d : 90;
+            int? platformId = int.TryParse(req.Query["platformId"], out var pId) ? pId : null;
+            int page = int.TryParse(req.Query["page"], out var p) ? p : 1;
+            int pageSize = int.TryParse(req.Query["pageSize"], out var ps) ? Math.Min(ps, 50) : 20;
+
+            // Limit days to reasonable range
+            days = Math.Min(Math.Max(days, 7), 365);
+
+            _logger.LogInformation("SQL GetUpcoming: days={Days}, platform={Platform}", days, platformId);
+
+            var result = await _gameService.GetUpcomingGamesAsync(days, platformId, page, pageSize);
+
+            return new OkObjectResult(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting upcoming games from SQL");
+            return new ObjectResult(new { error = "Failed to get upcoming games", message = ex.Message })
+            {
+                StatusCode = (int)HttpStatusCode.InternalServerError
+            };
+        }
+    }
+
+    /// <summary>
+    /// Get game recommendations based on a source game
+    /// Route: GET /api/sql/recommendations/{gameId}
+    /// Query params: limit
+    /// </summary>
+    [Function("GetGameRecommendations")]
+    public async Task<IActionResult> GetRecommendations(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "sql/recommendations/{gameId:int}")] HttpRequest req,
+        int gameId)
+    {
+        try
+        {
+            int limit = int.TryParse(req.Query["limit"], out var l) ? Math.Min(l, 20) : 10;
+
+            _logger.LogInformation("SQL GetRecommendations: gameId={GameId}, limit={Limit}", gameId, limit);
+
+            var recommendations = await _gameService.GetRecommendationsAsync(gameId, limit);
+
+            return new OkObjectResult(new
+            {
+                sourceGameId = gameId,
+                recommendations = recommendations,
+                count = recommendations.Count
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting recommendations for game {GameId}", gameId);
+            return new ObjectResult(new { error = "Failed to get recommendations", message = ex.Message })
+            {
+                StatusCode = (int)HttpStatusCode.InternalServerError
+            };
+        }
+    }
+
+    /// <summary>
+    /// Get lookup data (genres, developers, publishers) from SQL database
+    /// Route: GET /api/sql/lookup/{type}
+    /// </summary>
+    [Function("GetLookupData")]
+    public async Task<IActionResult> GetLookupData(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "sql/lookup/{type}")] HttpRequest req,
+        string type)
+    {
+        try
+        {
+            _logger.LogInformation("SQL GetLookup: type={Type}", type);
+
+            object result = type.ToLowerInvariant() switch
+            {
+                "genres" => await _gameService.GetGenresAsync(),
+                "developers" => await _gameService.GetDevelopersAsync(),
+                "publishers" => await _gameService.GetPublishersAsync(),
+                _ => throw new ArgumentException($"Unknown lookup type: {type}")
+            };
+
+            // Add cache headers for lookup data (7 days)
+            var response = new OkObjectResult(new { data = result });
+            return response;
+        }
+        catch (ArgumentException ex)
+        {
+            return new BadRequestObjectResult(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting lookup data for type {Type}", type);
+            return new ObjectResult(new { error = "Failed to get lookup data", message = ex.Message })
+            {
+                StatusCode = (int)HttpStatusCode.InternalServerError
+            };
+        }
+    }
+
+    /// <summary>
+    /// Get database statistics
+    /// Route: GET /api/sql/stats
+    /// </summary>
+    [Function("GetDatabaseStats")]
+    public async Task<IActionResult> GetStats(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "sql/stats")] HttpRequest req)
+    {
+        try
+        {
+            var stats = await _gameService.GetStatsAsync();
+            return new OkObjectResult(stats);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting database stats");
+            return new ObjectResult(new { error = "Failed to get stats", message = ex.Message })
+            {
+                StatusCode = (int)HttpStatusCode.InternalServerError
+            };
+        }
+    }
+
+    // Helper methods
+
+    private static int[]? ParseIntArray(string? value)
+    {
+        if (string.IsNullOrEmpty(value)) return null;
+        
+        try
+        {
+            return value.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => int.TryParse(s.Trim(), out var i) ? i : (int?)null)
+                .Where(i => i.HasValue)
+                .Select(i => i!.Value)
+                .ToArray();
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private class BulkIdsRequest
+    {
+        public int[] Ids { get; set; } = Array.Empty<int>();
+    }
+}
