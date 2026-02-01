@@ -4,8 +4,15 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 // Support both modern publishable keys and legacy anon keys
 const supabaseKey = import.meta.env.VITE_SUPABASE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-// Check if Supabase is configured
+// Environment variable to force demo mode (useful for local development)
+const forceDemoMode = import.meta.env.VITE_FORCE_DEMO_MODE === 'true';
+
+// Check if Supabase is configured (returns false if demo mode is forced)
 export const isSupabaseConfigured = () => {
+  if (forceDemoMode) {
+    console.log('[Demo Mode] Forced via VITE_FORCE_DEMO_MODE=true');
+    return false;
+  }
   const configured = Boolean(supabaseUrl && supabaseKey);
   /*console.log('[Supabase Config]', { 
     configured, 

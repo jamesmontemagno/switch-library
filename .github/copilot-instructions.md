@@ -78,6 +78,7 @@ npm run dev  # Runs on http://localhost:5173
 - `VITE_SUPABASE_KEY` - Modern publishable key (sb_publishable_*) preferred, legacy anon key supported
 - `VITE_API_BASE_URL` - Backend URL (default: `/api` for proxy)
 - `VITE_BASE_PATH` - Base path for routing (e.g., `/switch-library/` for GitHub Pages)
+- `VITE_FORCE_DEMO_MODE` - Set to `true` to force demo mode (localStorage only, no Supabase)
 
 **Backend** ([backend-api/local.settings.json](backend-api/local.settings.json)):
 ```json
