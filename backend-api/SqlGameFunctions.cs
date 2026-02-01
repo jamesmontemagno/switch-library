@@ -38,7 +38,26 @@ public class SqlGameFunctions
             
             int? platformId = int.TryParse(req.Query["platformId"], out var pId) ? pId : null;
             int? releaseYear = int.TryParse(req.Query["releaseYear"], out var ry) ? ry : null;
-            bool? coop = req.Query.ContainsKey("coop") ? bool.Parse(req.Query["coop"].ToString()) : null;
+            bool? coop = null;
+            if (req.Query.ContainsKey("coop"))
+            {
+                var coopRaw = req.Query["coop"].ToString();
+                if (!string.IsNullOrWhiteSpace(coopRaw))
+                {
+                    if (bool.TryParse(coopRaw, out var coopParsed))
+                    {
+                        coop = coopParsed;
+                    }
+                    else
+                    {
+                        return new BadRequestObjectResult(new
+                        {
+                            error = "InvalidParameter",
+                            message = "The 'coop' query parameter must be 'true' or 'false'."
+                        });
+                    }
+                }
+            }
             int? minPlayers = int.TryParse(req.Query["minPlayers"], out var mp) ? mp : null;
             int page = int.TryParse(req.Query["page"], out var p) ? p : 1;
             int pageSize = int.TryParse(req.Query["pageSize"], out var ps) ? Math.Min(ps, 50) : 20;
