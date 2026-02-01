@@ -12,6 +12,9 @@ var builder = FunctionsApplication.CreateBuilder(args);
 
 builder.ConfigureFunctionsWebApplication();
 
+// Note: Response compression in Azure Functions is handled by the Azure infrastructure
+// For custom compression, consider using a middleware approach or rely on Azure's built-in compression
+
 // Add in-memory caching for SQL query results
 builder.Services.AddMemoryCache();
 

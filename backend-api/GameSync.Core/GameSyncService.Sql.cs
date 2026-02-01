@@ -247,6 +247,7 @@ public partial class GameSyncService
 
     /// <summary>
     /// Save lookup data (genres, developers, publishers) to SQL Database
+    /// Uses bulk insert with batching for performance
     /// </summary>
     private async Task SaveLookupDataToSqlAsync(string lookupType, JsonElement data)
     {
@@ -286,13 +287,8 @@ public partial class GameSyncService
             // Items is an object/dictionary with IDs as keys
             if (items.ValueKind == JsonValueKind.Object)
             {
-                var totalCount = items.EnumerateObject().Count();
-                _logger.LogInformation("Processing {Total} {LookupType} records...", totalCount, lookupType);
-                _logger.LogInformation("Starting SQL inserts for {LookupType}...", lookupType);
-                
-                var count = 0;
-                var batchCount = 0;
-                const int logInterval = 100; // Log progress every 100 records for better visibility
+                // Collect all items into a list for bulk processing
+                var itemsToInsert = new List<(int Id, string Name)>();
                 
                 foreach (var item in items.EnumerateObject())
                 {
@@ -303,33 +299,60 @@ public partial class GameSyncService
 
                         if (!string.IsNullOrWhiteSpace(name))
                         {
-                            var sql = $@"
-                                MERGE {tableName} AS target
-                                USING (SELECT @id AS {idColumn}) AS source
-                                ON target.{idColumn} = source.{idColumn}
-                                WHEN MATCHED THEN
-                                    UPDATE SET name = @name, cached_at = GETUTCDATE()
-                                WHEN NOT MATCHED THEN
-                                    INSERT ({idColumn}, name, cached_at)
-                                    VALUES (@id, @name, GETUTCDATE());";
-
-                            await connection.ExecuteAsync(sql, new { id = itemId, name }, 
-                                commandTimeout: _sqlSettings?.CommandTimeout ?? 300);
-                            count++;
-                            batchCount++;
-                            
-                            // Log progress every N records
-                            if (batchCount >= logInterval)
-                            {
-                                _logger.LogInformation("Processed {Count}/{Total} {LookupType}... ({Percent:F1}%)", 
-                                    count, totalCount, lookupType, (count * 100.0 / totalCount));
-                                batchCount = 0;
-                            }
+                            itemsToInsert.Add((itemId, name));
                         }
                     }
                 }
 
-                _logger.LogInformation("Completed: Saved {Count} {LookupType} to SQL database", count, lookupType);
+                var totalCount = itemsToInsert.Count;
+                _logger.LogInformation("Processing {Total} {LookupType} records with bulk insert...", totalCount, lookupType);
+
+                // Process in batches of 500 for optimal performance
+                const int batchSize = 500;
+                var batches = (int)Math.Ceiling(totalCount / (double)batchSize);
+                
+                for (int i = 0; i < batches; i++)
+                {
+                    var batch = itemsToInsert.Skip(i * batchSize).Take(batchSize).ToList();
+                    
+                    // Build VALUES clause for batch insert
+                    var valuesClauses = new List<string>();
+                    var parameters = new DynamicParameters();
+                    
+                    for (int j = 0; j < batch.Count; j++)
+                    {
+                        var paramId = $"@id{j}";
+                        var paramName = $"@name{j}";
+                        valuesClauses.Add($"({paramId}, {paramName}, GETUTCDATE())");
+                        parameters.Add(paramId, batch[j].Id);
+                        parameters.Add(paramName, batch[j].Name);
+                    }
+
+                    // Use MERGE with batched VALUES for efficient upsert
+                    var sql = $@"
+                        MERGE {tableName} AS target
+                        USING (VALUES {string.Join(", ", valuesClauses)}) AS source ({idColumn}, name, cached_at)
+                        ON target.{idColumn} = source.{idColumn}
+                        WHEN MATCHED THEN
+                            UPDATE SET name = source.name, cached_at = source.cached_at
+                        WHEN NOT MATCHED THEN
+                            INSERT ({idColumn}, name, cached_at)
+                            VALUES (source.{idColumn}, source.name, source.cached_at);";
+
+                    await connection.ExecuteAsync(sql, parameters, 
+                        commandTimeout: _sqlSettings?.CommandTimeout ?? 300);
+                    
+                    var processed = (i + 1) * batchSize;
+                    if (processed > totalCount) processed = totalCount;
+                    
+                    if (batches > 1)
+                    {
+                        _logger.LogInformation("Processed batch {Batch}/{TotalBatches}: {Count}/{Total} {LookupType} ({Percent:F1}%)", 
+                            i + 1, batches, processed, totalCount, lookupType, (processed * 100.0 / totalCount));
+                    }
+                }
+
+                _logger.LogInformation("Completed: Saved {Count} {LookupType} to SQL database using bulk insert", totalCount, lookupType);
             }
         }
         catch (Exception ex)

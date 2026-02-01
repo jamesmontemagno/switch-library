@@ -5,10 +5,22 @@
         "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
         "TheGamesDB__ApiKey": "YOUR_THEGAMESDB_API_KEY_HERE",
         "ProductionStorage": "UseDevelopmentStorage=true",
-        "BlobStorage__ContainerName": "games-cache"
+        "BlobStorage__ContainerName": "games-cache",
+        
+        "SqlDatabase__ConnectionString": "Server=localhost;Database=switchlibrary-games;Integrated Security=true;Encrypt=false;Min Pool Size=10;Max Pool Size=100;Connection Timeout=30;",
+        "SqlDatabase__DatabaseName": "switchlibrary-games",
+        "SqlDatabase__CommandTimeout": 300,
+        
+        "StorageMode": "Dual",
+        "Platforms__NintendoSwitch": 4971,
+        "Platforms__NintendoSwitch2": 5021,
+        
+        "Sync__SyncEnabled": true,
+        "Sync__EnableDatabaseInitialization": true
     },
     "Host": {
         "CORS": "*",
         "CORSCredentials": false
     }
 }
+

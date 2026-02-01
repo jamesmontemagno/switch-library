@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Dapper;
 using System.Text.Json;
+using System.Text;
 
 namespace SwitchLibraryApi;
 
@@ -161,44 +162,64 @@ public class SqlGameService
 
         var totalCount = await connection.ExecuteScalarAsync<int>(countSql, parameters);
 
-        // Get paged results with boxart
+        // Get paged results with boxart and related data in a single query using STRING_AGG
         var sql = $@"
-            SELECT DISTINCT
-                g.game_id AS Id,
-                g.game_title AS GameTitle,
-                g.release_date AS ReleaseDate,
-                g.platform AS Platform,
-                p.name AS PlatformName,
-                g.region_id AS RegionId,
-                g.players AS Players,
-                g.overview AS Overview,
-                g.rating AS Rating,
-                g.coop AS Coop,
-                g.youtube AS Youtube,
-                g.alternates AS Alternates,
-                g.last_updated AS LastUpdated,
-                b.filename AS BoxartFilename
-            FROM games_cache g
-            LEFT JOIN platforms p ON g.platform = p.platform_id
-            LEFT JOIN games_boxart b ON g.game_id = b.game_id AND b.type = 'boxart' AND b.side = 'front'
-            {whereClause}
-            ORDER BY 
-                CASE WHEN g.game_title LIKE @ExactMatch THEN 0 ELSE 1 END,
-                CASE WHEN g.region_id IN (1, 2) THEN 0 ELSE 1 END,
-                g.game_title
-            OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+            WITH GameResults AS (
+                SELECT DISTINCT
+                    g.game_id AS Id,
+                    g.game_title AS GameTitle,
+                    g.release_date AS ReleaseDate,
+                    g.platform AS Platform,
+                    p.name AS PlatformName,
+                    g.region_id AS RegionId,
+                    g.players AS Players,
+                    g.overview AS Overview,
+                    g.rating AS Rating,
+                    g.coop AS Coop,
+                    g.youtube AS Youtube,
+                    g.alternates AS Alternates,
+                    g.last_updated AS LastUpdated,
+                    b.filename AS BoxartFilename,
+                    CASE WHEN g.game_title LIKE @ExactMatch THEN 0 ELSE 1 END AS SortOrder1,
+                    CASE WHEN g.region_id IN (1, 2) THEN 0 ELSE 1 END AS SortOrder2
+                FROM games_cache g
+                LEFT JOIN platforms p ON g.platform = p.platform_id
+                LEFT JOIN games_boxart b ON g.game_id = b.game_id AND b.type = 'boxart' AND b.side = 'front'
+                {whereClause}
+                ORDER BY SortOrder1, SortOrder2, g.game_title
+                OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY
+            )
+            SELECT 
+                gr.*,
+                STRING_AGG(CAST(gg.genre_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY lg.name) AS GenreIds,
+                STRING_AGG(lg.name, '|') WITHIN GROUP (ORDER BY lg.name) AS GenreNames,
+                STRING_AGG(CAST(gd.developer_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY ld.name) AS DeveloperIds,
+                STRING_AGG(ld.name, '|') WITHIN GROUP (ORDER BY ld.name) AS DeveloperNames,
+                STRING_AGG(CAST(gp.publisher_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY lp.name) AS PublisherIds,
+                STRING_AGG(lp.name, '|') WITHIN GROUP (ORDER BY lp.name) AS PublisherNames
+            FROM GameResults gr
+            LEFT JOIN games_genres gg ON gr.Id = gg.game_id
+            LEFT JOIN lookup_genres lg ON gg.genre_id = lg.genre_id
+            LEFT JOIN games_developers gd ON gr.Id = gd.game_id
+            LEFT JOIN lookup_developers ld ON gd.developer_id = ld.developer_id
+            LEFT JOIN games_publishers gp ON gr.Id = gp.game_id
+            LEFT JOIN lookup_publishers lp ON gp.publisher_id = lp.publisher_id
+            GROUP BY gr.Id, gr.GameTitle, gr.ReleaseDate, gr.Platform, gr.PlatformName, 
+                     gr.RegionId, gr.Players, gr.Overview, gr.Rating, gr.Coop, 
+                     gr.Youtube, gr.Alternates, gr.LastUpdated, gr.BoxartFilename,
+                     gr.SortOrder1, gr.SortOrder2
+            ORDER BY gr.SortOrder1, gr.SortOrder2, gr.GameTitle";
 
         parameters.Add("ExactMatch", query);
         parameters.Add("Offset", offset);
         parameters.Add("PageSize", pageSize);
 
-        var games = (await connection.QueryAsync<GameSearchRow>(sql, parameters)).ToList();
+        var games = (await connection.QueryAsync<GameSearchRowWithAggregates>(sql, parameters, commandTimeout: 120)).ToList();
 
-        // Get genres, developers, publishers for found games
-        if (games.Count > 0)
+        // Parse aggregated data into proper collections
+        foreach (var game in games)
         {
-            var gameIds = games.Select(g => g.Id).ToArray();
-            await EnrichGamesWithRelatedData(connection, games, gameIds);
+            game.ParseAggregatedData();
         }
 
         _logger.LogInformation("Search found {Count} games (total: {Total})", games.Count, totalCount);
@@ -260,13 +281,28 @@ public class SqlGameService
                 g.sound AS Sound,
                 g.alternates AS Alternates,
                 g.last_updated AS LastUpdated,
-                b.filename AS BoxartFilename
+                b.filename AS BoxartFilename,
+                STRING_AGG(CAST(gg.genre_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY lg.name) AS GenreIds,
+                STRING_AGG(lg.name, '|') WITHIN GROUP (ORDER BY lg.name) AS GenreNames,
+                STRING_AGG(CAST(gd.developer_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY ld.name) AS DeveloperIds,
+                STRING_AGG(ld.name, '|') WITHIN GROUP (ORDER BY ld.name) AS DeveloperNames,
+                STRING_AGG(CAST(gp.publisher_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY lp.name) AS PublisherIds,
+                STRING_AGG(lp.name, '|') WITHIN GROUP (ORDER BY lp.name) AS PublisherNames
             FROM games_cache g
             LEFT JOIN platforms p ON g.platform = p.platform_id
             LEFT JOIN games_boxart b ON g.game_id = b.game_id AND b.type = 'boxart' AND b.side = 'front'
-            WHERE g.game_id = @GameId";
+            LEFT JOIN games_genres gg ON g.game_id = gg.game_id
+            LEFT JOIN lookup_genres lg ON gg.genre_id = lg.genre_id
+            LEFT JOIN games_developers gd ON g.game_id = gd.game_id
+            LEFT JOIN lookup_developers ld ON gd.developer_id = ld.developer_id
+            LEFT JOIN games_publishers gp ON g.game_id = gp.game_id
+            LEFT JOIN lookup_publishers lp ON gp.publisher_id = lp.publisher_id
+            WHERE g.game_id = @GameId
+            GROUP BY g.game_id, g.game_title, g.release_date, g.platform, p.name, g.region_id, 
+                     g.country_id, g.players, g.overview, g.rating, g.coop, g.youtube, g.os, 
+                     g.processor, g.ram, g.hdd, g.video, g.sound, g.alternates, g.last_updated, b.filename";
 
-        var game = await connection.QueryFirstOrDefaultAsync<GameSearchRow>(sql, new { GameId = gameId });
+        var game = await connection.QueryFirstOrDefaultAsync<GameSearchRowWithAggregates>(sql, new { GameId = gameId }, commandTimeout: 120);
 
         if (game == null)
         {
@@ -274,8 +310,8 @@ public class SqlGameService
             return null;
         }
 
-        // Get related data
-        await EnrichGamesWithRelatedData(connection, new List<GameSearchRow> { game }, new[] { gameId });
+        // Parse aggregated data
+        game.ParseAggregatedData();
 
         // Get all boxart for this game
         var boxartSql = @"
@@ -326,18 +362,32 @@ public class SqlGameService
                 g.rating AS Rating,
                 g.coop AS Coop,
                 g.alternates AS Alternates,
-                b.filename AS BoxartFilename
+                b.filename AS BoxartFilename,
+                STRING_AGG(CAST(gg.genre_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY lg.name) AS GenreIds,
+                STRING_AGG(lg.name, '|') WITHIN GROUP (ORDER BY lg.name) AS GenreNames,
+                STRING_AGG(CAST(gd.developer_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY ld.name) AS DeveloperIds,
+                STRING_AGG(ld.name, '|') WITHIN GROUP (ORDER BY ld.name) AS DeveloperNames,
+                STRING_AGG(CAST(gp.publisher_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY lp.name) AS PublisherIds,
+                STRING_AGG(lp.name, '|') WITHIN GROUP (ORDER BY lp.name) AS PublisherNames
             FROM games_cache g
             LEFT JOIN platforms p ON g.platform = p.platform_id
             LEFT JOIN games_boxart b ON g.game_id = b.game_id AND b.type = 'boxart' AND b.side = 'front'
-            WHERE g.game_id IN @GameIds";
+            LEFT JOIN games_genres gg ON g.game_id = gg.game_id
+            LEFT JOIN lookup_genres lg ON gg.genre_id = lg.genre_id
+            LEFT JOIN games_developers gd ON g.game_id = gd.game_id
+            LEFT JOIN lookup_developers ld ON gd.developer_id = ld.developer_id
+            LEFT JOIN games_publishers gp ON g.game_id = gp.game_id
+            LEFT JOIN lookup_publishers lp ON gp.publisher_id = lp.publisher_id
+            WHERE g.game_id IN @GameIds
+            GROUP BY g.game_id, g.game_title, g.release_date, g.platform, p.name, 
+                     g.region_id, g.players, g.overview, g.rating, g.coop, g.alternates, b.filename";
 
-        var games = (await connection.QueryAsync<GameSearchRow>(sql, new { GameIds = gameIds })).ToList();
+        var games = (await connection.QueryAsync<GameSearchRowWithAggregates>(sql, new { GameIds = gameIds }, commandTimeout: 120)).ToList();
 
-        if (games.Count > 0)
+        // Parse aggregated data
+        foreach (var game in games)
         {
-            var foundIds = games.Select(g => g.Id).ToArray();
-            await EnrichGamesWithRelatedData(connection, games, foundIds);
+            game.ParseAggregatedData();
         }
 
         return games.Select(MapToGameDto).ToList();
@@ -400,22 +450,36 @@ public class SqlGameService
                 g.rating AS Rating,
                 g.coop AS Coop,
                 g.alternates AS Alternates,
-                b.filename AS BoxartFilename
+                b.filename AS BoxartFilename,
+                STRING_AGG(CAST(gg.genre_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY lg.name) AS GenreIds,
+                STRING_AGG(lg.name, '|') WITHIN GROUP (ORDER BY lg.name) AS GenreNames,
+                STRING_AGG(CAST(gd.developer_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY ld.name) AS DeveloperIds,
+                STRING_AGG(ld.name, '|') WITHIN GROUP (ORDER BY ld.name) AS DeveloperNames,
+                STRING_AGG(CAST(gp.publisher_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY lp.name) AS PublisherIds,
+                STRING_AGG(lp.name, '|') WITHIN GROUP (ORDER BY lp.name) AS PublisherNames
             FROM games_cache g
             LEFT JOIN platforms p ON g.platform = p.platform_id
             LEFT JOIN games_boxart b ON g.game_id = b.game_id AND b.type = 'boxart' AND b.side = 'front'
+            LEFT JOIN games_genres gg ON g.game_id = gg.game_id
+            LEFT JOIN lookup_genres lg ON gg.genre_id = lg.genre_id
+            LEFT JOIN games_developers gd ON g.game_id = gd.game_id
+            LEFT JOIN lookup_developers ld ON gd.developer_id = ld.developer_id
+            LEFT JOIN games_publishers gp ON g.game_id = gp.game_id
+            LEFT JOIN lookup_publishers lp ON gp.publisher_id = lp.publisher_id
             WHERE g.release_date > @StartDate 
               AND g.release_date <= @EndDate
               {platformFilter}
+            GROUP BY g.game_id, g.game_title, g.release_date, g.platform, p.name, 
+                     g.region_id, g.players, g.overview, g.rating, g.coop, g.alternates, b.filename
             ORDER BY g.release_date ASC, g.game_title
             OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
 
-        var games = (await connection.QueryAsync<GameSearchRow>(sql, parameters)).ToList();
+        var games = (await connection.QueryAsync<GameSearchRowWithAggregates>(sql, parameters, commandTimeout: 120)).ToList();
 
-        if (games.Count > 0)
+        // Parse aggregated data
+        foreach (var game in games)
         {
-            var gameIds = games.Select(g => g.Id).ToArray();
-            await EnrichGamesWithRelatedData(connection, games, gameIds);
+            game.ParseAggregatedData();
         }
 
         var result = new GameSearchResult
@@ -449,10 +513,7 @@ public class SqlGameService
         await using var connection = new SqlConnection(_connectionString);
         await connection.OpenAsync();
 
-        // SQL query that scores games by similarity:
-        // - Same genres: 3 points each
-        // - Same developer: 2 points each
-        // - Same publisher: 1 point each
+        // SQL query that scores games by similarity using single aggregated query
         var sql = @"
             WITH SourceGame AS (
                 SELECT game_id, platform FROM games_cache WHERE game_id = @GameId
@@ -512,21 +573,35 @@ public class SqlGameService
                 g.rating AS Rating,
                 g.coop AS Coop,
                 b.filename AS BoxartFilename,
-                sg.score AS Score
+                sg.score AS Score,
+                STRING_AGG(CAST(gg.genre_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY lg.name) AS GenreIds,
+                STRING_AGG(lg.name, '|') WITHIN GROUP (ORDER BY lg.name) AS GenreNames,
+                STRING_AGG(CAST(gd.developer_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY ld.name) AS DeveloperIds,
+                STRING_AGG(ld.name, '|') WITHIN GROUP (ORDER BY ld.name) AS DeveloperNames,
+                STRING_AGG(CAST(gp.publisher_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY lp.name) AS PublisherIds,
+                STRING_AGG(lp.name, '|') WITHIN GROUP (ORDER BY lp.name) AS PublisherNames
             FROM ScoredGames sg
             JOIN games_cache g ON sg.game_id = g.game_id
             LEFT JOIN platforms p ON g.platform = p.platform_id
             LEFT JOIN games_boxart b ON g.game_id = b.game_id AND b.type = 'boxart' AND b.side = 'front'
+            LEFT JOIN games_genres gg ON g.game_id = gg.game_id
+            LEFT JOIN lookup_genres lg ON gg.genre_id = lg.genre_id
+            LEFT JOIN games_developers gd ON g.game_id = gd.game_id
+            LEFT JOIN lookup_developers ld ON gd.developer_id = ld.developer_id
+            LEFT JOIN games_publishers gp ON g.game_id = gp.game_id
+            LEFT JOIN lookup_publishers lp ON gp.publisher_id = lp.publisher_id
             WHERE sg.score > 0
+            GROUP BY g.game_id, g.game_title, g.release_date, g.platform, p.name, 
+                     g.region_id, g.players, g.overview, g.rating, g.coop, b.filename, sg.score
             ORDER BY sg.score DESC, g.game_title
             OFFSET 0 ROWS FETCH NEXT @Limit ROWS ONLY";
 
-        var games = (await connection.QueryAsync<GameSearchRow>(sql, new { GameId = gameId, Limit = limit })).ToList();
+        var games = (await connection.QueryAsync<GameSearchRowWithAggregates>(sql, new { GameId = gameId, Limit = limit }, commandTimeout: 120)).ToList();
 
-        if (games.Count > 0)
+        // Parse aggregated data
+        foreach (var game in games)
         {
-            var gameIds = games.Select(g => g.Id).ToArray();
-            await EnrichGamesWithRelatedData(connection, games, gameIds);
+            game.ParseAggregatedData();
         }
 
         var result = games.Select(MapToGameDto).ToList();
@@ -729,8 +804,20 @@ public class SqlGameService
     }
 
     // Cache key generation helpers
-    private static string GetSearchCacheKey(string query, int? platformId, int page, int pageSize) =>
-        $"search_{query?.ToLowerInvariant()}_{platformId}_{page}_{pageSize}";
+    private static string GetSearchCacheKey(string query, int? platformId, int page, int pageSize)
+    {
+        var normalized = query?.Trim().ToLowerInvariant() ?? "";
+        var key = $"search_{normalized}_{platformId}_{page}_{pageSize}";
+        
+        // Hash long keys to prevent memory bloat and ensure consistent key format
+        if (key.Length > 100)
+        {
+            using var sha = System.Security.Cryptography.SHA256.Create();
+            var hash = sha.ComputeHash(Encoding.UTF8.GetBytes(key));
+            return $"search_{Convert.ToBase64String(hash).Substring(0, 16).Replace("+", "").Replace("/", "")}";
+        }
+        return key;
+    }
 
     private static string GetGameCacheKey(int gameId) => $"game_{gameId}";
 
@@ -768,6 +855,39 @@ public class SqlGameService
         public List<GameRelatedItem>? Genres { get; set; }
         public List<GameRelatedItem>? Developers { get; set; }
         public List<GameRelatedItem>? Publishers { get; set; }
+    }
+
+    private class GameSearchRowWithAggregates : GameSearchRow
+    {
+        public string? GenreIds { get; set; }
+        public string? GenreNames { get; set; }
+        public string? DeveloperIds { get; set; }
+        public string? DeveloperNames { get; set; }
+        public string? PublisherIds { get; set; }
+        public string? PublisherNames { get; set; }
+
+        public void ParseAggregatedData()
+        {
+            Genres = ParseRelatedItems(GenreIds, GenreNames);
+            Developers = ParseRelatedItems(DeveloperIds, DeveloperNames);
+            Publishers = ParseRelatedItems(PublisherIds, PublisherNames);
+        }
+
+        private List<GameRelatedItem> ParseRelatedItems(string? ids, string? names)
+        {
+            if (string.IsNullOrEmpty(ids) || string.IsNullOrEmpty(names))
+                return new List<GameRelatedItem>();
+
+            var idArray = ids.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            var nameArray = names.Split('|', StringSplitOptions.RemoveEmptyEntries);
+
+            return idArray.Zip(nameArray, (id, name) => new GameRelatedItem
+            {
+                GameId = this.Id,
+                Id = int.Parse(id),
+                Name = name
+            }).ToList();
+        }
     }
 
     private class GameRelatedItem

@@ -273,7 +273,10 @@ public class SqlGameFunctions
                 _ => throw new ArgumentException($"Unknown lookup type: {type}")
             };
 
-            // Add cache headers for lookup data (7 days)
+            // Add cache headers for lookup data (7 days = 604800 seconds)
+            req.HttpContext.Response.Headers["Cache-Control"] = "public, max-age=604800, immutable";
+            req.HttpContext.Response.Headers["Vary"] = "Accept-Encoding";
+            
             var response = new OkObjectResult(new { data = result });
             return response;
         }
