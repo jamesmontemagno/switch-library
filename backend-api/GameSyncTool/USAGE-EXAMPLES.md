@@ -33,26 +33,42 @@ Running in INTERACTIVE mode
 ===========================================
 Main Menu:
 ===========================================
-1. Full Sync - Sync all games
-2. Incremental Sync - Sync only updates
-3. Show Statistics
-4. Exit
+1. Full Sync - Sync all games and lookup data
+2. Sync Games Only - Sync games without lookup data
+3. Incremental Sync - Sync only updates
+4. Sync Genres only
+5. Sync Developers only
+6. Sync Publishers only
+7. Show Statistics
+8. Exit
 
-Select an option (1-4):
+Select an option (1-8):
 ```
 
-**Option 1: Full Sync** - Downloads all games for both platforms:
-- Fetches all Nintendo Switch games (Platform ID: 4918)
-- Fetches all Nintendo Switch 2 games (Platform ID: 4950)
+**Option 1: Full Sync** - Downloads all games and lookup data for both platforms:
+- Fetches all Nintendo Switch games (Platform ID: 4971)
+- Fetches all Nintendo Switch 2 games (Platform ID: 5021)
 - Downloads lookup data (genres, developers, publishers)
+- Prompts whether to sync lookup data (can skip if already synced)
+- Supports pagination control and resume from last page
 - Can take 10-30 minutes depending on API and number of games
 
-**Option 2: Incremental Sync** - Updates only:
+**Option 2: Sync Games Only** - Downloads only games, skips lookup data:
+- Useful when you've already synced genres, developers, and publishers
+- Faster than full sync as it skips lookup data
+- Still supports pagination control and resume
+
+**Option 3: Incremental Sync** - Updates only:
 - Checks last sync timestamp
 - Downloads only new games since last sync
 - Much faster than full sync (typically < 5 minutes)
 
-**Option 3: Show Statistics** - Display cache info:
+**Options 4-6: Sync Individual Lookup Data** - Sync only specific lookup data:
+- Option 4: Sync only Genres
+- Option 5: Sync only Developers
+- Option 6: Sync only Publishers
+
+**Option 7: Show Statistics** - Display cache info:
 ```
 ===========================================
 Cache Statistics:
@@ -61,10 +77,55 @@ Total Games Cached: 1,247
 Last Sync Time: 2026-01-12 14:30:00 UTC
 
 Lookup Data:
-  Genres: ✓ Cached
-  Developers: ✓ Cached
-  Publishers: ✓ Cached
+  Genres: ✓ 32 cached
+  Developers: ✓ 187 cached
+  Publishers: ✓ 215 cached
 ===========================================
+```
+
+### Resume Functionality
+
+If a previous sync was interrupted, when you start a full sync in interactive mode, you'll see:
+
+```
+Previous sync progress detected:
+  Nintendo Switch: Last successful page was 136
+
+How would you like to proceed?
+  [R] Resume from last successful page
+  [P] Specify a page number to start from
+  [S] Start from the beginning (page 1)
+
+Your choice (R/P/S): R
+
+Resuming from page 136
+```
+
+### Lookup Data Prompt
+
+When starting a full sync (Option 1), you'll be asked about lookup data:
+
+```
+Do you want to sync lookup data (Genres, Developers, Publishers)?
+Note: This is required if you haven't synced them before or want to update them.
+Sync lookup data? (Y/N, default Y):
+```
+
+This allows you to skip syncing lookup data if you've already synced it, saving time.
+
+### Pagination Control
+
+During a full sync in interactive mode, after each page you'll see:
+
+```
+-------------------------------------------
+Page 136 completed. 3400 games synced so far.
+What would you like to do?
+  [C] Continue to next page
+  [A] Auto-complete (get the rest without prompting)
+  [Q] Quit sync
+-------------------------------------------
+Your choice (C/A/Q):
 ```
 
 ## Non-Interactive Mode Examples
@@ -72,17 +133,43 @@ Lookup Data:
 ### Command Line with API Key and Connection String
 
 ```bash
-# Full sync
+# Full sync (from beginning)
 dotnet run -- \
   --TheGamesDB:ApiKey=abc123xyz \
   --BlobStorage:ConnectionString="DefaultEndpointsProtocol=https;AccountName=..." \
   --mode=full
+
+# Games only sync (skip lookup data)
+dotnet run -- \
+  --TheGamesDB:ApiKey=abc123xyz \
+  --BlobStorage:ConnectionString="DefaultEndpointsProtocol=https;AccountName=..." \
+  --mode=games-only
+
+# Resume full sync from page 136
+dotnet run -- \
+  --TheGamesDB:ApiKey=abc123xyz \
+  --BlobStorage:ConnectionString="DefaultEndpointsProtocol=https;AccountName=..." \
+  --mode=full \
+  --start-page=136
+
+# Short form
+dotnet run -- \
+  --TheGamesDB:ApiKey=abc123xyz \
+  --BlobStorage:ConnectionString="DefaultEndpointsProtocol=https;AccountName=..." \
+  -m full \
+  -p 136
 
 # Incremental sync (for scheduled tasks)
 dotnet run -- \
   --TheGamesDB:ApiKey=abc123xyz \
   --BlobStorage:ConnectionString="DefaultEndpointsProtocol=https;AccountName=..." \
   --mode=update
+
+# Sync only genres
+dotnet run -- \
+  --TheGamesDB:ApiKey=abc123xyz \
+  --BlobStorage:ConnectionString="DefaultEndpointsProtocol=https;AccountName=..." \
+  --mode=genres
 
 # Show statistics
 dotnet run -- \
@@ -152,7 +239,7 @@ This may take a while depending on the number of games.
 info: GameSyncTool.GameSyncService[0]
       Starting full sync for all Switch and Switch 2 games...
 info: GameSyncTool.GameSyncService[0]
-      Syncing all games for Nintendo Switch (ID: 4918)...
+      Syncing all games for Nintendo Switch (ID: 4971)...
 info: GameSyncTool.GameSyncService[0]
       Fetching page 1 for Nintendo Switch...
 info: GameSyncTool.GameSyncService[0]
@@ -196,15 +283,42 @@ info: GameSyncTool.GameSyncService[0]
 info: GameSyncTool.GameSyncService[0]
       Last sync was at: 01/12/2026 14:30:00
 info: GameSyncTool.GameSyncService[0]
-      Syncing updates for Nintendo Switch (ID: 4918) since 01/12/2026 14:30:00...
+      Syncing updates for Nintendo Switch (ID: 4971) since 01/12/2026 14:30:00...
 info: GameSyncTool.GameSyncService[0]
       Completed syncing 0 updates for Nintendo Switch
 info: GameSyncTool.GameSyncService[0]
-      Syncing updates for Nintendo Switch 2 (ID: 4950) since 01/12/2026 14:30:00...
+      Syncing updates for Nintendo Switch 2 (ID: 5021) since 01/12/2026 14:30:00...
 info: GameSyncTool.GameSyncService[0]
       Completed syncing 0 updates for Nintendo Switch 2
 
 ✓ Incremental sync completed successfully in 0.12 minutes!
+```
+
+### Timeout with Retry and Resume
+```
+info: GameSyncTool.GameSyncService[0]
+      Fetching page 136 for Nintendo Switch...
+fail: GameSyncTool.GameSyncService[0]
+      API request failed: GatewayTimeout
+warn: GameSyncTool.GameSyncService[0]
+      Retrying in 5000ms (attempt 1/3)...
+fail: GameSyncTool.GameSyncService[0]
+      API request failed: GatewayTimeout
+warn: GameSyncTool.GameSyncService[0]
+      Retrying in 10000ms (attempt 2/3)...
+fail: GameSyncTool.GameSyncService[0]
+      API request failed: GatewayTimeout
+warn: GameSyncTool.GameSyncService[0]
+      Retrying in 20000ms (attempt 3/3)...
+fail: GameSyncTool.GameSyncService[0]
+      API request failed: GatewayTimeout
+fail: GameSyncTool.GameSyncService[0]
+      Failed to fetch page 136 after 3 retries
+
+✗ Full sync failed: API request failed after retries
+
+Last successful page was 135. You can resume with:
+  dotnet run -- --mode=full --start-page=136
 ```
 
 ## Troubleshooting
@@ -235,6 +349,44 @@ Error getting statistics: Retry failed after 6 tries... (Connection refused)
 
 ### Rate Limiting
 If you encounter rate limiting from TheGamesDB API:
-- The tool includes a 500ms delay between page requests
+- The tool includes a 2 second delay between page requests
 - Consider running syncs less frequently
 - Use incremental sync instead of full sync when possible
+
+### Timeout and Gateway Errors
+```
+fail: GameSyncTool.GameSyncService[0]
+      API request failed: GatewayTimeout
+```
+**What the tool does automatically**:
+- Retries failed requests up to 3 times with exponential backoff (5s, 10s, 20s)
+- Saves the last successful page number before failing
+- HttpClient timeout is set to 5 minutes
+
+**How to resume**:
+
+**Interactive Mode**: When you restart, you'll be prompted to resume:
+```
+Previous sync progress detected:
+  Nintendo Switch: Last successful page was 136
+
+How would you like to proceed?
+  [R] Resume from last successful page
+  [P] Specify a page number to start from
+  [S] Start from the beginning (page 1)
+
+Your choice (R/P/S): R
+```
+
+**Non-Interactive Mode**: Use `--start-page` argument:
+```bash
+# Resume from the last successful page
+dotnet run -- --mode=full --start-page=136
+```
+
+### Network Errors
+```
+warn: GameSyncTool.GameSyncService[0]
+      Network error on page 136. Retrying in 5000ms (attempt 1/3)...
+```
+The tool will automatically retry with exponential backoff. If all retries fail, the last successful page is saved and you can resume from there.

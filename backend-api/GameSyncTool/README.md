@@ -6,8 +6,10 @@ A .NET console application for syncing Nintendo Switch and Nintendo Switch 2 gam
 
 - **Full Sync**: Download all games for Nintendo Switch and Switch 2 platforms
 - **Incremental Sync**: Update only games that have been modified since the last sync
-- **Interactive Mode**: User-friendly menu-driven interface
+- **Interactive Mode**: User-friendly menu-driven interface with pagination control
 - **Non-Interactive Mode**: Command-line automation for scheduled tasks
+- **Resume Capability**: Resume interrupted syncs from the last successful page
+- **Retry Logic**: Automatic retry with exponential backoff for timeout and network errors
 - **Lookup Data Sync**: Sync genres, developers, and publishers
 - **Statistics**: View cache statistics and sync status
 
@@ -48,8 +50,8 @@ Configure the tool by editing `appsettings.json`:
     "ContainerName": "games-cache"
   },
   "Platforms": {
-    "NintendoSwitch": 4918,
-    "NintendoSwitch2": 4950
+    "NintendoSwitch": 4971,
+    "NintendoSwitch2": 5021
   }
 }
 ```
@@ -108,6 +110,44 @@ Or:
 
 ```bash
 dotnet run -- --mode=all
+```
+
+##### Games Only Sync
+
+If you've already synced lookup data (genres, developers, publishers) and only want to sync games:
+
+```bash
+dotnet run -- --mode=games
+# or
+dotnet run -- --mode=games-only
+```
+
+##### Resume from Last Page
+
+If a previous sync was interrupted, you can resume from the last successful page:
+
+**Interactive Mode** (default): When you start a full sync in interactive mode, if there's a previous sync with a saved page number, you'll be prompted:
+
+```
+Previous sync progress detected:
+  Nintendo Switch: Last successful page was 136
+
+How would you like to proceed?
+  [R] Resume from last successful page
+  [P] Specify a page number to start from
+  [S] Start from the beginning (page 1)
+
+Your choice (R/P/S):
+```
+
+**Non-Interactive Mode**: Use the `--start-page` argument:
+
+```bash
+# Resume from page 136
+dotnet run -- --mode=full --start-page=136
+
+# Short form
+dotnet run -- -m full -p 136
 ```
 
 #### Incremental Sync
@@ -222,23 +262,32 @@ public async Task Run([TimerTrigger("0 0 2 * * *")] TimerInfo myTimer)
 ## How It Works
 
 1. **Full Sync**: 
-   - Fetches all games for Nintendo Switch (Platform ID: 4918)
-   - Fetches all games for Nintendo Switch 2 (Platform ID: 4950)
+   - Fetches all games for Nintendo Switch (Platform ID: 4971)
+   - Fetches all games for Nintendo Switch 2 (Platform ID: 5021)
    - Fetches lookup data (genres, developers, publishers)
    - Saves all data to Azure Blob Storage as JSON files
    - Each game is saved as `game-{id}.json`
+   - Tracks the last successful page for resume capability
 
 2. **Incremental Sync**:
    - Reads the last sync timestamp from blob storage
    - Fetches games that were updated since the last sync
    - Updates the last sync timestamp
 
-3. **Storage Format**:
+3. **Retry Logic**:
+   - Automatically retries failed API requests up to 3 times
+   - Uses exponential backoff (5s, 10s, 20s delays)
+   - Handles timeouts, gateway errors, and network issues
+   - Saves the last successful page before failing
+   - HttpClient timeout increased to 5 minutes for slow responses
+
+4. **Storage Format**:
    - Games: `game-{id}.json` (e.g., `game-12345.json`)
    - Genres: `lookup-genres.json`
    - Developers: `lookup-developers.json`
    - Publishers: `lookup-publishers.json`
    - Last Sync: `last-sync.txt`
+   - Last Page (per platform): `last-page-platform-{id}.txt` (e.g., `last-page-platform-4971.txt`)
 
 ## Troubleshooting
 
@@ -260,13 +309,34 @@ Solution: Set your Azure Storage connection string in `appsettings.json`.
 
 ### Rate Limiting
 
-TheGamesDB API has rate limits. The tool includes a 500ms delay between page requests to avoid hitting rate limits. If you still encounter rate limiting, you can modify the delay in `GameSyncService.cs`.
+TheGamesDB API has rate limits. The tool includes a 2 second delay between page requests to avoid hitting rate limits. If you still encounter rate limiting, you can modify the delay in `GameSyncService.cs`.
+
+### Timeout Errors
+
+If you encounter `GatewayTimeout` or `RequestTimeout` errors:
+
+**What the tool does automatically**:
+- Retries failed requests up to 3 times
+- Uses exponential backoff (5s, 10s, 20s)
+- Saves the last successful page before failing
+- HttpClient timeout is set to 5 minutes
+
+**What you can do**:
+- Resume from the last successful page (see "Resume from Last Page" above)
+- The tool will prompt you in interactive mode
+- In non-interactive mode, use `--start-page=<page-number>`
+
+**Example**: If sync fails at page 140:
+```bash
+# Resume from where it left off
+dotnet run -- --mode=full --start-page=140
+```
 
 ## Platform IDs
 
 The following platform IDs are used:
-- **Nintendo Switch**: 4918
-- **Nintendo Switch 2**: 4950
+- **Nintendo Switch**: 4971
+- **Nintendo Switch 2**: 5021
 
 These IDs are configured in `appsettings.json` and can be modified if needed.
 

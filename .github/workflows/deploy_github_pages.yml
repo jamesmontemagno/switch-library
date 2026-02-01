@@ -6,6 +6,19 @@ on:
   push:
     branches:
       - main
+    paths:
+      # Frontend source code
+      - 'src/**'
+      - 'public/**'
+      - 'index.html'
+      # Build configuration
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.ts'
+      - 'tsconfig*.json'
+      - 'eslint.config.js'
+      # Workflow itself
+      - '.github/workflows/deploy_github_pages.yml'
   workflow_dispatch:
 
 permissions:
