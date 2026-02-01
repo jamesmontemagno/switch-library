@@ -16,7 +16,9 @@
         "Platforms__NintendoSwitch2": 5021,
         
         "Sync__SyncEnabled": true,
-        "Sync__EnableDatabaseInitialization": true
+        "Sync__EnableDatabaseInitialization": true,
+        
+        "AdminFunctionKey": "YOUR_ADMIN_FUNCTION_KEY_HERE"
     },
     "Host": {
         "CORS": "*",

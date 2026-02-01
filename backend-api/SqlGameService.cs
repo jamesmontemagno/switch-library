@@ -701,7 +701,13 @@ public class SqlGameService
                 (SELECT COUNT(*) FROM lookup_genres) AS TotalGenres,
                 (SELECT COUNT(*) FROM lookup_developers) AS TotalDevelopers,
                 (SELECT COUNT(*) FROM lookup_publishers) AS TotalPublishers,
-                (SELECT last_sync_time FROM sync_metadata WHERE id = 1) AS LastSyncTime";
+                (SELECT last_sync_time FROM sync_metadata WHERE id = 1) AS LastSyncTime,
+                (SELECT sync_type FROM sync_metadata WHERE id = 1) AS SyncType,
+                (SELECT games_synced FROM sync_metadata WHERE id = 1) AS GamesSynced,
+                (SELECT COUNT(*) FROM games_cache WHERE boxart IS NOT NULL AND boxart != '') AS GamesWithBoxart,
+                (SELECT COUNT(*) FROM games_cache WHERE overview IS NOT NULL AND overview != '') AS GamesWithOverview,
+                (SELECT COALESCE(AVG(CAST(rating AS FLOAT)), 0) FROM games_cache WHERE rating IS NOT NULL AND TRY_CAST(rating AS FLOAT) IS NOT NULL) AS AverageRating,
+                (SELECT COUNT(*) FROM games_cache WHERE coop = 'Yes') AS GamesWithCoop";
 
         var stats = await connection.QueryFirstAsync<DatabaseStatsDto>(sql);
         
@@ -973,4 +979,10 @@ public class DatabaseStatsDto
     public int TotalDevelopers { get; set; }
     public int TotalPublishers { get; set; }
     public DateTime? LastSyncTime { get; set; }
+    public string? SyncType { get; set; }
+    public int? GamesSynced { get; set; }
+    public int GamesWithBoxart { get; set; }
+    public int GamesWithOverview { get; set; }
+    public double AverageRating { get; set; }
+    public int GamesWithCoop { get; set; }
 }

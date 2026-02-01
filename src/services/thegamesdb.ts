@@ -691,6 +691,12 @@ export interface DatabaseStats {
   totalDevelopers: number;
   totalPublishers: number;
   lastSyncTime?: string;
+  syncType?: string;
+  gamesSynced?: number;
+  gamesWithBoxart: number;
+  gamesWithOverview: number;
+  averageRating: number;
+  gamesWithCoop: number;
 }
 
 export async function getDatabaseStats(): Promise<DatabaseStats | null> {
@@ -705,6 +711,23 @@ export async function getDatabaseStats(): Promise<DatabaseStats | null> {
     return await response.json();
   } catch (error) {
     logger.error('Failed to get database stats', error);
+    return null;
+  }
+}
+
+// Get admin database statistics (requires function key)
+export async function getAdminDatabaseStats(functionKey: string): Promise<DatabaseStats | null> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/database-stats?code=${functionKey}`);
+    
+    if (!response.ok) {
+      logger.error('Admin stats fetch error', new Error(`Status ${response.status}`));
+      return null;
+    }
+
+    return await response.json();
+  } catch (error) {
+    logger.error('Failed to get admin database stats', error);
     return null;
   }
 }

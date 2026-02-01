@@ -295,7 +295,30 @@ public class SqlGameFunctions
     }
 
     /// <summary>
-    /// Get database statistics
+    /// Get database statistics (Admin only - requires function key)
+    /// Route: GET /api/admin/database-stats
+    /// </summary>
+    [Function("GetDatabaseStatsAdmin")]
+    public async Task<IActionResult> GetDatabaseStatsAdmin(
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "admin/database-stats")] HttpRequest req)
+    {
+        try
+        {
+            var stats = await _gameService.GetStatsAsync();
+            return new OkObjectResult(stats);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting database stats");
+            return new ObjectResult(new { error = "Failed to get database stats", message = ex.Message })
+            {
+                StatusCode = (int)HttpStatusCode.InternalServerError
+            };
+        }
+    }
+
+    /// <summary>
+    /// Get database statistics (Public - for backward compatibility, kept anonymous)
     /// Route: GET /api/stats
     /// </summary>
     [Function("GetDatabaseStats")]

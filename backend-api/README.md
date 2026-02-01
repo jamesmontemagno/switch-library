@@ -48,7 +48,96 @@ See [GameSyncTool/README.md](GameSyncTool/README.md) for complete usage instruct
 
 ## API Endpoints
 
-### TheGamesDB Proxy
+### SQL Database Endpoints (Public Access)
+
+#### Search Games
+- **Route**: `GET /api/search`
+- **Description**: Search games from SQL database with filters and pagination
+- **Query Parameters**:
+  - `query`: Search term
+  - `platformId`: Platform ID (4971 = Switch, 5021 = Switch 2)
+  - `genreIds`: Comma-separated genre IDs
+  - `developerIds`: Comma-separated developer IDs
+  - `publisherIds`: Comma-separated publisher IDs
+  - `releaseYear`: Filter by release year
+  - `coop`: Filter by co-op support (true/false)
+  - `minPlayers`: Minimum player count
+  - `page`: Page number (default: 1)
+  - `pageSize`: Results per page (default: 20, max: 50)
+- **Example**: `GET /api/search?query=zelda&platformId=4971&page=1`
+
+#### Get Game By ID
+- **Route**: `GET /api/games/{gameId}`
+- **Description**: Gets single game details by ID from SQL database
+- **Example**: `GET /api/games/12345`
+
+#### Get Games By IDs (Bulk)
+- **Route**: `POST /api/games/bulk`
+- **Description**: Gets multiple game details by IDs from SQL database
+- **Request Body**: 
+  ```json
+  {
+    "ids": [123, 456, 789]
+  }
+  ```
+- **Example**: `POST /api/games/bulk` with body `{"ids": [1, 2, 3]}`
+
+#### Get Upcoming Games
+- **Route**: `GET /api/upcoming`
+- **Description**: Gets upcoming game releases from SQL database
+- **Query Parameters**:
+  - `days`: Number of days ahead (default: 90, max: 365)
+  - `platformId`: Platform ID filter
+  - `page`: Page number (default: 1)
+  - `pageSize`: Results per page (default: 20, max: 50)
+- **Example**: `GET /api/upcoming?days=90&platformId=4971`
+
+#### Get Game Recommendations
+- **Route**: `GET /api/recommendations/{gameId}`
+- **Description**: Gets game recommendations based on genres, developers, publishers
+- **Query Parameters**:
+  - `limit`: Number of recommendations (default: 10, max: 20)
+- **Example**: `GET /api/recommendations/12345?limit=10`
+
+#### Get Lookup Data
+- **Route**: `GET /api/lookup/{type}`
+- **Description**: Gets lookup data (genres, developers, publishers) from SQL database
+- **Path Parameter**: `type` - One of: `genres`, `developers`, `publishers`
+- **Example**: `GET /api/lookup/genres`
+
+#### Get Database Statistics
+- **Route**: `GET /api/stats`
+- **Description**: Gets basic database statistics (public access, cached for 5 minutes)
+- **Example**: `GET /api/stats`
+
+### Admin Endpoints (Function Key Required)
+
+#### Get Admin Database Statistics
+- **Route**: `GET /api/admin/database-stats`
+- **Authorization**: Function-level key required
+- **Description**: Gets detailed database statistics including sync information, data coverage, and quality metrics
+- **Response**:
+  ```json
+  {
+    "totalGames": 50000,
+    "switchGames": 45000,
+    "switch2Games": 5000,
+    "totalGenres": 25,
+    "totalDevelopers": 5000,
+    "totalPublishers": 3000,
+    "lastSyncTime": "2026-02-01T00:00:00Z",
+    "syncType": "incremental",
+    "gamesSynced": 150,
+    "gamesWithBoxart": 48000,
+    "gamesWithOverview": 40000,
+    "averageRating": 7.2,
+    "gamesWithCoop": 12000
+  }
+  ```
+- **Example**: `GET /api/admin/database-stats?code=YOUR_FUNCTION_KEY`
+- **Note**: Only accessible by administrators with valid function key. Used by the admin dashboard to display backend database health and statistics.
+
+### TheGamesDB Proxy (Legacy - Still Available)
 - **Route**: `GET /api/thegamesdb/{*path}`
 - **Description**: Proxies requests to `https://api.thegamesdb.net/v1/{path}` and automatically adds the API key
 - **Caching**: When search requests are made (`Games/ByGameName`), automatically caches all returned games to blob storage in the background
@@ -195,11 +284,24 @@ In Azure Portal, configure CORS for your Function App:
 
 ### Application Settings
 Configure the following application settings in the Azure Portal (Function App → Configuration → Application settings):
-- `TheGamesDB__ApiKey`: Your TheGamesDB API key
-- `ProductionStorage`: Azure Blob Storage connection string (use your storage account connection string in production)
+- `TheGamesDB__ApiKey`: Your TheGamesDB API key (required for nightly sync)
+- `SqlDatabase__ConnectionString`: Azure SQL Database connection string
+- `ProductionStorage`: Azure Blob Storage connection string (optional, for legacy blob caching)
 - `BlobStorage__ContainerName`: Name of the blob container for caching game data (default: `games-cache`)
+- `StorageMode`: Storage mode for sync operations (`Sql`, `Blob`, or `Dual`)
+- `Sync__SyncEnabled`: Enable/disable nightly sync (default: `true`)
 
-These settings store the API key securely on the server side and enable blob storage caching for game details.
+**For Admin Dashboard:**
+To enable the admin database statistics endpoint, you need to configure a function key:
+
+1. In Azure Portal, go to your Function App → Functions → GetDatabaseStatsAdmin
+2. Click "Function Keys" in the left menu
+3. Add a new function key with a name like "admin-dashboard"
+4. Copy the key value
+5. In your frontend deployment (GitHub Actions secrets or environment variables), add:
+   - `VITE_ADMIN_FUNCTION_KEY`: The function key value
+
+This key secures the admin-only statistics endpoint and should only be accessible by authenticated administrators.
 
 ## Security Considerations
 

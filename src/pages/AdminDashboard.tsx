@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSEO } from '../hooks/useSEO';
 import { getAdminStatistics, type AdminStatistics } from '../services/database';
+import { getAdminDatabaseStats, type DatabaseStats } from '../services/thegamesdb';
 import { logger } from '../services/logger';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
@@ -11,12 +12,21 @@ import {
   faSearch,
   faChartBar,
   faTrophy,
-  faChartLine
+  faChartLine,
+  faDatabase,
+  faSync,
+  faImage,
+  faFileAlt,
+  faStar,
+  faUserPlus
 } from '@fortawesome/free-solid-svg-icons';
 import './AdminDashboard.css';
 
+const ADMIN_FUNCTION_KEY = import.meta.env.VITE_ADMIN_FUNCTION_KEY || '';
+
 export function AdminDashboard() {
   const [stats, setStats] = useState<AdminStatistics | null>(null);
+  const [backendStats, setBackendStats] = useState<DatabaseStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,6 +42,7 @@ export function AdminDashboard() {
       setError(null);
       
       try {
+        // Load Supabase statistics
         logger.debug('AdminDashboard: Calling getAdminStatistics()');
         const data = await getAdminStatistics();
         if (data) {
@@ -43,6 +54,22 @@ export function AdminDashboard() {
         } else {
           logger.error('AdminDashboard: getAdminStatistics returned null');
           setError('Failed to load statistics. Admin dashboard only works with Supabase mode.');
+        }
+
+        // Load backend database statistics if function key is available
+        if (ADMIN_FUNCTION_KEY) {
+          logger.debug('AdminDashboard: Calling getAdminDatabaseStats()');
+          const backendData = await getAdminDatabaseStats(ADMIN_FUNCTION_KEY);
+          if (backendData) {
+            logger.info('AdminDashboard: Backend statistics loaded successfully', { 
+              totalGames: backendData.totalGames 
+            });
+            setBackendStats(backendData);
+          } else {
+            logger.warn('AdminDashboard: getAdminDatabaseStats returned null');
+          }
+        } else {
+          logger.warn('AdminDashboard: VITE_ADMIN_FUNCTION_KEY not configured');
         }
       } catch (err) {
         logger.error('AdminDashboard: Error loading statistics', err);
@@ -367,6 +394,174 @@ export function AdminDashboard() {
                   </span>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Backend Database Statistics */}
+        {backendStats && (
+          <div className="dashboard-section backend-stats-section">
+            <h2>
+              <FontAwesomeIcon icon={faDatabase} /> Backend Game Database
+            </h2>
+            <p className="section-subtitle">
+              Azure SQL Database statistics (cached for 5 minutes)
+            </p>
+
+            {/* Database Sync Info */}
+            {backendStats.lastSyncTime && (
+              <div className="sync-info">
+                <div className="sync-info-item">
+                  <FontAwesomeIcon icon={faSync} className="sync-icon" />
+                  <div>
+                    <strong>Last Synced:</strong>{' '}
+                    {new Date(backendStats.lastSyncTime).toLocaleString('en-US', {
+                      dateStyle: 'medium',
+                      timeStyle: 'short',
+                    })}
+                  </div>
+                </div>
+                {backendStats.syncType && (
+                  <div className="sync-info-item">
+                    <strong>Sync Type:</strong> {backendStats.syncType}
+                  </div>
+                )}
+                {backendStats.gamesSynced !== undefined && (
+                  <div className="sync-info-item">
+                    <strong>Games Synced:</strong> {backendStats.gamesSynced.toLocaleString()}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Backend Stats Grid */}
+            <div className="stats-grid backend-stats-grid">
+              <div className="stat-card backend-stat-card">
+                <div className="stat-icon">
+                  <FontAwesomeIcon icon={faDatabase} />
+                </div>
+                <div className="stat-content">
+                  <div className="stat-label">Total Games in DB</div>
+                  <div className="stat-value">{backendStats.totalGames.toLocaleString()}</div>
+                </div>
+              </div>
+
+              <div className="stat-card backend-stat-card">
+                <div className="stat-icon">
+                  <FontAwesomeIcon icon={faGamepad} />
+                </div>
+                <div className="stat-content">
+                  <div className="stat-label">Nintendo Switch</div>
+                  <div className="stat-value">{backendStats.switchGames.toLocaleString()}</div>
+                  <div className="stat-meta">
+                    {((backendStats.switchGames / backendStats.totalGames) * 100).toFixed(1)}% of total
+                  </div>
+                </div>
+              </div>
+
+              <div className="stat-card backend-stat-card">
+                <div className="stat-icon">
+                  <FontAwesomeIcon icon={faGamepad} />
+                </div>
+                <div className="stat-content">
+                  <div className="stat-label">Nintendo Switch 2</div>
+                  <div className="stat-value">{backendStats.switch2Games.toLocaleString()}</div>
+                  <div className="stat-meta">
+                    {((backendStats.switch2Games / backendStats.totalGames) * 100).toFixed(1)}% of total
+                  </div>
+                </div>
+              </div>
+
+              <div className="stat-card backend-stat-card">
+                <div className="stat-icon">
+                  <FontAwesomeIcon icon={faChartBar} />
+                </div>
+                <div className="stat-content">
+                  <div className="stat-label">Total Genres</div>
+                  <div className="stat-value">{backendStats.totalGenres.toLocaleString()}</div>
+                </div>
+              </div>
+
+              <div className="stat-card backend-stat-card">
+                <div className="stat-icon">
+                  <FontAwesomeIcon icon={faUserPlus} />
+                </div>
+                <div className="stat-content">
+                  <div className="stat-label">Total Developers</div>
+                  <div className="stat-value">{backendStats.totalDevelopers.toLocaleString()}</div>
+                </div>
+              </div>
+
+              <div className="stat-card backend-stat-card">
+                <div className="stat-icon">
+                  <FontAwesomeIcon icon={faUserPlus} />
+                </div>
+                <div className="stat-content">
+                  <div className="stat-label">Total Publishers</div>
+                  <div className="stat-value">{backendStats.totalPublishers.toLocaleString()}</div>
+                </div>
+              </div>
+
+              <div className="stat-card backend-stat-card">
+                <div className="stat-icon">
+                  <FontAwesomeIcon icon={faImage} />
+                </div>
+                <div className="stat-content">
+                  <div className="stat-label">Games with Boxart</div>
+                  <div className="stat-value">{backendStats.gamesWithBoxart.toLocaleString()}</div>
+                  <div className="stat-meta">
+                    {((backendStats.gamesWithBoxart / backendStats.totalGames) * 100).toFixed(1)}% coverage
+                  </div>
+                </div>
+              </div>
+
+              <div className="stat-card backend-stat-card">
+                <div className="stat-icon">
+                  <FontAwesomeIcon icon={faFileAlt} />
+                </div>
+                <div className="stat-content">
+                  <div className="stat-label">Games with Overview</div>
+                  <div className="stat-value">{backendStats.gamesWithOverview.toLocaleString()}</div>
+                  <div className="stat-meta">
+                    {((backendStats.gamesWithOverview / backendStats.totalGames) * 100).toFixed(1)}% coverage
+                  </div>
+                </div>
+              </div>
+
+              <div className="stat-card backend-stat-card">
+                <div className="stat-icon">
+                  <FontAwesomeIcon icon={faStar} />
+                </div>
+                <div className="stat-content">
+                  <div className="stat-label">Average Rating</div>
+                  <div className="stat-value">{backendStats.averageRating.toFixed(2)}</div>
+                </div>
+              </div>
+
+              <div className="stat-card backend-stat-card">
+                <div className="stat-icon">
+                  <FontAwesomeIcon icon={faUserFriends} />
+                </div>
+                <div className="stat-content">
+                  <div className="stat-label">Co-op Games</div>
+                  <div className="stat-value">{backendStats.gamesWithCoop.toLocaleString()}</div>
+                  <div className="stat-meta">
+                    {((backendStats.gamesWithCoop / backendStats.totalGames) * 100).toFixed(1)}% of total
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Show message if function key is not configured */}
+        {!ADMIN_FUNCTION_KEY && (
+          <div className="dashboard-section">
+            <div className="info-message">
+              <FontAwesomeIcon icon={faDatabase} />
+              <p>
+                Backend database statistics are not available. Configure <code>VITE_ADMIN_FUNCTION_KEY</code> environment variable to enable.
+              </p>
             </div>
           </div>
         )}
