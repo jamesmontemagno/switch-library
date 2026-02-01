@@ -345,6 +345,7 @@ class Program
 
         // Determine start page
         var startPage = 1;
+        var startTime = DateTime.UtcNow;
         
         if (forcedStartPage > 0)
         {
@@ -390,10 +391,14 @@ class Program
             switch (choice)
             {
                 case "R" when (switchLastPage.HasValue || switch2LastPage.HasValue):
-                    // Use the maximum of the two last pages
-                    startPage = Math.Max(switchLastPage ?? 1, switch2LastPage ?? 1);
-                    Console.WriteLine($"Resuming from page {startPage}");
-                    break;
+                    // Use separate resume pages for each platform
+                    var switchResume = switchLastPage.HasValue ? switchLastPage.Value + 1 : 1;
+                    var switch2Resume = switch2LastPage.HasValue ? switch2LastPage.Value + 1 : 1;
+                    Console.WriteLine($"Resuming Nintendo Switch from page {switchResume}");
+                    Console.WriteLine($"Resuming Nintendo Switch 2 from page {switch2Resume}");
+                    
+                    await PerformFullSyncWithSeparatePages(syncService, interactiveMode, switchResume, switch2Resume, shouldSyncLookupData, startTime);
+                    return;
 
                 case "P":
                     Console.Write("Enter page number to start from: ");
@@ -427,12 +432,34 @@ class Program
             }
             Console.WriteLine();
         }
-
-        var startTime = DateTime.UtcNow;
         
         try
         {
-            await syncService.SyncAllGamesAsync(interactiveMode, startPage, shouldSyncLookupData);
+            // For non-resume cases, use the same start page for both platforms
+            await syncService.SyncAllGamesAsync(interactiveMode, startPage, startPage, shouldSyncLookupData);
+            
+            var duration = DateTime.UtcNow - startTime;
+            Console.WriteLine();
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"✓ Full sync completed successfully in {duration.TotalMinutes:F2} minutes!");
+            Console.ResetColor();
+        }
+        catch (Exception ex)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"✗ Full sync failed: {ex.Message}");
+            Console.ResetColor();
+        }
+
+        Console.WriteLine();
+        await ShowStatisticsAsync(syncService);
+        Console.WriteLine();
+    }
+    static async Task PerformFullSyncWithSeparatePages(GameSyncService syncService, bool interactiveMode, int switchStartPage, int switch2StartPage, bool shouldSyncLookupData, DateTime startTime)
+    {
+        try
+        {
+            await syncService.SyncAllGamesAsync(interactiveMode, switchStartPage, switch2StartPage, shouldSyncLookupData);
             
             var duration = DateTime.UtcNow - startTime;
             Console.WriteLine();

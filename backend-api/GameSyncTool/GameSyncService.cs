@@ -162,9 +162,10 @@ public partial class GameSyncService
     /// Sync all games for Nintendo Switch and Switch 2 platforms
     /// </summary>
     /// <param name="interactiveMode">Enable interactive pagination prompts</param>
-    /// <param name="startPage">Page number to start syncing from (default: 1)</param>
+    /// <param name="switchStartPage">Page number to start syncing Nintendo Switch from (default: 1)</param>
+    /// <param name="switch2StartPage">Page number to start syncing Nintendo Switch 2 from (default: 1)</param>
     /// <param name="syncLookupData">Whether to sync lookup data (genres, developers, publishers) before games</param>
-    public async Task SyncAllGamesAsync(bool interactiveMode = false, int startPage = 1, bool syncLookupData = true)
+    public async Task SyncAllGamesAsync(bool interactiveMode = false, int switchStartPage = 1, int switch2StartPage = 1, bool syncLookupData = true)
     {
         _logger.LogInformation("Starting full sync for all Switch and Switch 2 games...");
 
@@ -186,8 +187,8 @@ public partial class GameSyncService
         }
 
         // Now sync games (they can reference the lookup data)
-        var switchCount = await SyncPlatformGamesAsync(_switchPlatformId, "Nintendo Switch", interactiveMode, startPage);
-        var switch2Count = await SyncPlatformGamesAsync(_switch2PlatformId, "Nintendo Switch 2", interactiveMode, startPage);
+        var switchCount = await SyncPlatformGamesAsync(_switchPlatformId, "Nintendo Switch", interactiveMode, switchStartPage);
+        var switch2Count = await SyncPlatformGamesAsync(_switch2PlatformId, "Nintendo Switch 2", interactiveMode, switch2StartPage);
 
         // Update the last sync timestamp with total games synced
         await SaveLastSyncTimeAsync("full", switchCount + switch2Count);
