@@ -1,13 +1,20 @@
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useSEO } from '../hooks/useSEO';
+import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPenToSquare, faClipboardList, faGamepad, faShareNodes, faMagnifyingGlass, faCloud } from '@fortawesome/free-solid-svg-icons';
+import { faPenToSquare, faClipboardList, faGamepad, faShareNodes, faMagnifyingGlass, faCloud, faCalendarDays, faArrowRight } from '@fortawesome/free-solid-svg-icons';
+import { getUpcomingGames, type BulkGameResult } from '../services/thegamesdb';
 import './Home.css';
 
 export function Home() {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const isOnline = useOnlineStatus();
+  
+  const [upcomingGames, setUpcomingGames] = useState<BulkGameResult[]>([]);
+  const [isLoadingUpcoming, setIsLoadingUpcoming] = useState(true);
 
   useSEO({
     title: 'My Switch Library - Track Your Nintendo Switch Game Collection',
@@ -15,12 +22,39 @@ export function Home() {
     url: 'https://myswitchlibrary.com/',
   });
 
+  // Load a few upcoming games
+  useEffect(() => {
+    const loadUpcoming = async () => {
+      if (!isOnline) {
+        setIsLoadingUpcoming(false);
+        return;
+      }
+      
+      try {
+        const result = await getUpcomingGames(60, undefined, 1, 6);
+        setUpcomingGames(result.games);
+      } catch (error) {
+        console.error('Failed to load upcoming games:', error);
+      } finally {
+        setIsLoadingUpcoming(false);
+      }
+    };
+    
+    loadUpcoming();
+  }, [isOnline]);
+
   const handleGetStarted = () => {
     if (isAuthenticated) {
       navigate('/library');
     } else {
       navigate('/auth');
     }
+  };
+
+  const formatReleaseDate = (dateString?: string) => {
+    if (!dateString) return 'TBA';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
   return (
@@ -94,6 +128,55 @@ export function Home() {
           </div>
         </div>
       </section>
+
+      {/* Upcoming Games Section */}
+      {isOnline && (
+        <section className="upcoming-preview">
+          <div className="upcoming-header">
+            <h2>
+              <FontAwesomeIcon icon={faCalendarDays} className="section-icon" />
+              Upcoming Releases
+            </h2>
+            <Link to="/calendar" className="view-all-link">
+              View Full Calendar <FontAwesomeIcon icon={faArrowRight} />
+            </Link>
+          </div>
+          
+          {isLoadingUpcoming ? (
+            <div className="upcoming-loading">Loading upcoming games...</div>
+          ) : upcomingGames.length > 0 ? (
+            <div className="upcoming-grid">
+              {upcomingGames.map((game) => (
+                <div key={game.id} className="upcoming-card">
+                  {game.coverUrl ? (
+                    <img 
+                      src={game.coverUrl} 
+                      alt={game.title}
+                      className="upcoming-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="upcoming-cover-placeholder">
+                      <FontAwesomeIcon icon={faGamepad} />
+                    </div>
+                  )}
+                  <div className="upcoming-info">
+                    <h3 className="upcoming-title">{game.title}</h3>
+                    <div className="upcoming-meta">
+                      <span className="upcoming-date">{formatReleaseDate(game.releaseDate)}</span>
+                      <span className={`upcoming-platform ${game.platform === 'Nintendo Switch 2' ? 'switch2' : 'switch'}`}>
+                        {game.platform === 'Nintendo Switch 2' ? 'Switch 2' : 'Switch'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="no-upcoming">No upcoming games found.</p>
+          )}
+        </section>
+      )}
 
       <section className="platforms">
         <h2>Supported Platforms</h2>
