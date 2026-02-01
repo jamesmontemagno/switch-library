@@ -320,7 +320,7 @@ export async function searchGames(
   params.set('pageSize', Math.min(pageSize, 50).toString());
 
   try {
-    const url = `${API_BASE_URL}/sql/search?${params}`;
+    const url = `${API_BASE_URL}/search?${params}`;
     const response = await fetch(url);
     
     if (!response.ok) {
@@ -367,7 +367,7 @@ export async function getGameById(gameId: number): Promise<TheGamesDBGame | null
   logger.apiUsage('SQL.getGameById', { gameId });
 
   try {
-    const response = await fetch(`${API_BASE_URL}/sql/games/${gameId}`);
+    const response = await fetch(`${API_BASE_URL}/games/${gameId}`);
     
     if (!response.ok) {
       if (response.status === 404) {
@@ -447,7 +447,7 @@ export async function getGenres(): Promise<Record<number, string>> {
   if (cached) return cached;
 
   try {
-    const response = await fetch(`${API_BASE_URL}/sql/lookup/genres`);
+    const response = await fetch(`${API_BASE_URL}/lookup/genres`);
     if (!response.ok) throw new Error(`API error: ${response.status}`);
     const result = await response.json();
     
@@ -470,7 +470,7 @@ export async function getDevelopers(): Promise<Record<number, string>> {
   if (cached) return cached;
 
   try {
-    const response = await fetch(`${API_BASE_URL}/sql/lookup/developers`);
+    const response = await fetch(`${API_BASE_URL}/lookup/developers`);
     if (!response.ok) throw new Error(`API error: ${response.status}`);
     const result = await response.json();
     
@@ -493,7 +493,7 @@ export async function getPublishers(): Promise<Record<number, string>> {
   if (cached) return cached;
 
   try {
-    const response = await fetch(`${API_BASE_URL}/sql/lookup/publishers`);
+    const response = await fetch(`${API_BASE_URL}/lookup/publishers`);
     if (!response.ok) throw new Error(`API error: ${response.status}`);
     const result = await response.json();
     
@@ -539,7 +539,7 @@ export async function getGamesByIds(
   logger.apiUsage('SQL.getGamesByIds', { count: ids.length });
 
   try {
-    const response = await fetch(`${API_BASE_URL}/sql/games/bulk`, {
+    const response = await fetch(`${API_BASE_URL}/games/bulk`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -616,7 +616,7 @@ export async function getUpcomingGames(
     params.set('page', page.toString());
     params.set('pageSize', pageSize.toString());
 
-    const response = await fetch(`${API_BASE_URL}/sql/upcoming?${params}`);
+    const response = await fetch(`${API_BASE_URL}/upcoming?${params}`);
     
     if (!response.ok) {
       logger.error('Upcoming games fetch error', new Error(`Status ${response.status}`));
@@ -657,7 +657,7 @@ export async function getGameRecommendations(
   logger.apiUsage('SQL.getRecommendations', { gameId, limit });
 
   try {
-    const response = await fetch(`${API_BASE_URL}/sql/recommendations/${gameId}?limit=${limit}`);
+    const response = await fetch(`${API_BASE_URL}/recommendations/${gameId}?limit=${limit}`);
     
     if (!response.ok) {
       logger.error('Recommendations fetch error', new Error(`Status ${response.status}`), { gameId });
@@ -695,7 +695,7 @@ export interface DatabaseStats {
 
 export async function getDatabaseStats(): Promise<DatabaseStats | null> {
   try {
-    const response = await fetch(`${API_BASE_URL}/sql/stats`);
+    const response = await fetch(`${API_BASE_URL}/stats`);
     
     if (!response.ok) {
       logger.error('Stats fetch error', new Error(`Status ${response.status}`));

@@ -24,12 +24,12 @@ public class SqlGameFunctions
 
     /// <summary>
     /// Search games from SQL database with filters and pagination
-    /// Route: GET /api/sql/search
+    /// Route: GET /api/search
     /// Query params: query, platformId, genreIds, developerIds, publisherIds, releaseYear, coop, minPlayers, page, pageSize
     /// </summary>
     [Function("SearchGamesFromSql")]
     public async Task<IActionResult> SearchGames(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "sql/search")] HttpRequest req)
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "search")] HttpRequest req)
     {
         try
         {
@@ -78,11 +78,11 @@ public class SqlGameFunctions
 
     /// <summary>
     /// Get single game details by ID from SQL database
-    /// Route: GET /api/sql/games/{gameId}
+    /// Route: GET /api/games/{gameId}
     /// </summary>
     [Function("GetGameFromSql")]
     public async Task<IActionResult> GetGame(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "sql/games/{gameId:int}")] HttpRequest req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "games/{gameId:int}")] HttpRequest req,
         int gameId)
     {
         try
@@ -110,12 +110,12 @@ public class SqlGameFunctions
 
     /// <summary>
     /// Get multiple games by IDs from SQL database
-    /// Route: POST /api/sql/games/bulk
+    /// Route: POST /api/games/bulk
     /// Body: { "ids": [123, 456, ...] }
     /// </summary>
     [Function("GetGamesFromSql")]
     public async Task<IActionResult> GetGamesBulk(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "sql/games/bulk")] HttpRequest req)
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "games/bulk")] HttpRequest req)
     {
         try
         {
@@ -165,12 +165,12 @@ public class SqlGameFunctions
 
     /// <summary>
     /// Get upcoming game releases from SQL database
-    /// Route: GET /api/sql/upcoming
+    /// Route: GET /api/upcoming
     /// Query params: days (30/60/90), platformId, page, pageSize
     /// </summary>
     [Function("GetUpcomingGames")]
     public async Task<IActionResult> GetUpcomingGames(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "sql/upcoming")] HttpRequest req)
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "upcoming")] HttpRequest req)
     {
         try
         {
@@ -200,12 +200,12 @@ public class SqlGameFunctions
 
     /// <summary>
     /// Get game recommendations based on a source game
-    /// Route: GET /api/sql/recommendations/{gameId}
+    /// Route: GET /api/recommendations/{gameId}
     /// Query params: limit
     /// </summary>
     [Function("GetGameRecommendations")]
     public async Task<IActionResult> GetRecommendations(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "sql/recommendations/{gameId:int}")] HttpRequest req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "recommendations/{gameId:int}")] HttpRequest req,
         int gameId)
     {
         try
@@ -235,11 +235,11 @@ public class SqlGameFunctions
 
     /// <summary>
     /// Get lookup data (genres, developers, publishers) from SQL database
-    /// Route: GET /api/sql/lookup/{type}
+    /// Route: GET /api/lookup/{type}
     /// </summary>
     [Function("GetLookupData")]
     public async Task<IActionResult> GetLookupData(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "sql/lookup/{type}")] HttpRequest req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "lookup/{type}")] HttpRequest req,
         string type)
     {
         try
@@ -274,11 +274,11 @@ public class SqlGameFunctions
 
     /// <summary>
     /// Get database statistics
-    /// Route: GET /api/sql/stats
+    /// Route: GET /api/stats
     /// </summary>
     [Function("GetDatabaseStats")]
     public async Task<IActionResult> GetStats(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "sql/stats")] HttpRequest req)
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "stats")] HttpRequest req)
     {
         try
         {

@@ -29,12 +29,13 @@ All game data queries now use the Azure SQL database as the primary source, sync
 
 1. **Azure SQL Database** with full-text search ([backend-api/SqlGameService.cs](backend-api/SqlGameService.cs))
 2. **Azure Functions** expose SQL queries via REST endpoints ([backend-api/SqlGameFunctions.cs](backend-api/SqlGameFunctions.cs)):
-   - `/api/sql/search` - Full-text search with pagination
-   - `/api/sql/games/{id}` - Single game details
-   - `/api/sql/games/bulk` - Bulk game lookup
-   - `/api/sql/upcoming` - Upcoming releases
-   - `/api/sql/recommendations/{gameId}` - Similar games by genre/developer/publisher
-   - `/api/sql/lookup/{type}` - Genres, developers, publishers
+   - `/api/search` - Full-text search with pagination
+   - `/api/games/{id}` - Single game details
+   - `/api/games/bulk` - Bulk game lookup
+   - `/api/upcoming` - Upcoming releases
+   - `/api/recommendations/{gameId}` - Similar games by genre/developer/publisher
+   - `/api/lookup/{type}` - Genres, developers, publishers
+   - `/api/stats` - Database statistics
 3. **Nightly Sync** ([backend-api/NightlySyncTimer.cs](backend-api/NightlySyncTimer.cs)) updates SQL from TheGamesDB API
 
 **Frontend Caching**: Short-lived cache (1 hour for searches, 24 hours for game details) in localStorage via [thegamesdb.ts](src/services/thegamesdb.ts).
