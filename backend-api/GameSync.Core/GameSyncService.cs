@@ -199,7 +199,8 @@ public partial class GameSyncService
     /// <summary>
     /// Sync only games that have been updated since the last sync
     /// </summary>
-    public async Task SyncUpdatesAsync()
+    /// <returns>SyncResult with detailed counts of new and updated games</returns>
+    public async Task<SyncResult> SyncUpdatesAsync()
     {
         _logger.LogInformation("Starting incremental sync for updated games and lookup data...");
 
@@ -218,13 +219,26 @@ public partial class GameSyncService
         _logger.LogInformation("Last sync was at: {LastSyncTime}", lastSyncTime);
 
         // Sync updates for both platforms
-        var switchCount = await SyncPlatformUpdatesAsync(_switchPlatformId, "Nintendo Switch", lastSyncTime);
-        var switch2Count = await SyncPlatformUpdatesAsync(_switch2PlatformId, "Nintendo Switch 2", lastSyncTime);
+        var switchResult = await SyncPlatformUpdatesAsync(_switchPlatformId, "Nintendo Switch", lastSyncTime);
+        var switch2Result = await SyncPlatformUpdatesAsync(_switch2PlatformId, "Nintendo Switch 2", lastSyncTime);
+
+        // Combine results
+        var result = new SyncResult
+        {
+            TotalProcessed = switchResult.TotalProcessed + switch2Result.TotalProcessed,
+            NewGamesAdded = switchResult.NewGamesAdded + switch2Result.NewGamesAdded,
+            GamesUpdated = switchResult.GamesUpdated + switch2Result.GamesUpdated,
+            SwitchGamesProcessed = switchResult.TotalProcessed,
+            Switch2GamesProcessed = switch2Result.TotalProcessed
+        };
 
         // Update the last sync timestamp with total games synced
-        await SaveLastSyncTimeAsync("incremental", switchCount + switch2Count);
+        await SaveLastSyncTimeAsync("incremental", result.TotalProcessed);
 
-        _logger.LogInformation("Incremental sync completed successfully!");
+        _logger.LogInformation("Incremental sync completed successfully! Total: {Total} ({New} new, {Updated} updated)", 
+            result.TotalProcessed, result.NewGamesAdded, result.GamesUpdated);
+        
+        return result;
     }
 
     private async Task<int> SyncPlatformGamesAsync(int platformId, string platformName, bool interactiveMode = false, int startPage = 1)
@@ -444,7 +458,7 @@ public partial class GameSyncService
         }
     }
 
-    private async Task<int> SyncPlatformUpdatesAsync(int platformId, string platformName, DateTime? since)
+    private async Task<SyncResult> SyncPlatformUpdatesAsync(int platformId, string platformName, DateTime? since)
     {
         _logger.LogInformation("Syncing updates for {Platform} (ID: {PlatformId}) since {Since}...", 
             platformName, platformId, since?.ToString() ?? "beginning");
@@ -455,7 +469,8 @@ public partial class GameSyncService
             if (!since.HasValue)
             {
                 _logger.LogInformation("No previous sync time found, performing full sync for {Platform}", platformName);
-                return await SyncPlatformGamesAsync(platformId, platformName, interactiveMode: false, startPage: 1);
+                var fullSyncCount = await SyncPlatformGamesAsync(platformId, platformName, interactiveMode: false, startPage: 1);
+                return new SyncResult { TotalProcessed = fullSyncCount, NewGamesAdded = fullSyncCount, GamesUpdated = 0 };
             }
 
             var page = 1;
@@ -582,7 +597,12 @@ public partial class GameSyncService
 
             _logger.LogInformation("Completed syncing {Total} games for {Platform} ({New} new, {Updated} updated)", 
                 totalSynced, platformName, totalSynced - totalUpdated, totalUpdated);
-            return totalSynced;
+            return new SyncResult 
+            { 
+                TotalProcessed = totalSynced, 
+                NewGamesAdded = totalSynced - totalUpdated, 
+                GamesUpdated = totalUpdated 
+            };
         }
         catch (Exception ex)
         {
@@ -1029,4 +1049,28 @@ public class SyncStatistics
     public int? SqlDeveloperCount { get; set; }
     public int? BlobPublisherCount { get; set; }
     public int? SqlPublisherCount { get; set; }
+}
+
+/// <summary>
+/// Result of a sync operation with detailed counts
+/// </summary>
+public class SyncResult
+{
+    public int TotalProcessed { get; set; }
+    public int NewGamesAdded { get; set; }
+    public int GamesUpdated { get; set; }
+    public int SwitchGamesProcessed { get; set; }
+    public int Switch2GamesProcessed { get; set; }
+    
+    public static SyncResult operator +(SyncResult a, SyncResult b)
+    {
+        return new SyncResult
+        {
+            TotalProcessed = a.TotalProcessed + b.TotalProcessed,
+            NewGamesAdded = a.NewGamesAdded + b.NewGamesAdded,
+            GamesUpdated = a.GamesUpdated + b.GamesUpdated,
+            SwitchGamesProcessed = a.SwitchGamesProcessed + b.SwitchGamesProcessed,
+            Switch2GamesProcessed = a.Switch2GamesProcessed + b.Switch2GamesProcessed
+        };
+    }
 }
