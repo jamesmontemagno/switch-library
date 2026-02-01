@@ -8,5 +8,17 @@
             },
             "enableLiveMetricsFilters": true
         }
+    },
+    "extensions": {
+        "timers": {
+            "enableDistributedTracing": true
+        }
+    },
+    "functionTimeout": "00:30:00",
+    "retry": {
+        "strategy": "exponentialBackoff",
+        "maxRetryCount": 3,
+        "minimumInterval": "00:00:05",
+        "maximumInterval": "00:05:00"
     }
 }

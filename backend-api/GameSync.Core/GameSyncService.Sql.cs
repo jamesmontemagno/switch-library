@@ -4,7 +4,7 @@ using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 
-namespace GameSyncTool;
+namespace GameSync.Core;
 
 /// <summary>
 /// SQL Database storage methods for GameSyncService

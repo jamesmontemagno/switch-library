@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using System.Text;
 using System.Text.Json;
 
-namespace GameSyncTool;
+namespace GameSync.Core;
 
 public partial class GameSyncService
 {
@@ -451,14 +451,26 @@ public partial class GameSyncService
 
         try
         {
+            // If no last sync time, fall back to full sync for this platform
+            if (!since.HasValue)
+            {
+                _logger.LogInformation("No previous sync time found, performing full sync for {Platform}", platformName);
+                return await SyncPlatformGamesAsync(platformId, platformName, interactiveMode: false, startPage: 1);
+            }
+
             var page = 1;
             var totalSynced = 0;
+            var totalUpdated = 0;
+
+            // Convert DateTime to Unix timestamp (seconds since epoch)
+            var unixTimestamp = ((DateTimeOffset)since.Value).ToUnixTimeSeconds();
 
             while (true)
             {
-                _logger.LogInformation("Fetching page {Page} for {Platform} updates...", page, platformName);
+                _logger.LogInformation("Fetching page {Page} of updates for {Platform}...", page, platformName);
 
-                var url = $"{ApiBaseUrl}/Games/ByPlatformID?apikey={_apiKey}&id={platformId}&page={page}";
+                // Use the Updates endpoint with time filter and platform filter
+                var url = $"{ApiBaseUrl}/Games/Updates?apikey={_apiKey}&last_edit_id={unixTimestamp}&page={page}";
                 var response = await _httpClient.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
@@ -471,53 +483,105 @@ public partial class GameSyncService
                 var jsonDoc = JsonDocument.Parse(content);
 
                 if (!jsonDoc.RootElement.TryGetProperty("data", out var data) ||
-                    !data.TryGetProperty("games", out var gamesArray) ||
-                    gamesArray.GetArrayLength() == 0)
+                    !data.TryGetProperty("updates", out var updatesArray) ||
+                    updatesArray.GetArrayLength() == 0)
                 {
-                    _logger.LogInformation("No more games found for {Platform}", platformName);
+                    _logger.LogInformation("No more updates found for page {Page}", page);
                     break;
                 }
 
+                _logger.LogInformation("Retrieved {Count} game updates from page {Page}", updatesArray.GetArrayLength(), page);
+
                 var gamesProcessed = 0;
 
-                foreach (var game in gamesArray.EnumerateArray())
+                foreach (var update in updatesArray.EnumerateArray())
                 {
-                    if (!game.TryGetProperty("id", out var idProp))
+                    if (!update.TryGetProperty("id", out var idProp))
                         continue;
 
                     var gameId = idProp.GetInt32();
 
-                    // Check if game needs updating
-                    if (since.HasValue)
+                    // Check if this game belongs to our target platform
+                    // The Updates endpoint returns ALL platform updates, so we need to filter
+                    bool belongsToPlatform = false;
+                    
+                    if (update.TryGetProperty("platform", out var platformProp))
                     {
-                        var existingGame = await GetGameAsync(gameId);
-                        if (existingGame != null)
+                        belongsToPlatform = platformProp.GetInt32() == platformId;
+                    }
+                    else if (update.TryGetProperty("platform_id", out var platformIdProp))
+                    {
+                        belongsToPlatform = platformIdProp.GetInt32() == platformId;
+                    }
+
+                    if (!belongsToPlatform)
+                    {
+                        // Not for our platform, skip it
+                        continue;
+                    }
+
+                    // Check if this is a new game or an update to existing one
+                    var existingGame = await GetGameAsync(gameId);
+                    var isUpdate = existingGame != null;
+
+                    // Fetch full game details (Updates endpoint only returns minimal data)
+                    var gameDetailsUrl = $"{ApiBaseUrl}/Games/ByGameID?apikey={_apiKey}&id={gameId}";
+                    var gameResponse = await _httpClient.GetAsync(gameDetailsUrl);
+                    
+                    if (!gameResponse.IsSuccessStatusCode)
+                    {
+                        _logger.LogWarning("Failed to fetch details for game {GameId}: {StatusCode}", gameId, gameResponse.StatusCode);
+                        continue;
+                    }
+
+                    var gameContent = await gameResponse.Content.ReadAsStringAsync();
+                    var gameDoc = JsonDocument.Parse(gameContent);
+
+                    if (gameDoc.RootElement.TryGetProperty("data", out var gameData) &&
+                        gameData.TryGetProperty("games", out var gamesArray) &&
+                        gamesArray.GetArrayLength() > 0)
+                    {
+                        var gameElement = gamesArray[0];
+                        
+                        // Save or update the game in cache
+                        await SaveGameAsync(gameId, gameElement);
+                        totalSynced++;
+                        gamesProcessed++;
+                        
+                        if (isUpdate)
                         {
-                            // Game exists, skip if not updated
-                            continue;
+                            totalUpdated++;
+                            _logger.LogDebug("Updated game {GameId} in cache", gameId);
+                        }
+                        else
+                        {
+                            _logger.LogDebug("Added new game {GameId} to cache", gameId);
                         }
                     }
 
-                    await SaveGameAsync(gameId, game);
-                    totalSynced++;
-                    gamesProcessed++;
+                    // Small delay to avoid rate limiting when fetching individual games
+                    await Task.Delay(500);
                 }
 
-                _logger.LogInformation("Processed {Processed} games from page {Page}, {Total} total updates for {Platform}", 
-                    gamesProcessed, page, totalSynced, platformName);
+                _logger.LogInformation("Processed {Processed} {Platform} games from page {Page} ({New} new, {Updated} updated)", 
+                    gamesProcessed, platformName, page, totalSynced - totalUpdated, totalUpdated);
 
                 if (!jsonDoc.RootElement.TryGetProperty("pages", out var pages) ||
                     !pages.TryGetProperty("next", out var nextPage) ||
                     nextPage.ValueKind == JsonValueKind.Null)
                 {
+                    _logger.LogInformation("No more pages available for {Platform} updates", platformName);
                     break;
                 }
 
                 page++;
+                
+                // Delay between pages (longer since we're making individual game requests too)
                 await Task.Delay(2000);
             }
 
-            _logger.LogInformation("Completed syncing {Total} updates for {Platform}", totalSynced, platformName);
+            _logger.LogInformation("Completed syncing {Total} games for {Platform} ({New} new, {Updated} updated)", 
+                totalSynced, platformName, totalSynced - totalUpdated, totalUpdated);
             return totalSynced;
         }
         catch (Exception ex)

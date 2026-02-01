@@ -1,9 +1,9 @@
-﻿using GameSyncTool;
+﻿using GameSync.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-class Program
+partial class Program
 {
     static async Task<int> Main(string[] args)
     {

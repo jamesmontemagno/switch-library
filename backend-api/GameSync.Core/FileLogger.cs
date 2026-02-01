@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 
-namespace GameSyncTool;
+namespace GameSync.Core;
 
 public class FileLoggerProvider : ILoggerProvider
 {

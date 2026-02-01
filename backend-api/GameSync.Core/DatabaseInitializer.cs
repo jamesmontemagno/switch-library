@@ -2,7 +2,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using Dapper;
 
-namespace GameSyncTool;
+namespace GameSync.Core;
 
 /// <summary>
 /// Handles database schema initialization and migrations

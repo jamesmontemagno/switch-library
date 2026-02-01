@@ -1,4 +1,4 @@
-namespace GameSyncTool;
+namespace GameSync.Core;
 
 public class AppSettings
 {
