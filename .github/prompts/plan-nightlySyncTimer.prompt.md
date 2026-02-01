@@ -37,7 +37,7 @@ Add an Azure Functions timer trigger that runs nightly (2 AM UTC by default) to 
        "SyncSchedule": "0 0 2 * * *",
        "StorageMode": "Dual",
        "TheGamesDB__ApiKey": "existing-key",
-       "BlobStorage__ConnectionString": "existing",
+       "ProductionStorage": "existing",
        "BlobStorage__ContainerName": "games-cache",
        "SqlDatabase__ConnectionString": "existing",
        "SqlDatabase__DatabaseName": "switchlibrary-games",
