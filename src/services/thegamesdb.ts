@@ -293,8 +293,8 @@ export async function searchGames(
     pageSize = 20,
   } = options;
 
-  // Create cache key from query parameters
-  const cacheKey = `${query.toLowerCase().trim()}_${platformId || 'all'}_${page}_${pageSize}`;
+  // Create cache key from all query parameters including filters
+  const cacheKey = `${query.toLowerCase().trim()}_${platformId || 'all'}_${genreIds?.join('-') || ''}_${developerIds?.join('-') || ''}_${publisherIds?.join('-') || ''}_${releaseYear || ''}_${coop ?? ''}_${minPlayers || ''}_${page}_${pageSize}`;
   
   // Check cache first
   const cachedResult = getCachedSearch(cacheKey);

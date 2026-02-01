@@ -402,6 +402,7 @@ export function ReleaseCalendar() {
                   onClick={() => loadUpcomingGames(currentPage - 1)}
                   disabled={currentPage === 1 || isLoading}
                   className="btn-pagination"
+                  aria-label="Previous page"
                 >
                   ← Previous
                 </button>
@@ -412,6 +413,7 @@ export function ReleaseCalendar() {
                   onClick={() => loadUpcomingGames(currentPage + 1)}
                   disabled={currentPage === totalPages || isLoading}
                   className="btn-pagination"
+                  aria-label="Next page"
                 >
                   Next →
                 </button>

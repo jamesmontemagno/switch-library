@@ -92,13 +92,12 @@ public class SqlGameService
         var whereClauses = new List<string>();
         var parameters = new DynamicParameters();
 
-        // Full-text search on game_title (use CONTAINS for indexed search)
+        // Full-text search on game_title
+        // Use LIKE for partial matching on title and alternates (full-text index not always available)
         if (!string.IsNullOrWhiteSpace(query))
         {
-            // Use LIKE for partial matching if full-text not available, otherwise CONTAINS
-            whereClauses.Add("(g.game_title LIKE @SearchPattern OR CONTAINS(g.game_title, @FtsQuery) OR g.alternates LIKE @SearchPattern)");
+            whereClauses.Add("(g.game_title LIKE @SearchPattern OR g.alternates LIKE @SearchPattern)");
             parameters.Add("SearchPattern", $"%{query}%");
-            parameters.Add("FtsQuery", $"\"{query}*\"");
         }
 
         // Platform filter

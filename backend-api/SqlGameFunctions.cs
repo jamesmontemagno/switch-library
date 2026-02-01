@@ -39,9 +39,9 @@ public class SqlGameFunctions
             int? platformId = int.TryParse(req.Query["platformId"], out var pId) ? pId : null;
             int? releaseYear = int.TryParse(req.Query["releaseYear"], out var ry) ? ry : null;
             bool? coop = null;
-            if (req.Query.ContainsKey("coop"))
+            if (req.Query.TryGetValue("coop", out var coopValues))
             {
-                var coopRaw = req.Query["coop"].ToString();
+                var coopRaw = coopValues.ToString();
                 if (!string.IsNullOrWhiteSpace(coopRaw))
                 {
                     if (bool.TryParse(coopRaw, out var coopParsed))
