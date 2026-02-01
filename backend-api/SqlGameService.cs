@@ -470,13 +470,34 @@ public class SqlGameService
             ScoredGames AS (
                 SELECT 
                     g.game_id,
-                    (SELECT COUNT(*) * 3 FROM games_genres gg 
-                     WHERE gg.game_id = g.game_id AND gg.genre_id IN (SELECT genre_id FROM SourceGenres)) +
-                    (SELECT COUNT(*) * 2 FROM games_developers gd 
-                     WHERE gd.game_id = g.game_id AND gd.developer_id IN (SELECT developer_id FROM SourceDevelopers)) +
-                    (SELECT COUNT(*) FROM games_publishers gp 
-                     WHERE gp.game_id = g.game_id AND gp.publisher_id IN (SELECT publisher_id FROM SourcePublishers)) AS score
+                    COALESCE(gg.match_count, 0) * 3
+                    + COALESCE(gd.match_count, 0) * 2
+                    + COALESCE(gp.match_count, 0) AS score
                 FROM games_cache g
+                LEFT JOIN (
+                    SELECT 
+                        gg.game_id,
+                        COUNT(*) AS match_count
+                    FROM games_genres gg
+                    INNER JOIN SourceGenres sg ON gg.genre_id = sg.genre_id
+                    GROUP BY gg.game_id
+                ) AS gg ON gg.game_id = g.game_id
+                LEFT JOIN (
+                    SELECT 
+                        gd.game_id,
+                        COUNT(*) AS match_count
+                    FROM games_developers gd
+                    INNER JOIN SourceDevelopers sd ON gd.developer_id = sd.developer_id
+                    GROUP BY gd.game_id
+                ) AS gd ON gd.game_id = g.game_id
+                LEFT JOIN (
+                    SELECT 
+                        gp.game_id,
+                        COUNT(*) AS match_count
+                    FROM games_publishers gp
+                    INNER JOIN SourcePublishers sp ON gp.publisher_id = sp.publisher_id
+                    GROUP BY gp.game_id
+                ) AS gp ON gp.game_id = g.game_id
                 WHERE g.game_id != @GameId
                   AND g.platform IN (SELECT platform FROM SourceGame)
             )
