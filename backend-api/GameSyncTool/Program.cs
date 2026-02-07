@@ -259,7 +259,14 @@ partial class Program
 
                 case "update":
                 case "incremental":
-                    await PerformIncrementalSyncAsync(syncService);
+                    var sinceArg = GetCommandLineArgument(args, "--since") ??
+                                   GetCommandLineArgument(args, "-s");
+                    DateTime? sinceDate = null;
+                    if (!string.IsNullOrEmpty(sinceArg) && DateTime.TryParse(sinceArg, out var parsedSinceDate))
+                    {
+                        sinceDate = DateTime.SpecifyKind(parsedSinceDate, DateTimeKind.Utc);
+                    }
+                    await PerformIncrementalSyncAsync(syncService, sinceDate);
                     return 0;
 
                 case "stats":
@@ -479,17 +486,62 @@ partial class Program
         Console.WriteLine();
     }
 
-    static async Task PerformIncrementalSyncAsync(GameSyncService syncService)
+    static async Task PerformIncrementalSyncAsync(GameSyncService syncService, DateTime? overrideSyncDate = null)
     {
         Console.WriteLine("Starting INCREMENTAL SYNC...");
-        Console.WriteLine("This will sync lookup data and games updated since the last sync.");
+
+        // Show stored last sync date and allow override in interactive mode
+        if (overrideSyncDate == null)
+        {
+            var stats = await syncService.GetStatisticsAsync();
+            if (stats.LastSyncTime.HasValue)
+            {
+                Console.WriteLine($"Last sync: {stats.LastSyncTime.Value:yyyy-MM-dd HH:mm:ss} UTC");
+                Console.WriteLine();
+                Console.WriteLine("Would you like to override the sync date?");
+                Console.WriteLine("  [Enter] Use last sync date (default)");
+                Console.WriteLine("  [D]     Specify a custom date");
+                Console.Write("Your choice: ");
+
+                var choice = Console.ReadLine()?.Trim().ToUpperInvariant();
+                if (choice == "D")
+                {
+                    Console.Write("Enter sync-from date (yyyy-MM-dd): ");
+                    var dateInput = Console.ReadLine()?.Trim();
+                    if (DateTime.TryParse(dateInput, out var parsedDate))
+                    {
+                        overrideSyncDate = DateTime.SpecifyKind(parsedDate, DateTimeKind.Utc);
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        Console.WriteLine($"Using override date: {overrideSyncDate.Value:yyyy-MM-dd HH:mm:ss} UTC");
+                        Console.ResetColor();
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine("Invalid date format. Using last sync date.");
+                        Console.ResetColor();
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine("No previous sync found. This will perform a full sync.");
+            }
+        }
+        else
+        {
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine($"Using override sync date: {overrideSyncDate.Value:yyyy-MM-dd HH:mm:ss} UTC");
+            Console.ResetColor();
+        }
+
         Console.WriteLine();
 
         var startTime = DateTime.UtcNow;
 
         try
         {
-            await syncService.SyncUpdatesAsync();
+            await syncService.SyncUpdatesAsync(overrideSyncDate);
 
             var duration = DateTime.UtcNow - startTime;
             Console.WriteLine();

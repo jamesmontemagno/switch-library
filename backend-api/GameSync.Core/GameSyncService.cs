@@ -119,7 +119,7 @@ public partial class GameSyncService
     }
 
     /// <summary>
-    /// Get last sync time - always from blob storage (sync metadata, not game data)
+    /// Get last sync time from storage
     /// </summary>
     private async Task<DateTime?> GetLastSyncTimeAsync()
     {
@@ -127,9 +127,9 @@ public partial class GameSyncService
         if (_storageMode == StorageMode.SqlDatabase || _storageMode == StorageMode.Dual)
         {
             var sqlResult = await GetLastSyncTimeFromSqlAsync();
-            if (sqlResult.Item1.HasValue)
+            if (sqlResult.lastSyncTime.HasValue)
             {
-                return sqlResult.Item1;
+                return sqlResult.lastSyncTime;
             }
         }
 
@@ -199,7 +199,8 @@ public partial class GameSyncService
     /// <summary>
     /// Sync only games that have been updated since the last sync
     /// </summary>
-    public async Task SyncUpdatesAsync()
+    /// <param name="overrideSyncDate">Optional: override the last sync date instead of reading from storage</param>
+    public async Task SyncUpdatesAsync(DateTime? overrideSyncDate = null)
     {
         _logger.LogInformation("Starting incremental sync for updated games and lookup data...");
 
@@ -213,16 +214,17 @@ public partial class GameSyncService
         // Sync lookup data first (genres, developers, publishers)
         await SyncLookupDataAsync();
 
-        // Get the last sync timestamp
-        var lastSyncTime = await GetLastSyncTimeAsync();
-        _logger.LogInformation("Last sync was at: {LastSyncTime}", lastSyncTime);
+        // Use override date or read from storage
+        var lastSyncTime = overrideSyncDate ?? await GetLastSyncTimeAsync();
+        _logger.LogInformation("Last sync was at: {LastSyncTime}{Override}", 
+            lastSyncTime, overrideSyncDate.HasValue ? " (user override)" : "");
 
-        // Sync updates for both platforms
-        var switchCount = await SyncPlatformUpdatesAsync(_switchPlatformId, "Nintendo Switch", lastSyncTime);
-        var switch2Count = await SyncPlatformUpdatesAsync(_switch2PlatformId, "Nintendo Switch 2", lastSyncTime);
+        // Sync updates for both platforms - Updates endpoint returns all platforms,
+        // so we only need to call it once and filter by platform from game details
+        var totalSynced = await SyncRecentUpdatesAsync(lastSyncTime);
 
         // Update the last sync timestamp with total games synced
-        await SaveLastSyncTimeAsync("incremental", switchCount + switch2Count);
+        await SaveLastSyncTimeAsync("incremental", totalSynced);
 
         _logger.LogInformation("Incremental sync completed successfully!");
     }
@@ -444,33 +446,49 @@ public partial class GameSyncService
         }
     }
 
-    private async Task<int> SyncPlatformUpdatesAsync(int platformId, string platformName, DateTime? since)
+    // Update types that map to storable fields (non-image types)
+    private static readonly HashSet<string> StorableFieldTypes = new(StringComparer.OrdinalIgnoreCase)
     {
-        _logger.LogInformation("Syncing updates for {Platform} (ID: {PlatformId}) since {Since}...", 
-            platformName, platformId, since?.ToString() ?? "beginning");
+        "game_title", "overview", "release_date", "players", "coop", "youtube",
+        "rating", "region_id", "country_id", "platform",
+        "genres", "developers", "publishers", "alternates"
+    };
 
+    /// <summary>
+    /// Fetch recent updates from TheGamesDB Updates endpoint using time (minutes) parameter.
+    /// Processes updates inline: new Switch games are built from update fields directly,
+    /// field updates are applied to existing games, removed games are deleted.
+    /// This eliminates the need for individual /Games/ByGameID API calls.
+    /// </summary>
+    private async Task<int> SyncRecentUpdatesAsync(DateTime? lastSyncTime)
+    {
         try
         {
-            // If no last sync time, fall back to full sync for this platform
-            if (!since.HasValue)
+            // If no last sync time, fall back to full sync
+            if (!lastSyncTime.HasValue)
             {
-                _logger.LogInformation("No previous sync time found, performing full sync for {Platform}", platformName);
-                return await SyncPlatformGamesAsync(platformId, platformName, interactiveMode: false, startPage: 1);
+                _logger.LogInformation("No previous sync time found, performing full sync");
+                var switchCount = await SyncPlatformGamesAsync(_switchPlatformId, "Nintendo Switch", interactiveMode: false, startPage: 1);
+                var switch2Count = await SyncPlatformGamesAsync(_switch2PlatformId, "Nintendo Switch 2", interactiveMode: false, startPage: 1);
+                return switchCount + switch2Count;
             }
 
-            var page = 1;
-            var totalSynced = 0;
-            var totalUpdated = 0;
+            // Calculate minutes since last sync (add 60 min buffer for safety)
+            var minutesSinceSync = (int)Math.Ceiling((DateTime.UtcNow - lastSyncTime.Value).TotalMinutes) + 60;
+            _logger.LogInformation("Fetching updates from the last {Minutes} minutes...", minutesSinceSync);
 
-            // Convert DateTime to Unix timestamp (seconds since epoch)
-            var unixTimestamp = ((DateTimeOffset)since.Value).ToUnixTimeSeconds();
+            // =============================================
+            // Pass 1: Collect all updates grouped by game_id
+            // =============================================
+            var gameUpdates = new Dictionary<int, GameUpdateInfo>();
+            var page = 1;
+            var totalUpdateEntries = 0;
 
             while (true)
             {
-                _logger.LogInformation("Fetching page {Page} of updates for {Platform}...", page, platformName);
+                _logger.LogInformation("Fetching page {Page} of updates...", page);
 
-                // Use the Updates endpoint with time filter and platform filter
-                var url = $"{ApiBaseUrl}/Games/Updates?apikey={_apiKey}&last_edit_id={unixTimestamp}&page={page}";
+                var url = $"{ApiBaseUrl}/Games/Updates?apikey={_apiKey}&time={minutesSinceSync}&page={page}";
                 var response = await _httpClient.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
@@ -486,108 +504,298 @@ public partial class GameSyncService
                     !data.TryGetProperty("updates", out var updatesArray) ||
                     updatesArray.GetArrayLength() == 0)
                 {
-                    _logger.LogInformation("No more updates found for page {Page}", page);
+                    _logger.LogInformation("No more updates found on page {Page}", page);
                     break;
                 }
 
-                _logger.LogInformation("Retrieved {Count} game updates from page {Page}", updatesArray.GetArrayLength(), page);
+                var pageCount = updatesArray.GetArrayLength();
+                totalUpdateEntries += pageCount;
+                _logger.LogInformation("Retrieved {Count} update entries from page {Page}", pageCount, page);
 
-                var gamesProcessed = 0;
-
+                // Parse each update entry into per-game change sets
                 foreach (var update in updatesArray.EnumerateArray())
                 {
-                    if (!update.TryGetProperty("id", out var idProp))
+                    if (!update.TryGetProperty("game_id", out var gameIdProp))
                         continue;
 
-                    var gameId = idProp.GetInt32();
+                    var gameId = gameIdProp.GetInt32();
+                    var type = update.TryGetProperty("type", out var typeProp) ? typeProp.GetString() ?? "" : "";
 
-                    // Check if this game belongs to our target platform
-                    // The Updates endpoint returns ALL platform updates, so we need to filter
-                    bool belongsToPlatform = false;
-                    
-                    if (update.TryGetProperty("platform", out var platformProp))
+                    if (!gameUpdates.TryGetValue(gameId, out var info))
                     {
-                        belongsToPlatform = platformProp.GetInt32() == platformId;
-                    }
-                    else if (update.TryGetProperty("platform_id", out var platformIdProp))
-                    {
-                        belongsToPlatform = platformIdProp.GetInt32() == platformId;
+                        info = new GameUpdateInfo();
+                        gameUpdates[gameId] = info;
                     }
 
-                    if (!belongsToPlatform)
+                    // Detect lifecycle signals
+                    if (type == "game")
                     {
-                        // Not for our platform, skip it
+                        var value = update.TryGetProperty("value", out var valProp) && valProp.ValueKind == JsonValueKind.String
+                            ? valProp.GetString() : null;
+                        if (value == "[NEW]") info.IsNew = true;
+                        else if (value == "[REMOVED]") info.IsRemoved = true;
                         continue;
                     }
 
-                    // Check if this is a new game or an update to existing one
-                    var existingGame = await GetGameAsync(gameId);
-                    var isUpdate = existingGame != null;
-
-                    // Fetch full game details (Updates endpoint only returns minimal data)
-                    var gameDetailsUrl = $"{ApiBaseUrl}/Games/ByGameID?apikey={_apiKey}&id={gameId}";
-                    var gameResponse = await _httpClient.GetAsync(gameDetailsUrl);
-                    
-                    if (!gameResponse.IsSuccessStatusCode)
+                    // Detect platform (always a string like "4971")
+                    if (type == "platform")
                     {
-                        _logger.LogWarning("Failed to fetch details for game {GameId}: {StatusCode}", gameId, gameResponse.StatusCode);
-                        continue;
-                    }
-
-                    var gameContent = await gameResponse.Content.ReadAsStringAsync();
-                    var gameDoc = JsonDocument.Parse(gameContent);
-
-                    if (gameDoc.RootElement.TryGetProperty("data", out var gameData) &&
-                        gameData.TryGetProperty("games", out var gamesArray) &&
-                        gamesArray.GetArrayLength() > 0)
-                    {
-                        var gameElement = gamesArray[0];
-                        
-                        // Save or update the game in cache
-                        await SaveGameAsync(gameId, gameElement);
-                        totalSynced++;
-                        gamesProcessed++;
-                        
-                        if (isUpdate)
+                        var platformStr = update.TryGetProperty("value", out var valProp) && valProp.ValueKind == JsonValueKind.String
+                            ? valProp.GetString() : null;
+                        if (platformStr != null && int.TryParse(platformStr, out var platformId))
                         {
-                            totalUpdated++;
-                            _logger.LogDebug("Updated game {GameId} in cache", gameId);
-                        }
-                        else
-                        {
-                            _logger.LogDebug("Added new game {GameId} to cache", gameId);
+                            info.Platform = platformId;
                         }
                     }
 
-                    // Small delay to avoid rate limiting when fetching individual games
-                    await Task.Delay(500);
+                    // Store field values (latest wins since results are newest-first)
+                    if (StorableFieldTypes.Contains(type) && update.TryGetProperty("value", out var fieldVal))
+                    {
+                        // Only store if we haven't seen this field yet (first = newest)
+                        if (!info.Fields.ContainsKey(type))
+                        {
+                            info.Fields[type] = fieldVal.Clone();
+                        }
+                    }
                 }
 
-                _logger.LogInformation("Processed {Processed} {Platform} games from page {Page} ({New} new, {Updated} updated)", 
-                    gamesProcessed, platformName, page, totalSynced - totalUpdated, totalUpdated);
-
+                // Check for more pages
                 if (!jsonDoc.RootElement.TryGetProperty("pages", out var pages) ||
                     !pages.TryGetProperty("next", out var nextPage) ||
                     nextPage.ValueKind == JsonValueKind.Null)
                 {
-                    _logger.LogInformation("No more pages available for {Platform} updates", platformName);
                     break;
                 }
 
                 page++;
-                
-                // Delay between pages (longer since we're making individual game requests too)
-                await Task.Delay(2000);
+                await Task.Delay(1000);
             }
 
-            _logger.LogInformation("Completed syncing {Total} games for {Platform} ({New} new, {Updated} updated)", 
-                totalSynced, platformName, totalSynced - totalUpdated, totalUpdated);
+            if (gameUpdates.Count == 0)
+            {
+                _logger.LogInformation("No game updates found since last sync");
+                return 0;
+            }
+
+            _logger.LogInformation("Collected {TotalEntries} update entries across {Pages} pages for {Games} unique games",
+                totalUpdateEntries, page, gameUpdates.Count);
+
+            // =============================================
+            // Pass 2: Process each game's change set
+            // =============================================
+            var totalSynced = 0;
+            var totalNew = 0;
+            var totalUpdated = 0;
+            var totalRemoved = 0;
+            var totalSkipped = 0;
+
+            foreach (var (gameId, info) in gameUpdates)
+            {
+                try
+                {
+                    // --- REMOVED games ---
+                    if (info.IsRemoved)
+                    {
+                        var existed = await GetGameAsync(gameId);
+                        if (existed != null)
+                        {
+                            await DeleteGameAsync(gameId);
+                            totalRemoved++;
+                            _logger.LogInformation("Deleted removed game {GameId} from cache", gameId);
+                        }
+                        continue;
+                    }
+
+                    // --- NEW games ---
+                    if (info.IsNew)
+                    {
+                        // Check platform from the update data
+                        if (!info.Platform.HasValue ||
+                            (info.Platform.Value != _switchPlatformId && info.Platform.Value != _switch2PlatformId))
+                        {
+                            _logger.LogDebug("Skipping new game {GameId} - platform {Platform} is not Switch/Switch 2",
+                                gameId, info.Platform?.ToString() ?? "unknown");
+                            totalSkipped++;
+                            continue;
+                        }
+
+                        // We have all the fields in the update data - save directly
+                        if (_storageMode == StorageMode.SqlDatabase || _storageMode == StorageMode.Dual)
+                        {
+                            await SaveNewGameFromUpdatesAsync(gameId, info);
+                        }
+
+                        if (_storageMode == StorageMode.Blob || _storageMode == StorageMode.Dual)
+                        {
+                            // For blob mode, build a JSON object and save
+                            var jsonObj = BuildGameJsonFromUpdates(gameId, info);
+                            var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
+                            await SaveGameToBlobAsync(containerClient, gameId, jsonObj);
+                        }
+
+                        totalNew++;
+                        totalSynced++;
+                        _logger.LogInformation("Added new Switch game {GameId}: {Title}",
+                            gameId, info.Fields.TryGetValue("game_title", out var titleVal) ? titleVal.ToString() : "unknown");
+                        continue;
+                    }
+
+                    // --- Field updates to EXISTING games ---
+                    // Only process fields that map to our schema (skip image-only updates)
+                    if (!info.Fields.Any())
+                    {
+                        _logger.LogDebug("Skipping game {GameId} - only image updates", gameId);
+                        totalSkipped++;
+                        continue;
+                    }
+
+                    // Check if the game exists in our database
+                    var existingGame = await GetGameAsync(gameId);
+                    if (existingGame == null)
+                    {
+                        // Not in our DB = not a Switch game we track
+                        _logger.LogDebug("Skipping game {GameId} - not in our database", gameId);
+                        totalSkipped++;
+                        continue;
+                    }
+
+                    // Apply field-level updates
+                    if (_storageMode == StorageMode.SqlDatabase || _storageMode == StorageMode.Dual)
+                    {
+                        await ApplyFieldUpdatesAsync(gameId, info.Fields);
+                    }
+
+                    if (_storageMode == StorageMode.Blob || _storageMode == StorageMode.Dual)
+                    {
+                        // For blob mode, fetch full game and re-save (can't do field-level updates on blobs)
+                        var gameDetailsUrl = $"{ApiBaseUrl}/Games/ByGameID?apikey={_apiKey}&id={gameId}";
+                        var gameResponse = await _httpClient.GetAsync(gameDetailsUrl);
+                        if (gameResponse.IsSuccessStatusCode)
+                        {
+                            var gameContent = await gameResponse.Content.ReadAsStringAsync();
+                            var gameDoc = JsonDocument.Parse(gameContent);
+                            if (gameDoc.RootElement.TryGetProperty("data", out var gameData) &&
+                                gameData.TryGetProperty("games", out var gamesArray) &&
+                                gamesArray.GetArrayLength() > 0)
+                            {
+                                var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
+                                await SaveGameToBlobAsync(containerClient, gameId, gamesArray[0]);
+                            }
+                        }
+                    }
+
+                    totalUpdated++;
+                    totalSynced++;
+                    _logger.LogDebug("Updated game {GameId} with {FieldCount} field changes",
+                        gameId, info.Fields.Count);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Error processing game {GameId}, skipping", gameId);
+                }
+            }
+
+            _logger.LogInformation(
+                "Incremental sync complete: {Total} synced ({New} new, {Updated} updated, {Removed} removed, {Skipped} skipped)",
+                totalSynced, totalNew, totalUpdated, totalRemoved, totalSkipped);
             return totalSynced;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error syncing updates for {Platform}", platformName);
+            _logger.LogError(ex, "Error syncing recent updates");
             throw;
+        }
+    }
+
+    /// <summary>
+    /// Build a JsonElement representing a game from update fields (for blob storage)
+    /// </summary>
+    private JsonElement BuildGameJsonFromUpdates(int gameId, GameUpdateInfo info)
+    {
+        using var stream = new MemoryStream();
+        using (var writer = new Utf8JsonWriter(stream))
+        {
+            writer.WriteStartObject();
+            writer.WriteNumber("id", gameId);
+
+            if (info.Platform.HasValue)
+                writer.WriteNumber("platform", info.Platform.Value);
+
+            foreach (var (fieldType, value) in info.Fields)
+            {
+                switch (fieldType)
+                {
+                    case "game_title":
+                    case "overview":
+                    case "release_date":
+                    case "coop":
+                    case "youtube":
+                    case "rating":
+                        writer.WriteString(fieldType, value.ValueKind == JsonValueKind.String ? value.GetString() : value.ToString());
+                        break;
+                    case "players":
+                    case "region_id":
+                    case "country_id":
+                        var strVal = value.ValueKind == JsonValueKind.String ? value.GetString() : value.ToString();
+                        if (int.TryParse(strVal, out var intVal))
+                            writer.WriteNumber(fieldType, intVal);
+                        break;
+                    case "genres":
+                    case "developers":
+                    case "publishers":
+                    case "alternates":
+                        writer.WritePropertyName(fieldType);
+                        value.WriteTo(writer);
+                        break;
+                }
+            }
+
+            writer.WriteEndObject();
+        }
+
+        stream.Position = 0;
+        return JsonDocument.Parse(stream).RootElement.Clone();
+    }
+
+    /// <summary>
+    /// Delete a game from storage
+    /// </summary>
+    private async Task DeleteGameAsync(int gameId)
+    {
+        switch (_storageMode)
+        {
+            case StorageMode.Blob:
+                await DeleteGameFromBlobAsync(gameId);
+                break;
+
+            case StorageMode.SqlDatabase:
+                await DeleteGameFromSqlAsync(gameId);
+                break;
+
+            case StorageMode.Dual:
+                await Task.WhenAll(
+                    DeleteGameFromBlobAsync(gameId),
+                    DeleteGameFromSqlAsync(gameId)
+                );
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Delete a game blob from blob storage
+    /// </summary>
+    private async Task DeleteGameFromBlobAsync(int gameId)
+    {
+        try
+        {
+            var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
+            var blobClient = containerClient.GetBlobClient($"game-{gameId}.json");
+            await blobClient.DeleteIfExistsAsync();
+            _logger.LogDebug("Deleted game {GameId} from blob storage", gameId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error deleting game {GameId} from blob storage", gameId);
         }
     }
 
@@ -787,7 +995,6 @@ public partial class GameSyncService
             var response = await blobClient.DownloadContentAsync();
             var content = response.Value.Content.ToString();
 
-            // Support both old format (just timestamp) and new format (timestamp|syncType|count)
             var parts = content.Split('|');
             if (DateTime.TryParse(parts[0], out var lastSync))
             {
@@ -1029,4 +1236,22 @@ public class SyncStatistics
     public int? SqlDeveloperCount { get; set; }
     public int? BlobPublisherCount { get; set; }
     public int? SqlPublisherCount { get; set; }
+}
+
+/// <summary>
+/// Holds parsed update data for a single game from the Updates endpoint
+/// </summary>
+public class GameUpdateInfo
+{
+    /// <summary>True if this game was newly created (type=game, value=[NEW])</summary>
+    public bool IsNew { get; set; }
+
+    /// <summary>True if this game was removed (type=game, value=[REMOVED])</summary>
+    public bool IsRemoved { get; set; }
+
+    /// <summary>Platform ID from the update (only present for new games)</summary>
+    public int? Platform { get; set; }
+
+    /// <summary>Field-level changes: type → value (latest value wins)</summary>
+    public Dictionary<string, JsonElement> Fields { get; set; } = new();
 }

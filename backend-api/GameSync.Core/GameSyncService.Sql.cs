@@ -495,6 +495,280 @@ public partial class GameSyncService
         return null;
     }
 
+    /// <summary>
+    /// Delete a game from SQL Database (CASCADE handles junction tables)
+    /// </summary>
+    private async Task DeleteGameFromSqlAsync(int gameId)
+    {
+        try
+        {
+            await using var connection = await GetSqlConnectionAsync();
+            await connection.ExecuteAsync(
+                "DELETE FROM games_cache WHERE game_id = @gameId",
+                new { gameId }
+            );
+            _logger.LogDebug("Deleted game {GameId} from SQL database", gameId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error deleting game {GameId} from SQL database", gameId);
+        }
+    }
+
+    /// <summary>
+    /// Save a new game to SQL Database directly from update fields (no API call needed)
+    /// </summary>
+    private async Task SaveNewGameFromUpdatesAsync(int gameId, GameUpdateInfo info)
+    {
+        try
+        {
+            await using var connection = await GetSqlConnectionAsync();
+            await using var transaction = connection.BeginTransaction();
+
+            try
+            {
+                var title = GetStringField(info, "game_title");
+                var releaseDateStr = GetStringField(info, "release_date");
+                var releaseDate = ParseNullableDate(releaseDateStr);
+                var platform = info.Platform ?? 0;
+                var regionId = GetIntField(info, "region_id");
+                var countryId = GetIntField(info, "country_id");
+                var players = GetIntField(info, "players");
+                var overview = GetStringField(info, "overview");
+                var rating = GetStringField(info, "rating");
+                var coop = GetStringField(info, "coop");
+                var youtube = GetStringField(info, "youtube");
+                string? alternates = null;
+                if (info.Fields.TryGetValue("alternates", out var altVal))
+                {
+                    alternates = altVal.ToString();
+                }
+
+                var gameSql = @"
+                    MERGE games_cache AS target
+                    USING (SELECT @gameId AS game_id) AS source
+                    ON target.game_id = source.game_id
+                    WHEN MATCHED THEN
+                        UPDATE SET 
+                            game_title = @title,
+                            release_date = @releaseDate,
+                            platform = @platform,
+                            region_id = @regionId,
+                            country_id = @countryId,
+                            players = @players,
+                            overview = @overview,
+                            rating = @rating,
+                            coop = @coop,
+                            youtube = @youtube,
+                            alternates = @alternates,
+                            cached_at = GETUTCDATE()
+                    WHEN NOT MATCHED THEN
+                        INSERT (game_id, game_title, release_date, platform, region_id, country_id, players, 
+                                overview, rating, coop, youtube, alternates, cached_at)
+                        VALUES (@gameId, @title, @releaseDate, @platform, @regionId, @countryId, @players, 
+                                @overview, @rating, @coop, @youtube, @alternates, GETUTCDATE());";
+
+                await connection.ExecuteAsync(gameSql, new
+                {
+                    gameId, title, releaseDate, platform, regionId, countryId,
+                    players, overview, rating, coop, youtube, alternates
+                }, transaction);
+
+                // Handle junction tables
+                await SaveJunctionFromUpdatesAsync(connection, transaction, gameId, info, "genres", "games_genres", "genre_id", "lookup_genres");
+                await SaveJunctionFromUpdatesAsync(connection, transaction, gameId, info, "developers", "games_developers", "developer_id", "lookup_developers");
+                await SaveJunctionFromUpdatesAsync(connection, transaction, gameId, info, "publishers", "games_publishers", "publisher_id", "lookup_publishers");
+
+                await transaction.CommitAsync();
+                _logger.LogDebug("Saved new game {GameId} from update fields", gameId);
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error saving new game {GameId} from updates", gameId);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Apply individual field updates to an existing game in SQL Database
+    /// </summary>
+    private async Task ApplyFieldUpdatesAsync(int gameId, Dictionary<string, JsonElement> fields)
+    {
+        try
+        {
+            await using var connection = await GetSqlConnectionAsync();
+            await using var transaction = connection.BeginTransaction();
+
+            try
+            {
+                // Build dynamic UPDATE for simple columns
+                var setClauses = new List<string>();
+                var parameters = new DynamicParameters();
+                parameters.Add("gameId", gameId);
+
+                foreach (var (fieldType, value) in fields)
+                {
+                    switch (fieldType)
+                    {
+                        case "game_title":
+                            setClauses.Add("game_title = @game_title");
+                            parameters.Add("game_title", GetStringFromElement(value));
+                            break;
+                        case "overview":
+                            setClauses.Add("overview = @overview");
+                            parameters.Add("overview", GetStringFromElement(value));
+                            break;
+                        case "release_date":
+                            setClauses.Add("release_date = @release_date");
+                            parameters.Add("release_date", ParseNullableDate(GetStringFromElement(value)));
+                            break;
+                        case "players":
+                            setClauses.Add("players = @players");
+                            parameters.Add("players", GetIntFromElement(value));
+                            break;
+                        case "coop":
+                            setClauses.Add("coop = @coop");
+                            parameters.Add("coop", GetStringFromElement(value));
+                            break;
+                        case "youtube":
+                            setClauses.Add("youtube = @youtube");
+                            parameters.Add("youtube", GetStringFromElement(value));
+                            break;
+                        case "rating":
+                            setClauses.Add("rating = @rating");
+                            parameters.Add("rating", GetStringFromElement(value));
+                            break;
+                        case "region_id":
+                            setClauses.Add("region_id = @region_id");
+                            parameters.Add("region_id", GetIntFromElement(value));
+                            break;
+                        case "country_id":
+                            setClauses.Add("country_id = @country_id");
+                            parameters.Add("country_id", GetIntFromElement(value));
+                            break;
+                        case "platform":
+                            setClauses.Add("platform = @platform");
+                            parameters.Add("platform", GetIntFromElement(value));
+                            break;
+                        case "alternates":
+                            setClauses.Add("alternates = @alternates");
+                            parameters.Add("alternates", value.ToString());
+                            break;
+                    }
+                }
+
+                // Execute column updates if any
+                if (setClauses.Any())
+                {
+                    setClauses.Add("cached_at = GETUTCDATE()");
+                    var sql = $"UPDATE games_cache SET {string.Join(", ", setClauses)} WHERE game_id = @gameId";
+                    await connection.ExecuteAsync(sql, parameters, transaction);
+                }
+
+                // Handle junction table updates
+                var updateInfo = new GameUpdateInfo { Fields = fields };
+                if (fields.ContainsKey("genres"))
+                    await SaveJunctionFromUpdatesAsync(connection, transaction, gameId, updateInfo, "genres", "games_genres", "genre_id", "lookup_genres");
+                if (fields.ContainsKey("developers"))
+                    await SaveJunctionFromUpdatesAsync(connection, transaction, gameId, updateInfo, "developers", "games_developers", "developer_id", "lookup_developers");
+                if (fields.ContainsKey("publishers"))
+                    await SaveJunctionFromUpdatesAsync(connection, transaction, gameId, updateInfo, "publishers", "games_publishers", "publisher_id", "lookup_publishers");
+
+                await transaction.CommitAsync();
+                _logger.LogDebug("Applied {Count} field updates to game {GameId}", fields.Count, gameId);
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error applying field updates to game {GameId}", gameId);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Helper: save junction table data (genres/developers/publishers) from update fields
+    /// </summary>
+    private async Task SaveJunctionFromUpdatesAsync(
+        SqlConnection connection, System.Data.Common.DbTransaction transaction,
+        int gameId, GameUpdateInfo info,
+        string fieldName, string tableName, string idColumn, string lookupTable)
+    {
+        if (!info.Fields.TryGetValue(fieldName, out var value) || value.ValueKind != JsonValueKind.Array)
+            return;
+
+        var ids = value.EnumerateArray()
+            .Where(v => v.ValueKind == JsonValueKind.Number)
+            .Select(v => v.GetInt32())
+            .Distinct()
+            .ToList();
+
+        // Delete existing
+        await connection.ExecuteAsync(
+            $"DELETE FROM {tableName} WHERE game_id = @gameId",
+            new { gameId }, transaction);
+
+        // Insert new
+        foreach (var id in ids)
+        {
+            await connection.ExecuteAsync(
+                $@"MERGE {tableName} AS target
+                   USING (SELECT @gameId AS game_id, @itemId AS {idColumn}) AS source
+                   ON target.game_id = source.game_id AND target.{idColumn} = source.{idColumn}
+                   WHEN NOT MATCHED AND EXISTS (SELECT 1 FROM {lookupTable} WHERE {idColumn} = @itemId) THEN
+                       INSERT (game_id, {idColumn}) VALUES (@gameId, @itemId);",
+                new { gameId, itemId = id }, transaction);
+        }
+    }
+
+    // =============================================
+    // Field extraction helpers for update values
+    // =============================================
+
+    private static string? GetStringField(GameUpdateInfo info, string fieldName)
+    {
+        if (info.Fields.TryGetValue(fieldName, out var val))
+            return GetStringFromElement(val);
+        return null;
+    }
+
+    private static int? GetIntField(GameUpdateInfo info, string fieldName)
+    {
+        if (info.Fields.TryGetValue(fieldName, out var val))
+            return GetIntFromElement(val);
+        return null;
+    }
+
+    private static string? GetStringFromElement(JsonElement el)
+    {
+        return el.ValueKind switch
+        {
+            JsonValueKind.String => el.GetString(),
+            JsonValueKind.Null => null,
+            _ => el.ToString()
+        };
+    }
+
+    private static int? GetIntFromElement(JsonElement el)
+    {
+        return el.ValueKind switch
+        {
+            JsonValueKind.Number => el.GetInt32(),
+            JsonValueKind.String when int.TryParse(el.GetString(), out var i) => i,
+            _ => null
+        };
+    }
+
     private class SyncMetadata
     {
         public DateTime LastSyncTime { get; set; }

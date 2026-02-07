@@ -270,8 +270,15 @@ public async Task Run([TimerTrigger("0 0 2 * * *")] TimerInfo myTimer)
    - Tracks the last successful page for resume capability
 
 2. **Incremental Sync**:
-   - Reads the last sync timestamp from blob storage
-   - Fetches games that were updated since the last sync
+   - Reads the last sync timestamp from blob storage / SQL
+   - Calculates minutes since last sync
+   - Calls TheGamesDB Updates endpoint with `time={minutes}` to get recent edits
+   - Groups update entries by `game_id` into change sets, detecting:
+     - **New games** (`type=game, value=[NEW]`): Platform checked inline — non-Switch games skipped immediately with zero API calls. Switch games saved directly from update fields.
+     - **Removed games** (`type=game, value=[REMOVED]`): Deleted from cache if present.
+     - **Field updates**: Applied directly via SQL UPDATE for games already in our database. Games not in our DB are skipped (not Switch).
+   - Image-only updates (boxart, screenshots, etc.) are skipped since we don't store those
+   - Nearly all individual `/Games/ByGameID` API calls are eliminated
    - Updates the last sync timestamp
 
 3. **Retry Logic**:
@@ -286,7 +293,7 @@ public async Task Run([TimerTrigger("0 0 2 * * *")] TimerInfo myTimer)
    - Genres: `lookup-genres.json`
    - Developers: `lookup-developers.json`
    - Publishers: `lookup-publishers.json`
-   - Last Sync: `last-sync.txt`
+   - Last Sync: `last-sync.txt` (timestamp|syncType|count)
    - Last Page (per platform): `last-page-platform-{id}.txt` (e.g., `last-page-platform-4971.txt`)
 
 ## Troubleshooting
