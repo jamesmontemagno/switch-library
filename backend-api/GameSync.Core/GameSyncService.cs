@@ -197,6 +197,42 @@ public partial class GameSyncService
     }
 
     /// <summary>
+    /// Sync only Nintendo Switch 2 games
+    /// </summary>
+    /// <param name="interactiveMode">Enable interactive pagination prompts</param>
+    /// <param name="startPage">Page number to start syncing from (default: 1)</param>
+    /// <param name="syncLookupData">Whether to sync lookup data (genres, developers, publishers) before games</param>
+    public async Task SyncSwitch2GamesAsync(bool interactiveMode = false, int startPage = 1, bool syncLookupData = true)
+    {
+        _logger.LogInformation("Starting sync for Nintendo Switch 2 games only...");
+
+        // Ensure container exists (only needed for blob mode)
+        if (_storageMode == StorageMode.Blob || _storageMode == StorageMode.Dual)
+        {
+            var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
+            await containerClient.CreateIfNotExistsAsync();
+        }
+
+        // IMPORTANT: Sync lookup data FIRST (games reference these via foreign keys)
+        if (syncLookupData)
+        {
+            await SyncLookupDataAsync();
+        }
+        else
+        {
+            _logger.LogInformation("Skipping lookup data sync (genres, developers, publishers)");
+        }
+
+        // Sync only Switch 2 games
+        var switch2Count = await SyncPlatformGamesAsync(_switch2PlatformId, "Nintendo Switch 2", interactiveMode, startPage);
+
+        // Update the last sync timestamp with total games synced
+        await SaveLastSyncTimeAsync("switch2-only", switch2Count);
+
+        _logger.LogInformation("Nintendo Switch 2 sync completed successfully!");
+    }
+
+    /// <summary>
     /// Sync only games that have been updated since the last sync
     /// </summary>
     /// <param name="overrideSyncDate">Optional: override the last sync date instead of reading from storage</param>

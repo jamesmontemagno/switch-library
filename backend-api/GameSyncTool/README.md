@@ -5,6 +5,7 @@ A .NET console application for syncing Nintendo Switch and Nintendo Switch 2 gam
 ## Features
 
 - **Full Sync**: Download all games for Nintendo Switch and Switch 2 platforms
+- **Switch 2 Only Sync**: Sync only Nintendo Switch 2 games with page resume support
 - **Incremental Sync**: Update only games that have been modified since the last sync
 - **Interactive Mode**: User-friendly menu-driven interface with pagination control
 - **Non-Interactive Mode**: Command-line automation for scheduled tasks
@@ -91,10 +92,15 @@ dotnet run
 ```
 
 You'll see a menu with options:
-1. Full Sync - Sync all games
-2. Incremental Sync - Sync only updates
-3. Show Statistics
-4. Exit
+1. Full Sync - Sync all games and lookup data
+2. Sync Games Only - Sync games without lookup data
+3. Sync Switch 2 Games Only - Sync only Nintendo Switch 2 games
+4. Incremental Sync - Sync only updates
+5. Sync Genres only
+6. Sync Developers only
+7. Sync Publishers only
+8. Show Statistics
+9. Exit
 
 ### Non-Interactive Mode
 
@@ -121,6 +127,26 @@ dotnet run -- --mode=games
 # or
 dotnet run -- --mode=games-only
 ```
+
+#### Switch 2 Only Sync
+
+Sync only Nintendo Switch 2 games (skips Nintendo Switch entirely):
+
+```bash
+dotnet run -- --mode=switch2
+# or
+dotnet run -- --mode=switch2-only
+```
+
+With a specific start page:
+
+```bash
+dotnet run -- --mode=switch2 --start-page=5
+# Short form
+dotnet run -- -m switch2 -p 5
+```
+
+In interactive mode, this option supports the same page resume mechanism as the full sync — you can resume from the last successful page, specify a page number, or start from the beginning.
 
 ##### Resume from Last Page
 

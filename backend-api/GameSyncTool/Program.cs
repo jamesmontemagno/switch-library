@@ -162,14 +162,15 @@ partial class Program
             Console.WriteLine("===========================================");
         Console.WriteLine("1. Full Sync - Sync all games and lookup data");
         Console.WriteLine("2. Sync Games Only - Sync games without lookup data");
-        Console.WriteLine("3. Incremental Sync - Sync only updates");
-        Console.WriteLine("4. Sync Genres only");
-        Console.WriteLine("5. Sync Developers only");
-        Console.WriteLine("6. Sync Publishers only");
-        Console.WriteLine("7. Show Statistics");
-        Console.WriteLine("8. Exit");
+        Console.WriteLine("3. Sync Switch 2 Games Only - Sync only Nintendo Switch 2 games");
+        Console.WriteLine("4. Incremental Sync - Sync only updates");
+        Console.WriteLine("5. Sync Genres only");
+        Console.WriteLine("6. Sync Developers only");
+        Console.WriteLine("7. Sync Publishers only");
+        Console.WriteLine("8. Show Statistics");
+        Console.WriteLine("9. Exit");
         Console.WriteLine();
-        Console.Write("Select an option (1-8): ");
+        Console.Write("Select an option (1-9): ");
 
             var choice = Console.ReadLine()?.Trim();
             Console.WriteLine();
@@ -185,32 +186,36 @@ partial class Program
                     break;
 
                 case "3":
-                    await PerformIncrementalSyncAsync(syncService);
+                    await PerformSwitch2OnlySyncAsync(syncService, interactiveMode: true, platformSettings, forcedStartPage: 0);
                     break;
 
                 case "4":
-                    await SyncGenresOnlyAsync(syncService);
+                    await PerformIncrementalSyncAsync(syncService);
                     break;
 
                 case "5":
-                    await SyncDevelopersOnlyAsync(syncService);
+                    await SyncGenresOnlyAsync(syncService);
                     break;
 
                 case "6":
-                    await SyncPublishersOnlyAsync(syncService);
+                    await SyncDevelopersOnlyAsync(syncService);
                     break;
 
                 case "7":
-                    await ShowStatisticsAsync(syncService);
+                    await SyncPublishersOnlyAsync(syncService);
                     break;
 
                 case "8":
+                    await ShowStatisticsAsync(syncService);
+                    break;
+
+                case "9":
                     Console.WriteLine("Goodbye!");
                     return 0;
 
                 default:
                     Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine("Invalid option. Please select 1-8.");
+                    Console.WriteLine("Invalid option. Please select 1-9.");
                     Console.ResetColor();
                     Console.WriteLine();
                     break;
@@ -269,6 +274,21 @@ partial class Program
                     await PerformIncrementalSyncAsync(syncService, sinceDate);
                     return 0;
 
+                case "switch2":
+                case "switch2-only":
+                    // Check for --start-page argument
+                    var switch2StartPageArg = GetCommandLineArgument(args, "--start-page") ??
+                                             GetCommandLineArgument(args, "-p");
+                    var switch2StartPage = 1;
+                    if (!string.IsNullOrEmpty(switch2StartPageArg) && int.TryParse(switch2StartPageArg, out var switch2ParsedPage))
+                    {
+                        switch2StartPage = switch2ParsedPage;
+                    }
+                    
+                    var switch2PlatformSettings = serviceProvider.GetRequiredService<PlatformsSettings>();
+                    await PerformSwitch2OnlySyncAsync(syncService, interactiveMode: false, switch2PlatformSettings, switch2StartPage);
+                    return 0;
+
                 case "stats":
                 case "statistics":
                     await ShowStatisticsAsync(syncService);
@@ -294,6 +314,7 @@ partial class Program
                     Console.WriteLine("Valid modes:");
                     Console.WriteLine("  --mode=full        (or --mode=all) - Full sync of all games and lookup data");
                     Console.WriteLine("  --mode=games       (or --mode=games-only) - Sync games only (skip lookup data)");
+                    Console.WriteLine("  --mode=switch2     (or --mode=switch2-only) - Sync Nintendo Switch 2 games only");
                     Console.WriteLine("  --mode=update      (or --mode=incremental) - Incremental sync");
                     Console.WriteLine("  --mode=genres      - Sync only genres lookup data");
                     Console.WriteLine("  --mode=developers  - Sync only developers lookup data");
@@ -478,6 +499,135 @@ partial class Program
         {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine($"✗ Full sync failed: {ex.Message}");
+            Console.ResetColor();
+        }
+
+        Console.WriteLine();
+        await ShowStatisticsAsync(syncService);
+        Console.WriteLine();
+    }
+
+    static async Task PerformSwitch2OnlySyncAsync(GameSyncService syncService, bool interactiveMode = false, PlatformsSettings? platformSettings = null, int forcedStartPage = 0)
+    {
+        Console.WriteLine("Starting NINTENDO SWITCH 2 ONLY SYNC...");
+        Console.WriteLine("This will sync only Nintendo Switch 2 games.");
+        
+        if (interactiveMode)
+        {
+            Console.WriteLine("You will be prompted after each page to continue, quit, or auto-complete.");
+        }
+        Console.WriteLine("This may take a while depending on the number of games.");
+        Console.WriteLine();
+
+        // Ask about lookup data sync in interactive mode
+        var shouldSyncLookupData = true;
+        if (interactiveMode)
+        {
+            Console.WriteLine("Do you want to sync lookup data (Genres, Developers, Publishers)?");
+            Console.WriteLine("Note: This is required if you haven't synced them before or want to update them.");
+            Console.Write("Sync lookup data? (Y/N, default Y): ");
+            var lookupChoice = Console.ReadLine()?.Trim().ToUpperInvariant();
+            Console.WriteLine();
+
+            if (lookupChoice == "N" || lookupChoice == "NO")
+            {
+                shouldSyncLookupData = false;
+                Console.WriteLine("Skipping lookup data sync.");
+                Console.WriteLine();
+            }
+        }
+
+        // Determine start page
+        var startPage = 1;
+        var startTime = DateTime.UtcNow;
+        
+        if (forcedStartPage > 0)
+        {
+            // Command line argument takes priority
+            startPage = forcedStartPage;
+            Console.WriteLine($"Starting from page {startPage} (specified via command line)");
+            Console.WriteLine();
+        }
+        else if (interactiveMode && platformSettings != null)
+        {
+            // Always ask user what page to start from in interactive mode
+            var switch2LastPage = await syncService.GetLastSuccessfulPageAsync(platformSettings.NintendoSwitch2);
+            
+            // Show saved page info if available
+            if (switch2LastPage.HasValue)
+            {
+                Console.WriteLine("Previous sync progress detected:");
+                Console.WriteLine($"  Nintendo Switch 2: Last successful page was {switch2LastPage.Value}");
+                Console.WriteLine();
+            }
+            
+            Console.WriteLine("What page would you like to start from?");
+            if (switch2LastPage.HasValue)
+            {
+                Console.WriteLine("  [R] Resume from last successful page");
+            }
+            Console.WriteLine("  [P] Specify a page number to start from");
+            Console.WriteLine("  [S] Start from the beginning (page 1)");
+            Console.WriteLine();
+            Console.Write(switch2LastPage.HasValue ? "Your choice (R/P/S): " : "Your choice (P/S): ");
+            
+            var choice = Console.ReadLine()?.Trim().ToUpperInvariant();
+            Console.WriteLine();
+
+            switch (choice)
+            {
+                case "R" when switch2LastPage.HasValue:
+                    startPage = switch2LastPage.Value + 1;
+                    Console.WriteLine($"Resuming Nintendo Switch 2 from page {startPage}");
+                    break;
+
+                case "P":
+                    Console.Write("Enter page number to start from: ");
+                    var pageInput = Console.ReadLine()?.Trim();
+                    if (int.TryParse(pageInput, out var specifiedPage) && specifiedPage > 0)
+                    {
+                        startPage = specifiedPage;
+                        Console.WriteLine($"Starting from page {startPage}");
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine("Invalid page number. Starting from page 1.");
+                        Console.ResetColor();
+                        startPage = 1;
+                    }
+                    break;
+
+                case "S":
+                case "":
+                    startPage = 1;
+                    Console.WriteLine("Starting from the beginning (page 1)");
+                    break;
+
+                default:
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine("Invalid choice. Starting from the beginning (page 1).");
+                    Console.ResetColor();
+                    startPage = 1;
+                    break;
+            }
+            Console.WriteLine();
+        }
+        
+        try
+        {
+            await syncService.SyncSwitch2GamesAsync(interactiveMode, startPage, shouldSyncLookupData);
+            
+            var duration = DateTime.UtcNow - startTime;
+            Console.WriteLine();
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"✓ Nintendo Switch 2 sync completed successfully in {duration.TotalMinutes:F2} minutes!");
+            Console.ResetColor();
+        }
+        catch (Exception ex)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"✗ Nintendo Switch 2 sync failed: {ex.Message}");
             Console.ResetColor();
         }
 

@@ -35,14 +35,15 @@ Main Menu:
 ===========================================
 1. Full Sync - Sync all games and lookup data
 2. Sync Games Only - Sync games without lookup data
-3. Incremental Sync - Sync only updates
-4. Sync Genres only
-5. Sync Developers only
-6. Sync Publishers only
-7. Show Statistics
-8. Exit
+3. Sync Switch 2 Games Only - Sync only Nintendo Switch 2 games
+4. Incremental Sync - Sync only updates
+5. Sync Genres only
+6. Sync Developers only
+7. Sync Publishers only
+8. Show Statistics
+9. Exit
 
-Select an option (1-8):
+Select an option (1-9):
 ```
 
 **Option 1: Full Sync** - Downloads all games and lookup data for both platforms:
@@ -58,17 +59,23 @@ Select an option (1-8):
 - Faster than full sync as it skips lookup data
 - Still supports pagination control and resume
 
-**Option 3: Incremental Sync** - Updates only:
+**Option 3: Sync Switch 2 Games Only** - Sync only Nintendo Switch 2 games:
+- Syncs only Nintendo Switch 2 platform (Platform ID: 5021)
+- Skips Nintendo Switch entirely for faster targeted syncing
+- Supports the same page resume mechanism (Resume/Specify/Start)
+- Optionally syncs lookup data first
+
+**Option 4: Incremental Sync** - Updates only:
 - Checks last sync timestamp
 - Downloads only new games since last sync
 - Much faster than full sync (typically < 5 minutes)
 
-**Options 4-6: Sync Individual Lookup Data** - Sync only specific lookup data:
-- Option 4: Sync only Genres
-- Option 5: Sync only Developers
-- Option 6: Sync only Publishers
+**Options 5-7: Sync Individual Lookup Data** - Sync only specific lookup data:
+- Option 5: Sync only Genres
+- Option 6: Sync only Developers
+- Option 7: Sync only Publishers
 
-**Option 7: Show Statistics** - Display cache info:
+**Option 8: Show Statistics** - Display cache info:
 ```
 ===========================================
 Cache Statistics:
@@ -158,6 +165,19 @@ dotnet run -- \
   --BlobStorage:ConnectionString="DefaultEndpointsProtocol=https;AccountName=..." \
   -m full \
   -p 136
+
+# Switch 2 only sync
+dotnet run -- \
+  --TheGamesDB:ApiKey=abc123xyz \
+  --BlobStorage:ConnectionString="DefaultEndpointsProtocol=https;AccountName=..." \
+  --mode=switch2
+
+# Switch 2 only sync from page 5
+dotnet run -- \
+  --TheGamesDB:ApiKey=abc123xyz \
+  --BlobStorage:ConnectionString="DefaultEndpointsProtocol=https;AccountName=..." \
+  --mode=switch2 \
+  --start-page=5
 
 # Incremental sync (for scheduled tasks)
 dotnet run -- \
