@@ -226,7 +226,11 @@ public partial class GameSyncService
         // Update the last sync timestamp with total games synced
         await SaveLastSyncTimeAsync("incremental", totalSynced);
 
-        _logger.LogInformation("Incremental sync completed successfully!");
+
+        _logger.LogInformation("Incremental sync completed successfully! Total: {Total} ({New} new, {Updated} updated)", 
+            result.TotalProcessed, result.NewGamesAdded, result.GamesUpdated);
+        
+        return result;
     }
 
     private async Task<int> SyncPlatformGamesAsync(int platformId, string platformName, bool interactiveMode = false, int startPage = 1)

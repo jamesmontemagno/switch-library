@@ -48,7 +48,8 @@ builder.Services.AddScoped<GameSyncService>(sp =>
     configuration.GetSection("BlobStorage").Bind(blobSettings);
     if (string.IsNullOrEmpty(blobSettings.ConnectionString))
     {
-        blobSettings.ConnectionString = configuration["BlobStorage__ConnectionString"] ?? "UseDevelopmentStorage=true";
+        // Use ProductionStorage for consistency with other API functions (GetGameById, GetGamesByIds, TheGamesDbProxy)
+        blobSettings.ConnectionString = configuration["ProductionStorage"] ?? "UseDevelopmentStorage=true";
     }
     if (string.IsNullOrEmpty(blobSettings.ContainerName))
     {
