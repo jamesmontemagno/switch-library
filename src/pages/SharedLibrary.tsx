@@ -10,7 +10,7 @@ import { ShareLibraryModal } from '../components/ShareLibraryModal';
 import { UpsellBanner } from '../components/UpsellBanner';
 import { SegmentedControl } from '../components/SegmentedControl';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowsLeftRight, faPlus, faCheck, faUserCheck, faTableCells, faList, faGripLines } from '@fortawesome/free-solid-svg-icons';
+import { faArrowsLeftRight, faPlus, faCheck, faUserCheck, faTableCells, faList, faGripLines, faStar, faTrophy } from '@fortawesome/free-solid-svg-icons';
 import './SharedLibrary.css';
 
 type SortOption = 'title_asc' | 'title_desc' | 'added_newest' | 'platform' | 'format';
@@ -447,6 +447,16 @@ export function SharedLibrary() {
                           <span>🎮</span>
                         </div>
                       )}
+                      {game.isFavorite && (
+                        <span className="badge-favorite small" role="img" aria-label="Favorite">
+                          <FontAwesomeIcon icon={faStar} />
+                        </span>
+                      )}
+                      {game.completed && (
+                        <span className="badge-beaten small" role="img" aria-label="Beaten">
+                          <FontAwesomeIcon icon={faTrophy} />
+                        </span>
+                      )}
                     </div>
                     <div className="compact-info">
                       <h3 className="compact-title">{game.title}</h3>
@@ -456,9 +466,6 @@ export function SharedLibrary() {
                         </span>
                         <span className={`format-tag small ${game.format.toLowerCase()}`}>
                           {game.format}
-                        </span>
-                        <span className={`completed-checkbox ${game.completed ? 'checked' : ''}`} title={game.completed ? 'Completed' : 'Not completed'}>
-                          {game.completed && <FontAwesomeIcon icon={faCheck} />}
                         </span>
                         {user && inMyCollection && (
                           <span className="in-collection-indicator" title="In Your Collection">
@@ -495,6 +502,16 @@ export function SharedLibrary() {
                           <span>🎮</span>
                         </div>
                       )}
+                      {game.isFavorite && (
+                        <span className="badge-favorite" role="img" aria-label="Favorite">
+                          <FontAwesomeIcon icon={faStar} />
+                        </span>
+                      )}
+                      {game.completed && (
+                        <span className="badge-beaten" role="img" aria-label="Beaten">
+                          <FontAwesomeIcon icon={faTrophy} />
+                        </span>
+                      )}
                       {user && inMyCollection && (
                         <div className="in-collection-badge" title="In Your Collection">
                           <FontAwesomeIcon icon={faCheck} />
@@ -518,9 +535,6 @@ export function SharedLibrary() {
                         {game.completedDate && (
                           <span className="date-info">🏆 Completed: {new Date(game.completedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
                         )}
-                        <span className={`completed-checkbox ${game.completed ? 'checked' : ''}`} title={game.completed ? 'Completed' : 'Not completed'}>
-                          {game.completed && <FontAwesomeIcon icon={faCheck} />}
-                        </span>
                       </div>
                       {user && (
                         <div className="game-actions">
@@ -557,6 +571,16 @@ export function SharedLibrary() {
                         <span>🎮</span>
                       </div>
                     )}
+                    {game.isFavorite && (
+                      <span className="badge-favorite" role="img" aria-label="Favorite">
+                        <FontAwesomeIcon icon={faStar} />
+                      </span>
+                    )}
+                    {game.completed && (
+                      <span className="badge-beaten" role="img" aria-label="Beaten">
+                        <FontAwesomeIcon icon={faTrophy} />
+                      </span>
+                    )}
                     {user && inMyCollection && (
                       <div className="in-collection-badge" title="In Your Collection">
                         <FontAwesomeIcon icon={faCheck} />
@@ -571,9 +595,6 @@ export function SharedLibrary() {
                       </span>
                       <span className={`format-tag ${game.format.toLowerCase()}`}>
                         {game.format}
-                      </span>
-                      <span className={`completed-checkbox ${game.completed ? 'checked' : ''}`} title={game.completed ? 'Completed' : 'Not completed'}>
-                        {game.completed && <FontAwesomeIcon icon={faCheck} />}
                       </span>
                     </div>
                     {user && (

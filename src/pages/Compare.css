@@ -283,21 +283,6 @@ button.summary-card.stats:hover {
   color: var(--text-secondary);
 }
 
-.compare-game-cover .completed-badge {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  background: #22c55e;
-  color: white;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
-  font-weight: bold;
-}
 
 .compare-game-info {
   padding: 0.75rem;
@@ -330,32 +315,6 @@ button.summary-card.stats:hover {
   text-transform: uppercase;
 }
 
-.game-tags .completed-checkbox {
-  display: none; /* Hide when not completed */
-}
-
-.game-tags .completed-checkbox.checked {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.125rem;
-  height: 1.125rem;
-  border: none;
-  border-radius: 50%; /* Circular */
-  background: #22c55e; /* Green background */
-  color: white;
-  font-size: 0.5625rem;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  flex-shrink: 0;
-  cursor: default;
-  box-shadow: 0 2px 4px rgba(34, 197, 94, 0.3);
-}
-
-.game-tags .completed-checkbox.checked:hover {
-  background: #16a34a; /* Darker green on hover */
-  box-shadow: 0 3px 6px rgba(34, 197, 94, 0.4);
-  transform: translateY(-1px);
-}
 
 .game-tags .platform-tag.switch {
   background: rgba(230, 0, 18, 0.2);

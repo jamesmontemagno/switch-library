@@ -14,7 +14,7 @@ import { SegmentedControl } from '../components/SegmentedControl';
 import { Button } from '../components/Button';
 import { logger } from '../services/logger';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faPenToSquare, faGamepad, faTrash, faCartShopping, faTrophy, faLink, faMagnifyingGlass, faTableCells, faList, faGripLines, faPlus, faStar } from '@fortawesome/free-solid-svg-icons';
+import { faPenToSquare, faGamepad, faTrash, faCartShopping, faTrophy, faLink, faMagnifyingGlass, faTableCells, faList, faGripLines, faPlus, faStar } from '@fortawesome/free-solid-svg-icons';
 import './Library.css';
 
 const DISMISSED_SHARE_PROMPT_KEY = 'dismissedSharePrompt';
@@ -586,25 +586,24 @@ function GameCard({ game, viewMode, onDelete, onEdit, isOnline }: GameCardProps)
             <div className="cover-placeholder-small"><FontAwesomeIcon icon={faGamepad} /></div>
           )}
           {game.isFavorite && (
-            <div className="favorite-badge small" title="Favorite">
+            <span className="badge-favorite small" role="img" aria-label="Favorite">
               <FontAwesomeIcon icon={faStar} />
-            </div>
+            </span>
+          )}
+          {game.completed && (
+            <span className="badge-beaten small" role="img" aria-label="Beaten">
+              <FontAwesomeIcon icon={faTrophy} />
+            </span>
           )}
         </div>
         <div className="compact-info">
-          <h3 className="compact-title">
-            {game.isFavorite && <FontAwesomeIcon icon={faStar} style={{ color: '#fbbf24', marginRight: '0.3rem', fontSize: '0.85em' }} />}
-            {game.title}
-          </h3>
+          <h3 className="compact-title">{game.title}</h3>
           <div className="compact-meta">
             <span className={`platform-tag small ${game.platform === 'Nintendo Switch' ? 'switch' : 'switch2'}`}>
               {game.platform === 'Nintendo Switch' ? 'Switch' : 'Switch 2'}
             </span>
             <span className={`format-tag small ${game.format.toLowerCase()}`}>
               {game.format}
-            </span>
-            <span className={`completed-checkbox ${game.completed ? 'checked' : ''}`} title={game.completed ? 'Completed' : 'Not completed'}>
-              {game.completed && <FontAwesomeIcon icon={faCheck} />}
             </span>
           </div>
         </div>
@@ -629,16 +628,18 @@ function GameCard({ game, viewMode, onDelete, onEdit, isOnline }: GameCardProps)
             </div>
           )}
           {game.isFavorite && (
-            <div className="favorite-badge" title="Favorite">
+            <span className="badge-favorite" role="img" aria-label="Favorite">
               <FontAwesomeIcon icon={faStar} />
-            </div>
+            </span>
+          )}
+          {game.completed && (
+            <span className="badge-beaten" role="img" aria-label="Beaten">
+              <FontAwesomeIcon icon={faTrophy} />
+            </span>
           )}
         </div>
         <div className="list-info">
-          <h3 className="game-title">
-            {game.isFavorite && <FontAwesomeIcon icon={faStar} style={{ color: '#fbbf24', marginRight: '0.5rem' }} />}
-            {game.title}
-          </h3>
+          <h3 className="game-title">{game.title}</h3>
           <div className="game-meta">
             <span className={`platform-tag ${game.platform === 'Nintendo Switch' ? 'switch' : 'switch2'}`}>
               {game.platform === 'Nintendo Switch' ? 'Switch' : 'Switch 2'}
@@ -654,9 +655,6 @@ function GameCard({ game, viewMode, onDelete, onEdit, isOnline }: GameCardProps)
             {game.completedDate && (
               <span className="date-info"><FontAwesomeIcon icon={faTrophy} /> Completed: {formatDate(game.completedDate)}</span>
             )}
-            <span className={`completed-checkbox ${game.completed ? 'checked' : ''}`} title={game.completed ? 'Completed' : 'Not completed'}>
-              {game.completed && <FontAwesomeIcon icon={faCheck} />}
-            </span>
             {game.notes && (
               <p className="list-notes">{game.notes}</p>
             )}
@@ -682,9 +680,14 @@ function GameCard({ game, viewMode, onDelete, onEdit, isOnline }: GameCardProps)
           </div>
         )}
         {game.isFavorite && (
-          <div className="favorite-badge" title="Favorite">
+          <span className="badge-favorite" role="img" aria-label="Favorite">
             <FontAwesomeIcon icon={faStar} />
-          </div>
+          </span>
+        )}
+        {game.completed && (
+          <span className="badge-beaten" role="img" aria-label="Beaten">
+            <FontAwesomeIcon icon={faTrophy} />
+          </span>
         )}
       </div>
       <div className="game-info">
@@ -697,7 +700,7 @@ function GameCard({ game, viewMode, onDelete, onEdit, isOnline }: GameCardProps)
             {game.format}
           </span>
         </div>
-        {(game.purchaseDate || game.completedDate || game.completed) && (
+        {(game.purchaseDate || game.completedDate) && (
           <div className="game-dates">
             {game.purchaseDate && (
               <span className="date-info" title="Purchase Date">
@@ -709,9 +712,6 @@ function GameCard({ game, viewMode, onDelete, onEdit, isOnline }: GameCardProps)
                 <FontAwesomeIcon icon={faTrophy} /> {formatDate(game.completedDate)}
               </span>
             )}
-            <span className={`completed-checkbox ${game.completed ? 'checked' : ''}`} title={game.completed ? 'Completed' : 'Not completed'}>
-              {game.completed && <FontAwesomeIcon icon={faCheck} />}
-            </span>
           </div>
         )}
         <div className="game-actions">

@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSEO } from '../hooks/useSEO';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChartColumn, faTriangleExclamation, faChartLine, faGamepad, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { faChartColumn, faTriangleExclamation, faChartLine, faGamepad, faStar, faTrophy } from '@fortawesome/free-solid-svg-icons';
 import type { GameEntry } from '../types';
 import { loadSharedGames, getSharedUserProfile } from '../services/database';
 import { normalizeGameTitle, gamesMatch, type GameComparisonKey } from '../utils/gameComparison';
@@ -357,6 +357,16 @@ export function Compare() {
                     ) : (
                       <div className="cover-placeholder"><FontAwesomeIcon icon={faGamepad} /></div>
                     )}
+                    {game.isFavorite && (
+                      <span className="badge-favorite" role="img" aria-label="Favorite">
+                        <FontAwesomeIcon icon={faStar} />
+                      </span>
+                    )}
+                    {game.completed && (
+                      <span className="badge-beaten" role="img" aria-label="Beaten">
+                        <FontAwesomeIcon icon={faTrophy} />
+                      </span>
+                    )}
                   </div>
                   <div className="compare-game-info">
                     <h3>{game.title}</h3>
@@ -366,9 +376,6 @@ export function Compare() {
                       </span>
                       <span className={`format-tag ${game.format.toLowerCase()}`}>
                         {game.format}
-                      </span>
-                      <span className={`completed-checkbox ${game.completed ? 'checked' : ''}`} title={game.completed ? 'Completed' : 'Not completed'}>
-                        {game.completed && <FontAwesomeIcon icon={faCheck} />}
                       </span>
                     </div>
                   </div>
