@@ -64,7 +64,9 @@ public partial class GameSyncService
                 
                 var rating = gameData.TryGetProperty("rating", out var ratingProp) && ratingProp.ValueKind != JsonValueKind.Null ? ratingProp.GetString() : null;
                 var coop = gameData.TryGetProperty("coop", out var coopProp) && coopProp.ValueKind != JsonValueKind.Null ? coopProp.GetString() : null;
-                var youtube = gameData.TryGetProperty("youtube", out var youtubeProp) && youtubeProp.ValueKind != JsonValueKind.Null ? youtubeProp.GetString() : null;
+                var youtubeRaw = gameData.TryGetProperty("youtube", out var youtubeProp) && youtubeProp.ValueKind != JsonValueKind.Null ? youtubeProp.GetString() : null;
+                // Truncate youtube to 500 chars to prevent SQL truncation errors
+                var youtube = youtubeRaw != null && youtubeRaw.Length > 500 ? youtubeRaw.Substring(0, 500) : youtubeRaw;
                 var alternates = gameData.TryGetProperty("alternates", out var alternatesProp) && alternatesProp.ValueKind != JsonValueKind.Null ? alternatesProp.ToString() : null;
 
                 // Merge game into games_cache table

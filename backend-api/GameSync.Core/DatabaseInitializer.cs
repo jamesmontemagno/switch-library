@@ -48,8 +48,7 @@ public class DatabaseInitializer
             else
             {
                 _logger.LogInformation("Database schema is initialized");
-                // Future: Check version and run migrations if needed
-                // await RunMigrationsAsync(connection);
+                await RunMigrationsAsync(connection);
             }
         }
         catch (Exception ex)
@@ -102,7 +101,7 @@ public class DatabaseInitializer
                 last_updated DATETIME2,
                 rating NVARCHAR(50),
                 coop NVARCHAR(10),
-                youtube NVARCHAR(100),
+                youtube NVARCHAR(500),
                 os NVARCHAR(500),
                 processor NVARCHAR(500),
                 ram NVARCHAR(500),
@@ -238,10 +237,13 @@ public class DatabaseInitializer
 
         _logger.LogInformation("Current database schema version: {Version}", currentVersion);
 
-        // Future migrations would go here
-        // if (currentVersion < 2)
-        // {
-        //     await ApplyMigration2Async(connection);
-        // }
+        if (currentVersion < 2)
+        {
+            _logger.LogInformation("Applying migration 2: Widen youtube column to NVARCHAR(500)");
+            await connection.ExecuteAsync("ALTER TABLE games_cache ALTER COLUMN youtube NVARCHAR(500)");
+            await connection.ExecuteAsync(
+                "INSERT INTO schema_migrations (version, description) VALUES (2, 'Widen youtube column to NVARCHAR(500)')");
+            _logger.LogInformation("Migration 2 applied successfully");
+        }
     }
 }
