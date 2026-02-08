@@ -47,11 +47,11 @@ public partial class GameSyncService
                     _logger.LogWarning("Game {GameId}: Invalid release_date '{ReleaseDate}', setting to null", gameId, releaseDateStr);
                 }
                 
-                var platform = gameData.TryGetProperty("platform", out var platformProp) ? platformProp.GetInt32() : 0;
-                var regionId = gameData.TryGetProperty("region_id", out var regionIdProp) ? regionIdProp.GetInt32() : (int?)null;
-                var countryId = gameData.TryGetProperty("country_id", out var countryIdProp) ? countryIdProp.GetInt32() : (int?)null;
-                var players = gameData.TryGetProperty("players", out var playersProp) ? playersProp.GetInt32() : (int?)null;
-                var overview = gameData.TryGetProperty("overview", out var overviewProp) ? overviewProp.GetString() : null;
+                var platform = gameData.TryGetProperty("platform", out var platformProp) && platformProp.ValueKind == JsonValueKind.Number ? platformProp.GetInt32() : 0;
+                var regionId = gameData.TryGetProperty("region_id", out var regionIdProp) && regionIdProp.ValueKind == JsonValueKind.Number ? regionIdProp.GetInt32() : (int?)null;
+                var countryId = gameData.TryGetProperty("country_id", out var countryIdProp) && countryIdProp.ValueKind == JsonValueKind.Number ? countryIdProp.GetInt32() : (int?)null;
+                var players = gameData.TryGetProperty("players", out var playersProp) && playersProp.ValueKind == JsonValueKind.Number ? playersProp.GetInt32() : (int?)null;
+                var overview = gameData.TryGetProperty("overview", out var overviewProp) && overviewProp.ValueKind != JsonValueKind.Null ? overviewProp.GetString() : null;
                 
                 var lastUpdatedStr = gameData.TryGetProperty("last_updated", out var lastUpdatedProp) && 
                                     lastUpdatedProp.ValueKind != JsonValueKind.Null ?
@@ -62,10 +62,10 @@ public partial class GameSyncService
                     _logger.LogWarning("Game {GameId}: Invalid last_updated '{LastUpdated}', setting to null", gameId, lastUpdatedStr);
                 }
                 
-                var rating = gameData.TryGetProperty("rating", out var ratingProp) ? ratingProp.GetString() : null;
-                var coop = gameData.TryGetProperty("coop", out var coopProp) ? coopProp.GetString() : null;
-                var youtube = gameData.TryGetProperty("youtube", out var youtubeProp) ? youtubeProp.GetString() : null;
-                var alternates = gameData.TryGetProperty("alternates", out var alternatesProp) ? alternatesProp.ToString() : null;
+                var rating = gameData.TryGetProperty("rating", out var ratingProp) && ratingProp.ValueKind != JsonValueKind.Null ? ratingProp.GetString() : null;
+                var coop = gameData.TryGetProperty("coop", out var coopProp) && coopProp.ValueKind != JsonValueKind.Null ? coopProp.GetString() : null;
+                var youtube = gameData.TryGetProperty("youtube", out var youtubeProp) && youtubeProp.ValueKind != JsonValueKind.Null ? youtubeProp.GetString() : null;
+                var alternates = gameData.TryGetProperty("alternates", out var alternatesProp) && alternatesProp.ValueKind != JsonValueKind.Null ? alternatesProp.ToString() : null;
 
                 // Merge game into games_cache table
                 var gameSql = @"
