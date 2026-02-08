@@ -25,6 +25,8 @@ export function Layout() {
             <a href="https://www.refractored.com/terms" target="_blank" rel="noopener noreferrer">Terms</a>
             {' · '}
             <a href="https://www.refractored.com/about#privacy-policy" target="_blank" rel="noopener noreferrer">Privacy</a>
+            {' · '}
+            <a href="https://github.com/jamesmontemagno/switch-library/issues" target="_blank" rel="noopener noreferrer">Feedback</a>
           </p>
           <p className="footer-attribution">
             Game data synced from{' '}

@@ -2,6 +2,36 @@
   text-align: center;
 }
 
+.beta-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.625rem 1rem;
+  background: var(--info-bg, #e8f4fd);
+  border-bottom: 1px solid var(--info-border, #b6d4fe);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  flex-wrap: wrap;
+}
+
+.beta-badge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  background: var(--primary, #e60012);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.75rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.beta-text {
+  color: var(--text-secondary);
+}
+
 .hero {
   padding: 3rem 1rem;
   max-width: 700px;

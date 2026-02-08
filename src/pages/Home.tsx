@@ -59,6 +59,11 @@ export function Home() {
 
   return (
     <div className="home">
+      <div className="beta-banner" role="status">
+        <span className="beta-badge">Public Beta</span>
+        <span className="beta-text">This app is in public beta. Features may change and data sync is still in progress.</span>
+      </div>
+
       <section className="hero">
         <h1 className="hero-title">
           Track Your Nintendo Switch Collection
