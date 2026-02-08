@@ -191,23 +191,37 @@ public class SqlGameService
             )
             SELECT 
                 gr.*,
-                STRING_AGG(CAST(gg.genre_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY lg.name) AS GenreIds,
-                STRING_AGG(lg.name, '|') WITHIN GROUP (ORDER BY lg.name) AS GenreNames,
-                STRING_AGG(CAST(gd.developer_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY ld.name) AS DeveloperIds,
-                STRING_AGG(ld.name, '|') WITHIN GROUP (ORDER BY ld.name) AS DeveloperNames,
-                STRING_AGG(CAST(gp.publisher_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY lp.name) AS PublisherIds,
-                STRING_AGG(lp.name, '|') WITHIN GROUP (ORDER BY lp.name) AS PublisherNames
+                genre_agg.GenreIds,
+                genre_agg.GenreNames,
+                dev_agg.DeveloperIds,
+                dev_agg.DeveloperNames,
+                pub_agg.PublisherIds,
+                pub_agg.PublisherNames
             FROM GameResults gr
-            LEFT JOIN games_genres gg ON gr.Id = gg.game_id
-            LEFT JOIN lookup_genres lg ON gg.genre_id = lg.genre_id
-            LEFT JOIN games_developers gd ON gr.Id = gd.game_id
-            LEFT JOIN lookup_developers ld ON gd.developer_id = ld.developer_id
-            LEFT JOIN games_publishers gp ON gr.Id = gp.game_id
-            LEFT JOIN lookup_publishers lp ON gp.publisher_id = lp.publisher_id
-            GROUP BY gr.Id, gr.GameTitle, gr.ReleaseDate, gr.Platform, gr.PlatformName, 
-                     gr.RegionId, gr.Players, gr.Overview, gr.Rating, gr.Coop, 
-                     gr.Youtube, gr.Alternates, gr.LastUpdated, gr.BoxartFilename,
-                     gr.SortOrder1, gr.SortOrder2
+            OUTER APPLY (
+                SELECT 
+                    STRING_AGG(CAST(gg.genre_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY lg.name) AS GenreIds,
+                    STRING_AGG(lg.name, '|') WITHIN GROUP (ORDER BY lg.name) AS GenreNames
+                FROM games_genres gg
+                JOIN lookup_genres lg ON gg.genre_id = lg.genre_id
+                WHERE gg.game_id = gr.Id
+            ) genre_agg
+            OUTER APPLY (
+                SELECT 
+                    STRING_AGG(CAST(gd.developer_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY ld.name) AS DeveloperIds,
+                    STRING_AGG(ld.name, '|') WITHIN GROUP (ORDER BY ld.name) AS DeveloperNames
+                FROM games_developers gd
+                JOIN lookup_developers ld ON gd.developer_id = ld.developer_id
+                WHERE gd.game_id = gr.Id
+            ) dev_agg
+            OUTER APPLY (
+                SELECT 
+                    STRING_AGG(CAST(gp.publisher_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY lp.name) AS PublisherIds,
+                    STRING_AGG(lp.name, '|') WITHIN GROUP (ORDER BY lp.name) AS PublisherNames
+                FROM games_publishers gp
+                JOIN lookup_publishers lp ON gp.publisher_id = lp.publisher_id
+                WHERE gp.game_id = gr.Id
+            ) pub_agg
             ORDER BY gr.SortOrder1, gr.SortOrder2, gr.GameTitle";
 
         parameters.Add("ExactMatch", query);
@@ -282,25 +296,40 @@ public class SqlGameService
                 g.alternates AS Alternates,
                 g.last_updated AS LastUpdated,
                 b.filename AS BoxartFilename,
-                STRING_AGG(CAST(gg.genre_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY lg.name) AS GenreIds,
-                STRING_AGG(lg.name, '|') WITHIN GROUP (ORDER BY lg.name) AS GenreNames,
-                STRING_AGG(CAST(gd.developer_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY ld.name) AS DeveloperIds,
-                STRING_AGG(ld.name, '|') WITHIN GROUP (ORDER BY ld.name) AS DeveloperNames,
-                STRING_AGG(CAST(gp.publisher_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY lp.name) AS PublisherIds,
-                STRING_AGG(lp.name, '|') WITHIN GROUP (ORDER BY lp.name) AS PublisherNames
+                genre_agg.GenreIds,
+                genre_agg.GenreNames,
+                dev_agg.DeveloperIds,
+                dev_agg.DeveloperNames,
+                pub_agg.PublisherIds,
+                pub_agg.PublisherNames
             FROM games_cache g
             LEFT JOIN platforms p ON g.platform = p.platform_id
             LEFT JOIN games_boxart b ON g.game_id = b.game_id AND b.type = 'boxart' AND b.side = 'front'
-            LEFT JOIN games_genres gg ON g.game_id = gg.game_id
-            LEFT JOIN lookup_genres lg ON gg.genre_id = lg.genre_id
-            LEFT JOIN games_developers gd ON g.game_id = gd.game_id
-            LEFT JOIN lookup_developers ld ON gd.developer_id = ld.developer_id
-            LEFT JOIN games_publishers gp ON g.game_id = gp.game_id
-            LEFT JOIN lookup_publishers lp ON gp.publisher_id = lp.publisher_id
-            WHERE g.game_id = @GameId
-            GROUP BY g.game_id, g.game_title, g.release_date, g.platform, p.name, g.region_id, 
-                     g.country_id, g.players, g.overview, g.rating, g.coop, g.youtube, g.os, 
-                     g.processor, g.ram, g.hdd, g.video, g.sound, g.alternates, g.last_updated, b.filename";
+            OUTER APPLY (
+                SELECT 
+                    STRING_AGG(CAST(gg.genre_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY lg.name) AS GenreIds,
+                    STRING_AGG(lg.name, '|') WITHIN GROUP (ORDER BY lg.name) AS GenreNames
+                FROM games_genres gg
+                JOIN lookup_genres lg ON gg.genre_id = lg.genre_id
+                WHERE gg.game_id = g.game_id
+            ) genre_agg
+            OUTER APPLY (
+                SELECT 
+                    STRING_AGG(CAST(gd.developer_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY ld.name) AS DeveloperIds,
+                    STRING_AGG(ld.name, '|') WITHIN GROUP (ORDER BY ld.name) AS DeveloperNames
+                FROM games_developers gd
+                JOIN lookup_developers ld ON gd.developer_id = ld.developer_id
+                WHERE gd.game_id = g.game_id
+            ) dev_agg
+            OUTER APPLY (
+                SELECT 
+                    STRING_AGG(CAST(gp.publisher_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY lp.name) AS PublisherIds,
+                    STRING_AGG(lp.name, '|') WITHIN GROUP (ORDER BY lp.name) AS PublisherNames
+                FROM games_publishers gp
+                JOIN lookup_publishers lp ON gp.publisher_id = lp.publisher_id
+                WHERE gp.game_id = g.game_id
+            ) pub_agg
+            WHERE g.game_id = @GameId";
 
         var game = await connection.QueryFirstOrDefaultAsync<GameSearchRowWithAggregates>(sql, new { GameId = gameId }, commandTimeout: 120);
 
@@ -363,24 +392,40 @@ public class SqlGameService
                 g.coop AS Coop,
                 g.alternates AS Alternates,
                 b.filename AS BoxartFilename,
-                STRING_AGG(CAST(gg.genre_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY lg.name) AS GenreIds,
-                STRING_AGG(lg.name, '|') WITHIN GROUP (ORDER BY lg.name) AS GenreNames,
-                STRING_AGG(CAST(gd.developer_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY ld.name) AS DeveloperIds,
-                STRING_AGG(ld.name, '|') WITHIN GROUP (ORDER BY ld.name) AS DeveloperNames,
-                STRING_AGG(CAST(gp.publisher_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY lp.name) AS PublisherIds,
-                STRING_AGG(lp.name, '|') WITHIN GROUP (ORDER BY lp.name) AS PublisherNames
+                genre_agg.GenreIds,
+                genre_agg.GenreNames,
+                dev_agg.DeveloperIds,
+                dev_agg.DeveloperNames,
+                pub_agg.PublisherIds,
+                pub_agg.PublisherNames
             FROM games_cache g
             LEFT JOIN platforms p ON g.platform = p.platform_id
             LEFT JOIN games_boxart b ON g.game_id = b.game_id AND b.type = 'boxart' AND b.side = 'front'
-            LEFT JOIN games_genres gg ON g.game_id = gg.game_id
-            LEFT JOIN lookup_genres lg ON gg.genre_id = lg.genre_id
-            LEFT JOIN games_developers gd ON g.game_id = gd.game_id
-            LEFT JOIN lookup_developers ld ON gd.developer_id = ld.developer_id
-            LEFT JOIN games_publishers gp ON g.game_id = gp.game_id
-            LEFT JOIN lookup_publishers lp ON gp.publisher_id = lp.publisher_id
-            WHERE g.game_id IN @GameIds
-            GROUP BY g.game_id, g.game_title, g.release_date, g.platform, p.name, 
-                     g.region_id, g.players, g.overview, g.rating, g.coop, g.alternates, b.filename";
+            OUTER APPLY (
+                SELECT 
+                    STRING_AGG(CAST(gg.genre_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY lg.name) AS GenreIds,
+                    STRING_AGG(lg.name, '|') WITHIN GROUP (ORDER BY lg.name) AS GenreNames
+                FROM games_genres gg
+                JOIN lookup_genres lg ON gg.genre_id = lg.genre_id
+                WHERE gg.game_id = g.game_id
+            ) genre_agg
+            OUTER APPLY (
+                SELECT 
+                    STRING_AGG(CAST(gd.developer_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY ld.name) AS DeveloperIds,
+                    STRING_AGG(ld.name, '|') WITHIN GROUP (ORDER BY ld.name) AS DeveloperNames
+                FROM games_developers gd
+                JOIN lookup_developers ld ON gd.developer_id = ld.developer_id
+                WHERE gd.game_id = g.game_id
+            ) dev_agg
+            OUTER APPLY (
+                SELECT 
+                    STRING_AGG(CAST(gp.publisher_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY lp.name) AS PublisherIds,
+                    STRING_AGG(lp.name, '|') WITHIN GROUP (ORDER BY lp.name) AS PublisherNames
+                FROM games_publishers gp
+                JOIN lookup_publishers lp ON gp.publisher_id = lp.publisher_id
+                WHERE gp.game_id = g.game_id
+            ) pub_agg
+            WHERE g.game_id IN @GameIds";
 
         var games = (await connection.QueryAsync<GameSearchRowWithAggregates>(sql, new { GameIds = gameIds }, commandTimeout: 120)).ToList();
 
@@ -451,26 +496,42 @@ public class SqlGameService
                 g.coop AS Coop,
                 g.alternates AS Alternates,
                 b.filename AS BoxartFilename,
-                STRING_AGG(CAST(gg.genre_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY lg.name) AS GenreIds,
-                STRING_AGG(lg.name, '|') WITHIN GROUP (ORDER BY lg.name) AS GenreNames,
-                STRING_AGG(CAST(gd.developer_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY ld.name) AS DeveloperIds,
-                STRING_AGG(ld.name, '|') WITHIN GROUP (ORDER BY ld.name) AS DeveloperNames,
-                STRING_AGG(CAST(gp.publisher_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY lp.name) AS PublisherIds,
-                STRING_AGG(lp.name, '|') WITHIN GROUP (ORDER BY lp.name) AS PublisherNames
+                genre_agg.GenreIds,
+                genre_agg.GenreNames,
+                dev_agg.DeveloperIds,
+                dev_agg.DeveloperNames,
+                pub_agg.PublisherIds,
+                pub_agg.PublisherNames
             FROM games_cache g
             LEFT JOIN platforms p ON g.platform = p.platform_id
             LEFT JOIN games_boxart b ON g.game_id = b.game_id AND b.type = 'boxart' AND b.side = 'front'
-            LEFT JOIN games_genres gg ON g.game_id = gg.game_id
-            LEFT JOIN lookup_genres lg ON gg.genre_id = lg.genre_id
-            LEFT JOIN games_developers gd ON g.game_id = gd.game_id
-            LEFT JOIN lookup_developers ld ON gd.developer_id = ld.developer_id
-            LEFT JOIN games_publishers gp ON g.game_id = gp.game_id
-            LEFT JOIN lookup_publishers lp ON gp.publisher_id = lp.publisher_id
+            OUTER APPLY (
+                SELECT 
+                    STRING_AGG(CAST(gg.genre_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY lg.name) AS GenreIds,
+                    STRING_AGG(lg.name, '|') WITHIN GROUP (ORDER BY lg.name) AS GenreNames
+                FROM games_genres gg
+                JOIN lookup_genres lg ON gg.genre_id = lg.genre_id
+                WHERE gg.game_id = g.game_id
+            ) genre_agg
+            OUTER APPLY (
+                SELECT 
+                    STRING_AGG(CAST(gd.developer_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY ld.name) AS DeveloperIds,
+                    STRING_AGG(ld.name, '|') WITHIN GROUP (ORDER BY ld.name) AS DeveloperNames
+                FROM games_developers gd
+                JOIN lookup_developers ld ON gd.developer_id = ld.developer_id
+                WHERE gd.game_id = g.game_id
+            ) dev_agg
+            OUTER APPLY (
+                SELECT 
+                    STRING_AGG(CAST(gp.publisher_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY lp.name) AS PublisherIds,
+                    STRING_AGG(lp.name, '|') WITHIN GROUP (ORDER BY lp.name) AS PublisherNames
+                FROM games_publishers gp
+                JOIN lookup_publishers lp ON gp.publisher_id = lp.publisher_id
+                WHERE gp.game_id = g.game_id
+            ) pub_agg
             WHERE g.release_date > @StartDate 
               AND g.release_date <= @EndDate
               {platformFilter}
-            GROUP BY g.game_id, g.game_title, g.release_date, g.platform, p.name, 
-                     g.region_id, g.players, g.overview, g.rating, g.coop, g.alternates, b.filename
             ORDER BY g.release_date ASC, g.game_title
             OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
 
@@ -574,25 +635,41 @@ public class SqlGameService
                 g.coop AS Coop,
                 b.filename AS BoxartFilename,
                 sg.score AS Score,
-                STRING_AGG(CAST(gg.genre_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY lg.name) AS GenreIds,
-                STRING_AGG(lg.name, '|') WITHIN GROUP (ORDER BY lg.name) AS GenreNames,
-                STRING_AGG(CAST(gd.developer_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY ld.name) AS DeveloperIds,
-                STRING_AGG(ld.name, '|') WITHIN GROUP (ORDER BY ld.name) AS DeveloperNames,
-                STRING_AGG(CAST(gp.publisher_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY lp.name) AS PublisherIds,
-                STRING_AGG(lp.name, '|') WITHIN GROUP (ORDER BY lp.name) AS PublisherNames
+                genre_agg.GenreIds,
+                genre_agg.GenreNames,
+                dev_agg.DeveloperIds,
+                dev_agg.DeveloperNames,
+                pub_agg.PublisherIds,
+                pub_agg.PublisherNames
             FROM ScoredGames sg
             JOIN games_cache g ON sg.game_id = g.game_id
             LEFT JOIN platforms p ON g.platform = p.platform_id
             LEFT JOIN games_boxart b ON g.game_id = b.game_id AND b.type = 'boxart' AND b.side = 'front'
-            LEFT JOIN games_genres gg ON g.game_id = gg.game_id
-            LEFT JOIN lookup_genres lg ON gg.genre_id = lg.genre_id
-            LEFT JOIN games_developers gd ON g.game_id = gd.game_id
-            LEFT JOIN lookup_developers ld ON gd.developer_id = ld.developer_id
-            LEFT JOIN games_publishers gp ON g.game_id = gp.game_id
-            LEFT JOIN lookup_publishers lp ON gp.publisher_id = lp.publisher_id
+            OUTER APPLY (
+                SELECT 
+                    STRING_AGG(CAST(gg.genre_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY lg.name) AS GenreIds,
+                    STRING_AGG(lg.name, '|') WITHIN GROUP (ORDER BY lg.name) AS GenreNames
+                FROM games_genres gg
+                JOIN lookup_genres lg ON gg.genre_id = lg.genre_id
+                WHERE gg.game_id = g.game_id
+            ) genre_agg
+            OUTER APPLY (
+                SELECT 
+                    STRING_AGG(CAST(gd.developer_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY ld.name) AS DeveloperIds,
+                    STRING_AGG(ld.name, '|') WITHIN GROUP (ORDER BY ld.name) AS DeveloperNames
+                FROM games_developers gd
+                JOIN lookup_developers ld ON gd.developer_id = ld.developer_id
+                WHERE gd.game_id = g.game_id
+            ) dev_agg
+            OUTER APPLY (
+                SELECT 
+                    STRING_AGG(CAST(gp.publisher_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY lp.name) AS PublisherIds,
+                    STRING_AGG(lp.name, '|') WITHIN GROUP (ORDER BY lp.name) AS PublisherNames
+                FROM games_publishers gp
+                JOIN lookup_publishers lp ON gp.publisher_id = lp.publisher_id
+                WHERE gp.game_id = g.game_id
+            ) pub_agg
             WHERE sg.score > 0
-            GROUP BY g.game_id, g.game_title, g.release_date, g.platform, p.name, 
-                     g.region_id, g.players, g.overview, g.rating, g.coop, b.filename, sg.score
             ORDER BY sg.score DESC, g.game_title
             OFFSET 0 ROWS FETCH NEXT @Limit ROWS ONLY";
 
@@ -704,7 +781,7 @@ public class SqlGameService
                 (SELECT last_sync_time FROM sync_metadata WHERE id = 1) AS LastSyncTime,
                 (SELECT sync_type FROM sync_metadata WHERE id = 1) AS SyncType,
                 (SELECT games_synced FROM sync_metadata WHERE id = 1) AS GamesSynced,
-                (SELECT COUNT(*) FROM games_cache WHERE boxart IS NOT NULL AND boxart != '') AS GamesWithBoxart,
+                (SELECT COUNT(DISTINCT game_id) FROM games_boxart WHERE type = 'boxart' AND side = 'front') AS GamesWithBoxart,
                 (SELECT COUNT(*) FROM games_cache WHERE overview IS NOT NULL AND overview != '') AS GamesWithOverview,
                 (SELECT COALESCE(AVG(CAST(rating AS FLOAT)), 0) FROM games_cache WHERE rating IS NOT NULL AND TRY_CAST(rating AS FLOAT) IS NOT NULL) AS AverageRating,
                 (SELECT COUNT(*) FROM games_cache WHERE coop = 'Yes') AS GamesWithCoop";
