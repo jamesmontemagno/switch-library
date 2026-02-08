@@ -718,7 +718,7 @@ export async function getDatabaseStats(): Promise<DatabaseStats | null> {
 // Get admin database statistics (requires function key)
 export async function getAdminDatabaseStats(functionKey: string): Promise<DatabaseStats | null> {
   try {
-    const response = await fetch(`${API_BASE_URL}/admin/database-stats?code=${functionKey}`);
+    const response = await fetch(`${API_BASE_URL}/manage/database-stats?code=${functionKey}`);
     
     if (!response.ok) {
       logger.error('Admin stats fetch error', new Error(`Status ${response.status}`));

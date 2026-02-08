@@ -298,11 +298,11 @@ public class SqlGameFunctions
 
     /// <summary>
     /// Get database statistics (Admin only - requires function key)
-    /// Route: GET /api/admin/database-stats
+    /// Route: GET /api/manage/database-stats
     /// </summary>
     [Function("GetDatabaseStatsAdmin")]
     public async Task<IActionResult> GetDatabaseStatsAdmin(
-        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "admin/database-stats")] HttpRequest req)
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "manage/database-stats")] HttpRequest req)
     {
         try
         {
@@ -365,12 +365,12 @@ public class SqlGameFunctions
     /// <summary>
     /// Admin endpoint to trigger a full re-sync of all games from TheGamesDB.
     /// This repopulates all game data including overview, rating, players, genres, publishers, and boxart.
-    /// POST /api/admin/resync?syncLookups=true
+    /// POST /api/manage/resync?syncLookups=true
     /// Requires Function key authorization.
     /// </summary>
     [Function("AdminResync")]
     public async Task<IActionResult> AdminResync(
-        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "admin/resync")] HttpRequest req)
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "manage/resync")] HttpRequest req)
     {
         _logger.LogInformation("Admin resync triggered");
 
