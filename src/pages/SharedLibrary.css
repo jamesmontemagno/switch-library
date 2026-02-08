@@ -350,14 +350,20 @@
 .game-card.grid .game-cover {
   position: relative;
   aspect-ratio: 3/4;
+  flex-shrink: 0;
+  min-height: 240px;
   overflow: hidden;
   background: var(--bg-tertiary);
 }
 
 .game-card.grid .game-cover img {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
 }
 
 .game-card.grid .cover-placeholder {
