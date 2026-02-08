@@ -15,11 +15,13 @@ public class SqlGameFunctions
 {
     private readonly ILogger<SqlGameFunctions> _logger;
     private readonly SqlGameService _gameService;
+    private readonly GameSync.Core.GameSyncService? _syncService;
 
-    public SqlGameFunctions(ILogger<SqlGameFunctions> logger, SqlGameService gameService)
+    public SqlGameFunctions(ILogger<SqlGameFunctions> logger, SqlGameService gameService, GameSync.Core.GameSyncService? syncService = null)
     {
         _logger = logger;
         _gameService = gameService;
+        _syncService = syncService;
     }
 
     /// <summary>
@@ -357,6 +359,49 @@ public class SqlGameFunctions
         catch
         {
             return null;
+        }
+    }
+
+    /// <summary>
+    /// Admin endpoint to trigger a full re-sync of all games from TheGamesDB.
+    /// This repopulates all game data including overview, rating, players, genres, publishers, and boxart.
+    /// POST /api/admin/resync?syncLookups=true
+    /// Requires Function key authorization.
+    /// </summary>
+    [Function("AdminResync")]
+    public async Task<IActionResult> AdminResync(
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "admin/resync")] HttpRequest req)
+    {
+        _logger.LogInformation("Admin resync triggered");
+
+        if (_syncService == null)
+        {
+            return new ObjectResult(new { error = "Sync service not available" }) { StatusCode = 500 };
+        }
+
+        var syncLookups = bool.TryParse(req.Query["syncLookups"], out var sl) && sl;
+
+        try
+        {
+            _logger.LogInformation("Starting full resync (syncLookups={SyncLookups})", syncLookups);
+            await _syncService.SyncAllGamesAsync(
+                interactiveMode: false,
+                switchStartPage: 1,
+                switch2StartPage: 1,
+                syncLookupData: syncLookups
+            );
+
+            _logger.LogInformation("Full resync completed");
+
+            return new OkObjectResult(new
+            {
+                message = "Full resync completed"
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Full resync failed");
+            return new ObjectResult(new { error = ex.Message }) { StatusCode = 500 };
         }
     }
 

@@ -496,6 +496,71 @@ public partial class GameSyncService
     }
 
     /// <summary>
+    /// Save boxart data for a game to SQL Database
+    /// </summary>
+    private async Task SaveBoxartToSqlAsync(int gameId, JsonElement boxartArray)
+    {
+        try
+        {
+            if (boxartArray.ValueKind != JsonValueKind.Array || boxartArray.GetArrayLength() == 0)
+                return;
+
+            await using var connection = await GetSqlConnectionAsync();
+            await using var transaction = connection.BeginTransaction();
+
+            try
+            {
+                // Delete existing boxart for this game
+                await connection.ExecuteAsync(
+                    "DELETE FROM games_boxart WHERE game_id = @gameId",
+                    new { gameId },
+                    transaction
+                );
+
+                // Insert new boxart entries
+                foreach (var img in boxartArray.EnumerateArray())
+                {
+                    var id = img.TryGetProperty("id", out var idProp) ? idProp.GetInt32() : 0;
+                    if (id == 0) continue;
+
+                    var type = img.TryGetProperty("type", out var typeProp) ? typeProp.GetString() : null;
+                    var side = img.TryGetProperty("side", out var sideProp) ? sideProp.GetString() : null;
+                    var filename = img.TryGetProperty("filename", out var filenameProp) ? filenameProp.GetString() : null;
+                    var resolution = img.TryGetProperty("resolution", out var resProp) ? resProp.GetString() : null;
+
+                    if (string.IsNullOrEmpty(filename)) continue;
+
+                    await connection.ExecuteAsync(
+                        @"MERGE games_boxart AS target
+                          USING (SELECT @id AS id) AS source
+                          ON target.id = source.id
+                          WHEN MATCHED THEN
+                              UPDATE SET game_id = @gameId, type = @type, side = @side, filename = @filename, resolution = @resolution
+                          WHEN NOT MATCHED THEN
+                              INSERT (id, game_id, type, side, filename, resolution)
+                              VALUES (@id, @gameId, @type, @side, @filename, @resolution);",
+                        new { id, gameId, type, side, filename, resolution },
+                        transaction
+                    );
+                }
+
+                await transaction.CommitAsync();
+                _logger.LogDebug("Saved {Count} boxart entries for game {GameId}", boxartArray.GetArrayLength(), gameId);
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error saving boxart for game {GameId}", gameId);
+            // Don't throw - boxart is not critical, we don't want to fail the sync
+        }
+    }
+
+    /// <summary>
     /// Delete a game from SQL Database (CASCADE handles junction tables)
     /// </summary>
     private async Task DeleteGameFromSqlAsync(int gameId)

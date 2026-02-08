@@ -5,7 +5,7 @@ import { useSEO } from '../hooks/useSEO';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import type { GameEntry } from '../types';
 import { loadGames, saveGame } from '../services/database';
-import { getGameById, getGenres, getDevelopers, getPublishers, mapIdsToNames } from '../services/thegamesdb';
+import { getGameById, getGenres, getDevelopers, getPublishers, mapIdsToNames, getRegionName } from '../services/thegamesdb';
 import type { TheGamesDBGame } from '../services/thegamesdb';
 import { EditGameModal } from '../components/EditGameModal';
 import { GameRecommendations } from '../components/GameRecommendations';
@@ -241,6 +241,12 @@ export function GameDetails() {
                   <div className="info-item">
                     <span className="info-label">Release Date</span>
                     <span className="info-value">{formatDate(apiData.release_date)}</span>
+                  </div>
+                )}
+                {apiData.region_id !== undefined && apiData.region_id !== null && (
+                  <div className="info-item">
+                    <span className="info-label">Region</span>
+                    <span className="info-value">{getRegionName(apiData.region_id)}</span>
                   </div>
                 )}
                 {apiData.players && (

@@ -255,7 +255,7 @@ public partial class GameSyncService
                 {
                     try
                     {
-                        var url = $"{ApiBaseUrl}/Games/ByPlatformID?apikey={_apiKey}&id={platformId}&page={page}";
+                        var url = $"{ApiBaseUrl}/Games/ByPlatformID?apikey={_apiKey}&id={platformId}&page={page}&include=boxart&fields=players,publishers,genres,overview,last_updated,rating,coop,youtube,alternates";
                         var response = await _httpClient.GetAsync(url);
 
                         if (!response.IsSuccessStatusCode)
@@ -358,6 +358,23 @@ public partial class GameSyncService
 
                 _logger.LogInformation("Retrieved {Count} games from page {Page}", gamesArray.GetArrayLength(), page);
 
+                // Extract boxart data from include section (keyed by game ID)
+                Dictionary<int, JsonElement>? boxartByGameId = null;
+                if (jsonDoc.RootElement.TryGetProperty("include", out var include) &&
+                    include.TryGetProperty("boxart", out var boxartInclude) &&
+                    boxartInclude.TryGetProperty("data", out var boxartData))
+                {
+                    boxartByGameId = new Dictionary<int, JsonElement>();
+                    foreach (var entry in boxartData.EnumerateObject())
+                    {
+                        if (int.TryParse(entry.Name, out var gId))
+                        {
+                            boxartByGameId[gId] = entry.Value;
+                        }
+                    }
+                    _logger.LogDebug("Found boxart data for {Count} games on page {Page}", boxartByGameId.Count, page);
+                }
+
                 // Save each game to storage
                 foreach (var game in gamesArray.EnumerateArray())
                 {
@@ -365,6 +382,14 @@ public partial class GameSyncService
                     {
                         var gameId = idProp.GetInt32();
                         await SaveGameAsync(gameId, game);
+
+                        // Save boxart if available
+                        if (boxartByGameId != null && boxartByGameId.TryGetValue(gameId, out var boxartArray) &&
+                            (_storageMode == StorageMode.SqlDatabase || _storageMode == StorageMode.Dual))
+                        {
+                            await SaveBoxartToSqlAsync(gameId, boxartArray);
+                        }
+
                         totalSynced++;
                     }
                 }
@@ -681,7 +706,7 @@ public partial class GameSyncService
                     if (_storageMode == StorageMode.Blob || _storageMode == StorageMode.Dual)
                     {
                         // For blob mode, fetch full game and re-save (can't do field-level updates on blobs)
-                        var gameDetailsUrl = $"{ApiBaseUrl}/Games/ByGameID?apikey={_apiKey}&id={gameId}";
+                        var gameDetailsUrl = $"{ApiBaseUrl}/Games/ByGameID?apikey={_apiKey}&id={gameId}&include=boxart&fields=players,publishers,genres,overview,last_updated,rating,coop,youtube,alternates";
                         var gameResponse = await _httpClient.GetAsync(gameDetailsUrl);
                         if (gameResponse.IsSuccessStatusCode)
                         {
@@ -693,6 +718,16 @@ public partial class GameSyncService
                             {
                                 var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
                                 await SaveGameToBlobAsync(containerClient, gameId, gamesArray[0]);
+                            }
+
+                            // Extract and save boxart from include section
+                            if ((_storageMode == StorageMode.SqlDatabase || _storageMode == StorageMode.Dual) &&
+                                gameDoc.RootElement.TryGetProperty("include", out var includeSection) &&
+                                includeSection.TryGetProperty("boxart", out var boxartSection) &&
+                                boxartSection.TryGetProperty("data", out var boxartData) &&
+                                boxartData.TryGetProperty(gameId.ToString(), out var gameBoxart))
+                            {
+                                await SaveBoxartToSqlAsync(gameId, gameBoxart);
                             }
                         }
                     }
