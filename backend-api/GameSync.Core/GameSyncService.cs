@@ -200,7 +200,7 @@ public partial class GameSyncService
     /// Sync only games that have been updated since the last sync
     /// </summary>
     /// <param name="overrideSyncDate">Optional: override the last sync date instead of reading from storage</param>
-    public async Task SyncUpdatesAsync(DateTime? overrideSyncDate = null)
+    public async Task<SyncResult> SyncUpdatesAsync(DateTime? overrideSyncDate = null)
     {
         _logger.LogInformation("Starting incremental sync for updated games and lookup data...");
 
@@ -221,15 +221,14 @@ public partial class GameSyncService
 
         // Sync updates for both platforms - Updates endpoint returns all platforms,
         // so we only need to call it once and filter by platform from game details
-        var totalSynced = await SyncRecentUpdatesAsync(lastSyncTime);
+        var result = await SyncRecentUpdatesAsync(lastSyncTime);
 
         // Update the last sync timestamp with total games synced
-        await SaveLastSyncTimeAsync("incremental", totalSynced);
+        await SaveLastSyncTimeAsync("incremental", result.TotalProcessed);
 
-
-        _logger.LogInformation("Incremental sync completed successfully! Total: {Total} ({New} new, {Updated} updated)", 
+        _logger.LogInformation("Incremental sync completed successfully! Total: {Total} ({New} new, {Updated} updated)",
             result.TotalProcessed, result.NewGamesAdded, result.GamesUpdated);
-        
+
         return result;
     }
 
@@ -464,7 +463,7 @@ public partial class GameSyncService
     /// field updates are applied to existing games, removed games are deleted.
     /// This eliminates the need for individual /Games/ByGameID API calls.
     /// </summary>
-    private async Task<int> SyncRecentUpdatesAsync(DateTime? lastSyncTime)
+    private async Task<SyncResult> SyncRecentUpdatesAsync(DateTime? lastSyncTime)
     {
         try
         {
@@ -474,7 +473,13 @@ public partial class GameSyncService
                 _logger.LogInformation("No previous sync time found, performing full sync");
                 var switchCount = await SyncPlatformGamesAsync(_switchPlatformId, "Nintendo Switch", interactiveMode: false, startPage: 1);
                 var switch2Count = await SyncPlatformGamesAsync(_switch2PlatformId, "Nintendo Switch 2", interactiveMode: false, startPage: 1);
-                return switchCount + switch2Count;
+                return new SyncResult
+                {
+                    TotalProcessed = switchCount + switch2Count,
+                    NewGamesAdded = switchCount + switch2Count,
+                    SwitchGamesProcessed = switchCount,
+                    Switch2GamesProcessed = switch2Count
+                };
             }
 
             // Calculate minutes since last sync (add 60 min buffer for safety)
@@ -578,7 +583,7 @@ public partial class GameSyncService
             if (gameUpdates.Count == 0)
             {
                 _logger.LogInformation("No game updates found since last sync");
-                return 0;
+                return new SyncResult();
             }
 
             _logger.LogInformation("Collected {TotalEntries} update entries across {Pages} pages for {Games} unique games",
@@ -592,6 +597,8 @@ public partial class GameSyncService
             var totalUpdated = 0;
             var totalRemoved = 0;
             var totalSkipped = 0;
+            var switchProcessed = 0;
+            var switch2Processed = 0;
 
             foreach (var (gameId, info) in gameUpdates)
             {
@@ -639,6 +646,8 @@ public partial class GameSyncService
 
                         totalNew++;
                         totalSynced++;
+                        if (info.Platform == _switchPlatformId) switchProcessed++;
+                        else if (info.Platform == _switch2PlatformId) switch2Processed++;
                         _logger.LogInformation("Added new Switch game {GameId}: {Title}",
                             gameId, info.Fields.TryGetValue("game_title", out var titleVal) ? titleVal.ToString() : "unknown");
                         continue;
@@ -702,7 +711,14 @@ public partial class GameSyncService
             _logger.LogInformation(
                 "Incremental sync complete: {Total} synced ({New} new, {Updated} updated, {Removed} removed, {Skipped} skipped)",
                 totalSynced, totalNew, totalUpdated, totalRemoved, totalSkipped);
-            return totalSynced;
+            return new SyncResult
+            {
+                TotalProcessed = totalSynced,
+                NewGamesAdded = totalNew,
+                GamesUpdated = totalUpdated,
+                SwitchGamesProcessed = switchProcessed,
+                Switch2GamesProcessed = switch2Processed
+            };
         }
         catch (Exception ex)
         {
@@ -1245,6 +1261,18 @@ public class SyncStatistics
 /// <summary>
 /// Holds parsed update data for a single game from the Updates endpoint
 /// </summary>
+/// <summary>
+/// Result of an incremental sync operation
+/// </summary>
+public class SyncResult
+{
+    public int TotalProcessed { get; set; }
+    public int NewGamesAdded { get; set; }
+    public int GamesUpdated { get; set; }
+    public int SwitchGamesProcessed { get; set; }
+    public int Switch2GamesProcessed { get; set; }
+}
+
 public class GameUpdateInfo
 {
     /// <summary>True if this game was newly created (type=game, value=[NEW])</summary>
