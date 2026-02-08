@@ -27,6 +27,10 @@ export interface UserPreferences {
   friends?: {
     sortBy: 'added_desc' | 'added_asc' | 'nickname_asc' | 'nickname_desc' | 'games_desc' | 'games_asc';
   };
+  calendar?: {
+    daysAhead: number;
+    platform: Platform | 'all';
+  };
 }
 
 const STORAGE_KEY = 'switch-library-preferences';
@@ -49,6 +53,10 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   },
   friends: {
     sortBy: 'added_desc',
+  },
+  calendar: {
+    daysAhead: 90,
+    platform: 'all',
   },
 };
 

@@ -696,6 +696,7 @@
 /* Grid View Card */
 .game-card.grid .game-cover {
   position: relative;
+  width: 100%;
   aspect-ratio: 3 / 4;
   background: var(--bg-tertiary);
   overflow: hidden;
@@ -704,7 +705,8 @@
 .game-card.grid .game-cover img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain; /* Changed from cover to contain to show full box art */
+  display: block;
 }
 
 /* Favorite Badge */

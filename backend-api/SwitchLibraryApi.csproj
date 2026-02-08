@@ -8,6 +8,12 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <!-- Exclude subdirectory projects from being compiled as part of this project -->
+  <ItemGroup>
+    <Compile Remove="GameSync.Core\**\*.cs" />
+    <Compile Remove="GameSyncTool\**\*.cs" />
+  </ItemGroup>
+
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Azure.Storage.Blobs" Version="12.27.0" />

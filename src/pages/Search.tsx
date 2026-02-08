@@ -10,12 +10,9 @@ import {
   searchGames, 
   PLATFORM_IDS,
   isTheGamesDBConfigured,
-  getStoredAllowance,
-  isAllowanceExhausted,
   getRegionName,
 } from '../services/thegamesdb';
-import { saveGame, loadGames, getMonthlySearchCount, logSearchUsage, deleteGame as deleteGameFromDb, getTrendingGames } from '../services/database';
-import { UsageLimitModal } from '../components/UsageLimitModal';
+import { saveGame, loadGames, deleteGame as deleteGameFromDb, getTrendingGames } from '../services/database';
 import { ManualAddGameModal } from '../components/ManualAddGameModal';
 import { FirstGameCelebrationModal } from '../components/FirstGameCelebrationModal';
 import { ShareLibraryModal } from '../components/ShareLibraryModal';
@@ -150,14 +147,7 @@ export function Search() {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMoreResults, setHasMoreResults] = useState(false);
-  
-  // API Allowance
-  const [showAllowanceWarning, setShowAllowanceWarning] = useState(false);
-  const [allowanceInfo, setAllowanceInfo] = useState<{ remaining: number; extra: number } | null>(null);
-  
-  // Usage tracking
-  const [showUsageLimitModal, setShowUsageLimitModal] = useState(false);
-  const [usageInfo, setUsageInfo] = useState<{ count: number; limit: number; month: string } | null>(null);
+  const [totalPages, setTotalPages] = useState(1);
   
   // Adding state
   const [addingGameId, setAddingGameId] = useState<number | null>(null);
@@ -209,17 +199,6 @@ export function Search() {
   useEffect(() => {
     if (user) {
       loadGames(user.id).then(games => setUserGames(games));
-      // Load usage info on mount
-      getMonthlySearchCount(user.id).then(usage => setUsageInfo(usage));
-    }
-    
-    // Check API allowance on mount
-    const stored = getStoredAllowance();
-    if (stored) {
-      setAllowanceInfo({ remaining: stored.remaining, extra: stored.extra });
-      if (isAllowanceExhausted()) {
-        setShowAllowanceWarning(true);
-      }
     }
   }, [user]);
 
@@ -284,35 +263,6 @@ export function Search() {
   const handleSearch = useCallback(async (page: number = 1) => {
     if (!query.trim() || !hasTheGamesDB) return;
     
-    // Check usage limit before searching (only for non-cached searches)
-    if (user && usageInfo && usageInfo.count >= usageInfo.limit) {
-      // Check if this query is cached first
-      const cacheKey = `${query.toLowerCase().trim()}_${platform === 'Nintendo Switch' ? PLATFORM_IDS.NINTENDO_SWITCH : platform === 'Nintendo Switch 2' ? PLATFORM_IDS.NINTENDO_SWITCH_2 : PLATFORM_IDS.NINTENDO_SWITCH}_${page}`;
-      const cached = localStorage.getItem('thegamesdb_search_cache');
-      if (cached) {
-        try {
-          const cache = JSON.parse(cached);
-          const cachedResult = cache[cacheKey];
-          const SEARCH_CACHE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
-          if (cachedResult && Date.now() - cachedResult.timestamp < SEARCH_CACHE_EXPIRY_MS) {
-            // Cached result available, allow search to proceed
-          } else {
-            // No cached result and limit reached, show modal
-            setShowUsageLimitModal(true);
-            return;
-          }
-        } catch {
-          // Error checking cache, show modal to be safe
-          setShowUsageLimitModal(true);
-          return;
-        }
-      } else {
-        // No cache and limit reached
-        setShowUsageLimitModal(true);
-        return;
-      }
-    }
-    
     const requestId = ++searchRequestIdRef.current;
     setIsSearching(true);
     setError(null);
@@ -325,68 +275,30 @@ export function Search() {
     
     try {
       // Determine platform ID - always restrict to Switch platforms
-      let platformId: number = PLATFORM_IDS.NINTENDO_SWITCH;
+      let platformId: number | undefined = undefined;
       if (platform === 'Nintendo Switch') {
         platformId = PLATFORM_IDS.NINTENDO_SWITCH;
       } else if (platform === 'Nintendo Switch 2') {
         platformId = PLATFORM_IDS.NINTENDO_SWITCH_2;
       }
-      // 'all' still searches Switch platform (our app is Switch-only)
-      
-      // Check if this query is already cached BEFORE calling searchGames
-      // (searchGames will cache the result after the API call, so checking after would be wrong)
-      const cacheKey = `${query.toLowerCase().trim()}_${platformId}_${page}`;
-      const cached = localStorage.getItem('thegamesdb_search_cache');
-      let wasCachedBeforeSearch = false;
-      if (cached) {
-        try {
-          const cache = JSON.parse(cached);
-          const cachedResult = cache[cacheKey];
-          const SEARCH_CACHE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
-          if (cachedResult && Date.now() - cachedResult.timestamp < SEARCH_CACHE_EXPIRY_MS) {
-            wasCachedBeforeSearch = true;
-          }
-        } catch {
-          // Ignore cache check errors
-        }
-      }
+      // 'all' searches all Switch platforms (no filter)
       
       const result = await searchGames(query.trim(), {
         platformId,
         page,
+        pageSize: 20,
       });
       
       if (requestId !== searchRequestIdRef.current) return;
       
-      // Log the search if it wasn't cached and we have a user
-      if (!wasCachedBeforeSearch && user) {
-        await logSearchUsage(user.id, query.trim());
-        // Refresh usage info
-        const updatedUsage = await getMonthlySearchCount(user.id);
-        setUsageInfo(updatedUsage);
-      }
-      
-      // Update allowance info
-      if (result.remaining_monthly_allowance !== undefined) {
-        setAllowanceInfo({
-          remaining: result.remaining_monthly_allowance,
-          extra: result.extra_allowance || 0
-        });
-        
-        // Show warning if allowance is exhausted or low
-        if (result.remaining_monthly_allowance === 0) {
-          setShowAllowanceWarning(true);
-        } else if (result.remaining_monthly_allowance < 50 && !hasSearched) {
-          setShowAllowanceWarning(true);
-        }
-      }
-      
       if (result.count === 0) {
         setRawResults([]);
+        setHasMoreResults(false);
+        setTotalPages(1);
         return;
       }
       
-      // Map results with boxart from search results (no additional API calls needed)
+      // Map results with boxart from search results
       const resultsWithImages = result.games.map((game) => {
         // Boxart is now included in the search results
         const boxartUrl = game.boxart ? (game.boxart.thumb || game.boxart.small || game.boxart.medium || game.boxart.original) : undefined;
@@ -413,9 +325,9 @@ export function Search() {
       // Store raw results - filtering/sorting is done reactively in useMemo
       setRawResults(resultsWithImages);
       
-      // Assume there are more results if we got a full page
-      // TheGamesDB typically returns 20 results per page
-      setHasMoreResults(resultsWithImages.length >= 20);
+      // Use server-provided pagination info
+      setHasMoreResults(result.totalPages ? page < result.totalPages : resultsWithImages.length >= 20);
+      setTotalPages(result.totalPages || Math.ceil((result.totalCount || resultsWithImages.length) / 20));
     } catch (err) {
       if (requestId === searchRequestIdRef.current) {
         setError('Search failed. Please try again.');
@@ -426,8 +338,7 @@ export function Search() {
         setIsSearching(false);
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, platform, hasTheGamesDB, user, usageInfo]);
+  }, [query, platform, hasTheGamesDB]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -807,7 +718,7 @@ export function Search() {
                   ← Previous
                 </button>
                 <span className="page-indicator">
-                  Page {currentPage}
+                  Page {currentPage} of {totalPages}
                 </span>
                 <button
                   onClick={() => {
@@ -959,7 +870,7 @@ export function Search() {
                   ← Previous
                 </button>
                 <span className="page-indicator">
-                  Page {currentPage}
+                  Page {currentPage} of {totalPages}
                 </span>
                 <button
                   onClick={() => {
@@ -1088,51 +999,6 @@ export function Search() {
         </div>
       )}
 
-      {/* API Allowance Warning Modal */}
-      {showAllowanceWarning && allowanceInfo && (
-        <div className="modal-overlay" onClick={() => setShowAllowanceWarning(false)}>
-          <div className="allowance-warning-modal" onClick={(e) => e.stopPropagation()}>
-            <header className="modal-header">
-              <h2>{allowanceInfo.remaining === 0 ? <><FontAwesomeIcon icon={faTriangleExclamation} /> API Limit Reached</> : <><FontAwesomeIcon icon={faTriangleExclamation} /> API Limit Warning</>}</h2>
-              <button onClick={() => setShowAllowanceWarning(false)} className="modal-close"><FontAwesomeIcon icon={faXmark} /></button>
-            </header>
-            <div className="allowance-warning-content">
-              {allowanceInfo.remaining === 0 ? (
-                <>
-                  <p className="warning-message">
-                    You have exhausted your monthly API allowance for TheGamesDB.
-                  </p>
-                  <p className="warning-detail">
-                    You will not be able to search for new games until your allowance resets at the start of next month.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p className="warning-message">
-                    Your TheGamesDB API allowance is running low.
-                  </p>
-                  <p className="warning-detail">
-                    Remaining requests: <strong>{allowanceInfo.remaining}</strong>
-                    {allowanceInfo.extra > 0 && <> (+ {allowanceInfo.extra} extra)</>}
-                  </p>
-                  <p className="warning-hint">
-                    Consider limiting your searches to preserve your allowance for the rest of the month.
-                  </p>
-                </>
-              )}
-              <div className="allowance-actions">
-                <button 
-                  className="btn-understand" 
-                  onClick={() => setShowAllowanceWarning(false)}
-                >
-                  I Understand
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Quick Add Modal */}
       {quickAddGame && (
         <div className="modal-overlay" onClick={() => setQuickAddGame(null)}>
@@ -1202,14 +1068,6 @@ export function Search() {
             </div>
           </div>
         </div>
-      )}
-
-      {/* Usage Limit Modal */}
-      {showUsageLimitModal && usageInfo && (
-        <UsageLimitModal
-          onClose={() => setShowUsageLimitModal(false)}
-          usage={usageInfo}
-        />
       )}
 
       {/* Delete Confirmation Modal */}

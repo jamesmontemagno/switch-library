@@ -1,7 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import { Header } from './Header';
 import { BottomNavigation } from './BottomNavigation';
-import { ApiAllowanceIndicator } from './ApiAllowanceFooter';
 import { UpdateAvailableBanner } from './UpdateAvailableBanner';
 import { NetworkStatus } from './NetworkStatus';
 import { useAuth } from '../hooks/useAuth';
@@ -28,7 +27,7 @@ export function Layout() {
             <a href="https://www.refractored.com/about#privacy-policy" target="_blank" rel="noopener noreferrer">Privacy</a>
           </p>
           <p className="footer-attribution">
-            Game data provided by{' '}
+            Game data synced from{' '}
             <a href="https://thegamesdb.net" target="_blank" rel="noopener noreferrer">TheGamesDB.net</a>
           </p>
           {import.meta.env.VITE_APP_VERSION && (
@@ -37,7 +36,6 @@ export function Layout() {
             </p>
           )}
         </div>
-        <ApiAllowanceIndicator />
       </footer>
       <UpdateAvailableBanner />
       {isAuthenticated && <BottomNavigation />}

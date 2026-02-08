@@ -1,0 +1,723 @@
+{
+  "code": 200,
+  "status": "Success",
+  "data": {
+    "count": 100,
+    "updates": [
+      {
+        "edit_id": 1505358,
+        "game_id": 134827,
+        "timestamp": "2026-02-06 19:24:04",
+        "type": "alternates",
+        "value": [
+          "Qumdole no Ken: Master the Blind touch",
+          "クムドールの剣 マスター ザ ブラインドタッチ"
+        ]
+      },
+      {
+        "edit_id": 1505357,
+        "game_id": 134827,
+        "timestamp": "2026-02-06 19:24:04",
+        "type": "publishers",
+        "value": [237]
+      },
+      {
+        "edit_id": 1505356,
+        "game_id": 134827,
+        "timestamp": "2026-02-06 19:24:04",
+        "type": "developers",
+        "value": [694]
+      },
+      {
+        "edit_id": 1505355,
+        "game_id": 134827,
+        "timestamp": "2026-02-06 19:24:04",
+        "type": "genres",
+        "value": [4]
+      },
+      {
+        "edit_id": 1505354,
+        "game_id": 134827,
+        "timestamp": "2026-02-06 19:24:04",
+        "type": "country_id",
+        "value": "28"
+      },
+      {
+        "edit_id": 1505353,
+        "game_id": 134827,
+        "timestamp": "2026-02-06 19:24:04",
+        "type": "region_id",
+        "value": "9"
+      },
+      {
+        "edit_id": 1505352,
+        "game_id": 134827,
+        "timestamp": "2026-02-06 19:24:04",
+        "type": "rating",
+        "value": "Not Rated"
+      },
+      {
+        "edit_id": 1505351,
+        "game_id": 134827,
+        "timestamp": "2026-02-06 19:24:04",
+        "type": "youtube",
+        "value": ""
+      },
+      {
+        "edit_id": 1505350,
+        "game_id": 134827,
+        "timestamp": "2026-02-06 19:24:04",
+        "type": "coop",
+        "value": "No"
+      },
+      {
+        "edit_id": 1505349,
+        "game_id": 134827,
+        "timestamp": "2026-02-06 19:24:04",
+        "type": "players",
+        "value": "1"
+      },
+      {
+        "edit_id": 1505348,
+        "game_id": 134827,
+        "timestamp": "2026-02-06 19:24:04",
+        "type": "release_date",
+        "value": "1991-10-25"
+      },
+      {
+        "edit_id": 1505347,
+        "game_id": 134827,
+        "timestamp": "2026-02-06 19:24:04",
+        "type": "overview",
+        "value": "The Sword of Kumdor (クムドールの剣 マスター ザ ブラインドタッチ) is an RPG video game published by ASCIIu and developed by ASCII released on October 25th, 1991 for the PC-98.\r\n\r\nYou play as the Milky Way's #1 typist, summoned to planet Kumdor to fight mysterious monsters by typing spells — but you lose all your keyboard keys and your QWERTY skills in a crash landing. Can you recover your talents and save the world?? The game has a surreal atmosphere, quirky dialogue, and a distinctive visual style."
+      },
+      {
+        "edit_id": 1505346,
+        "game_id": 134827,
+        "timestamp": "2026-02-06 19:24:04",
+        "type": "game_title",
+        "value": "The Sword of Kumdor"
+      },
+      {
+        "edit_id": 1505345,
+        "game_id": 134827,
+        "timestamp": "2026-02-06 19:24:04",
+        "type": "platform",
+        "value": "4934"
+      },
+      {
+        "edit_id": 1505344,
+        "game_id": 134827,
+        "timestamp": "2026-02-06 19:24:04",
+        "type": "game",
+        "value": "[NEW]"
+      },
+      {
+        "edit_id": 1505343,
+        "game_id": 134824,
+        "timestamp": "2026-02-06 19:06:45",
+        "type": "clearlogo",
+        "value": "clearlogo/134824-2.png"
+      },
+      {
+        "edit_id": 1505342,
+        "game_id": 134824,
+        "timestamp": "2026-02-06 19:06:08",
+        "type": "clearlogo",
+        "value": "clearlogo/134824-1.png"
+      },
+      {
+        "edit_id": 1505341,
+        "game_id": 134821,
+        "timestamp": "2026-02-06 18:58:29",
+        "type": "game",
+        "value": "[REMOVED]"
+      },
+      {
+        "edit_id": 1505340,
+        "game_id": 134821,
+        "timestamp": "2026-02-06 18:58:29",
+        "type": "all_images",
+        "value": "[REMOVED]"
+      },
+      {
+        "edit_id": 1505339,
+        "game_id": 134826,
+        "timestamp": "2026-02-06 18:57:55",
+        "type": "game",
+        "value": "[REMOVED]"
+      },
+      {
+        "edit_id": 1505338,
+        "game_id": 134826,
+        "timestamp": "2026-02-06 18:57:55",
+        "type": "all_images",
+        "value": "[REMOVED]"
+      },
+      {
+        "edit_id": 1505337,
+        "game_id": 37564,
+        "timestamp": "2026-02-06 17:58:49",
+        "type": "clearlogo",
+        "value": "clearlogo/37564-1.png"
+      },
+      {
+        "edit_id": 1505336,
+        "game_id": 134825,
+        "timestamp": "2026-02-06 17:54:37",
+        "type": "overview",
+        "value": "These patches will replace Mega Man with Proto Man in both the Mega Man II (U) and Rock Man 2 (J) ROM’s. It does not include any new levels or ASM tweaks.\r\n\r\nFeatures Include:\r\n\r\n    -Changed Mega Man into Proto Man\r\n    -Minor Palette changes to Intro and Title screens\r\n    -Altered Stage Select Graphics\r\n    -Altered Items 1, 2, and 3 sprites\r\n    -New password screen graphics and palette\r\n    -New Wily castle Intro palette\r\n    -Play as Proto Man in your favorite Rockman 2/Mega Man II ROM hack\r\n\r\nThe ending sprites have all been changed to Proto Man as well. This is the most complete Proto Man hack to date. It is to serve as a base for anyone wishing to hack Mega Man 2/Rock Man 2 using Proto Man as a playable character.\r\n\r\nGFX link here: https://gamesdb.launchbox-app.com/games/details/417973-mega-man-2-proto-man-edition"
+      },
+      {
+        "edit_id": 1505335,
+        "game_id": 134825,
+        "timestamp": "2026-02-06 17:54:26",
+        "type": "screenshot",
+        "value": "screenshot/134825-5.jpg"
+      },
+      {
+        "edit_id": 1505334,
+        "game_id": 134825,
+        "timestamp": "2026-02-06 17:54:26",
+        "type": "screenshot",
+        "value": "screenshot/134825-4.jpg"
+      },
+      {
+        "edit_id": 1505333,
+        "game_id": 134825,
+        "timestamp": "2026-02-06 17:54:25",
+        "type": "screenshot",
+        "value": "screenshot/134825-3.jpg"
+      },
+      {
+        "edit_id": 1505332,
+        "game_id": 134826,
+        "timestamp": "2026-02-06 17:54:25",
+        "type": "fanart",
+        "value": "fanart/134826-1.jpg"
+      },
+      {
+        "edit_id": 1505331,
+        "game_id": 134825,
+        "timestamp": "2026-02-06 17:54:25",
+        "type": "screenshot",
+        "value": "screenshot/134825-2.jpg"
+      },
+      {
+        "edit_id": 1505330,
+        "game_id": 134825,
+        "timestamp": "2026-02-06 17:54:24",
+        "type": "screenshot",
+        "value": "screenshot/134825-1.jpg"
+      },
+      {
+        "edit_id": 1505329,
+        "game_id": 134826,
+        "timestamp": "2026-02-06 17:54:02",
+        "type": "clearlogo",
+        "value": "clearlogo/134826-1.png"
+      },
+      {
+        "edit_id": 1505328,
+        "game_id": 134826,
+        "timestamp": "2026-02-06 17:53:20",
+        "type": "boxart",
+        "value": "boxart/front/134826-1.jpg"
+      },
+      {
+        "edit_id": 1505327,
+        "game_id": 134825,
+        "timestamp": "2026-02-06 17:53:20",
+        "type": "titlescreen",
+        "value": "titlescreen/134825-1.jpg"
+      },
+      {
+        "edit_id": 1505326,
+        "game_id": 134825,
+        "timestamp": "2026-02-06 17:53:05",
+        "type": "clearlogo",
+        "value": "clearlogo/134825-1.png"
+      },
+      {
+        "edit_id": 1505325,
+        "game_id": 134826,
+        "timestamp": "2026-02-06 17:53:02",
+        "type": "publishers",
+        "value": [1]
+      },
+      {
+        "edit_id": 1505324,
+        "game_id": 134826,
+        "timestamp": "2026-02-06 17:53:02",
+        "type": "developers",
+        "value": [10176]
+      },
+      {
+        "edit_id": 1505323,
+        "game_id": 134826,
+        "timestamp": "2026-02-06 17:53:02",
+        "type": "genres",
+        "value": [26]
+      },
+      {
+        "edit_id": 1505322,
+        "game_id": 134826,
+        "timestamp": "2026-02-06 17:53:02",
+        "type": "country_id",
+        "value": "0"
+      },
+      {
+        "edit_id": 1505321,
+        "game_id": 134826,
+        "timestamp": "2026-02-06 17:53:02",
+        "type": "region_id",
+        "value": "9"
+      },
+      {
+        "edit_id": 1505320,
+        "game_id": 134826,
+        "timestamp": "2026-02-06 17:53:02",
+        "type": "rating",
+        "value": "E - Everyone"
+      },
+      {
+        "edit_id": 1505319,
+        "game_id": 134826,
+        "timestamp": "2026-02-06 17:53:02",
+        "type": "youtube",
+        "value": ""
+      },
+      {
+        "edit_id": 1505318,
+        "game_id": 134826,
+        "timestamp": "2026-02-06 17:53:02",
+        "type": "coop",
+        "value": "No"
+      },
+      {
+        "edit_id": 1505317,
+        "game_id": 134826,
+        "timestamp": "2026-02-06 17:53:02",
+        "type": "players",
+        "value": "1"
+      },
+      {
+        "edit_id": 1505316,
+        "game_id": 134826,
+        "timestamp": "2026-02-06 17:53:02",
+        "type": "release_date",
+        "value": "2025-12-08"
+      },
+      {
+        "edit_id": 1505315,
+        "game_id": 134826,
+        "timestamp": "2026-02-06 17:53:02",
+        "type": "overview",
+        "value": "The Xbox app, also known as Xbox on PC and formerly known as Xbox PC, developed by Microsoft Gaming for Windows, Android, iOS and Tizen, is a companion app for users of Xbox video game consoles, providing access to Xbox network community features, remote control, as well as second screen functionality (formerly branded as SmartGlass) with selected games, applications, and content."
+      },
+      {
+        "edit_id": 1505314,
+        "game_id": 134826,
+        "timestamp": "2026-02-06 17:53:02",
+        "type": "game_title",
+        "value": "XBox"
+      },
+      {
+        "edit_id": 1505313,
+        "game_id": 134826,
+        "timestamp": "2026-02-06 17:53:02",
+        "type": "platform",
+        "value": "4916"
+      },
+      {
+        "edit_id": 1505312,
+        "game_id": 134826,
+        "timestamp": "2026-02-06 17:53:02",
+        "type": "game",
+        "value": "[NEW]"
+      },
+      {
+        "edit_id": 1505311,
+        "game_id": 134825,
+        "timestamp": "2026-02-06 17:52:27",
+        "type": "banner",
+        "value": "banner/134825-1.jpg"
+      },
+      {
+        "edit_id": 1505310,
+        "game_id": 134825,
+        "timestamp": "2026-02-06 17:51:36",
+        "type": "boxart",
+        "value": "boxart/front/134825-1.jpg"
+      },
+      {
+        "edit_id": 1505309,
+        "game_id": 134824,
+        "timestamp": "2026-02-06 17:49:54",
+        "type": "titlescreen",
+        "value": "titlescreen/134824-1.jpg"
+      },
+      {
+        "edit_id": 1505308,
+        "game_id": 134824,
+        "timestamp": "2026-02-06 17:49:42",
+        "type": "screenshot",
+        "value": "screenshot/134824-2.jpg"
+      },
+      {
+        "edit_id": 1505307,
+        "game_id": 134824,
+        "timestamp": "2026-02-06 17:49:37",
+        "type": "screenshot",
+        "value": "screenshot/134824-1.jpg"
+      },
+      {
+        "edit_id": 1505306,
+        "game_id": 134824,
+        "timestamp": "2026-02-06 17:49:30",
+        "type": "boxart",
+        "value": "boxart/front/134824-1.jpg"
+      },
+      {
+        "edit_id": 1505305,
+        "game_id": 134808,
+        "timestamp": "2026-02-06 17:48:04",
+        "type": "boxart",
+        "value": "boxart/front/134808-1.jpg"
+      },
+      {
+        "edit_id": 1505304,
+        "game_id": 134825,
+        "timestamp": "2026-02-06 17:46:41",
+        "type": "publishers",
+        "value": [1976]
+      },
+      {
+        "edit_id": 1505303,
+        "game_id": 134825,
+        "timestamp": "2026-02-06 17:46:41",
+        "type": "developers",
+        "value": [142]
+      },
+      {
+        "edit_id": 1505302,
+        "game_id": 134825,
+        "timestamp": "2026-02-06 17:46:41",
+        "type": "genres",
+        "value": [1, 15, 8]
+      },
+      {
+        "edit_id": 1505301,
+        "game_id": 134825,
+        "timestamp": "2026-02-06 17:46:41",
+        "type": "country_id",
+        "value": "50"
+      },
+      {
+        "edit_id": 1505300,
+        "game_id": 134825,
+        "timestamp": "2026-02-06 17:46:41",
+        "type": "region_id",
+        "value": "1"
+      },
+      {
+        "edit_id": 1505299,
+        "game_id": 134825,
+        "timestamp": "2026-02-06 17:46:41",
+        "type": "rating",
+        "value": "Not Rated"
+      },
+      {
+        "edit_id": 1505298,
+        "game_id": 134825,
+        "timestamp": "2026-02-06 17:46:41",
+        "type": "youtube",
+        "value": ""
+      },
+      {
+        "edit_id": 1505297,
+        "game_id": 134825,
+        "timestamp": "2026-02-06 17:46:41",
+        "type": "coop",
+        "value": "No"
+      },
+      {
+        "edit_id": 1505296,
+        "game_id": 134825,
+        "timestamp": "2026-02-06 17:46:41",
+        "type": "players",
+        "value": "1"
+      },
+      {
+        "edit_id": 1505295,
+        "game_id": 134825,
+        "timestamp": "2026-02-06 17:46:41",
+        "type": "release_date",
+        "value": "2011-12-09"
+      },
+      {
+        "edit_id": 1505294,
+        "game_id": 134825,
+        "timestamp": "2026-02-06 17:46:41",
+        "type": "overview",
+        "value": "These patches will replace Mega Man with Proto Man in both the Mega Man II (U) and Rock Man 2 (J) ROM’s. It does not include any new levels or ASM tweaks.\r\n\r\nFeatures Include:\r\n\r\n    -Changed Mega Man into Proto Man\r\n    -Minor Palette changes to Intro and Title screens\r\n    -Altered Stage Select Graphics\r\n    -Altered Items 1, 2, and 3 sprites\r\n    -New password screen graphics and palette\r\n    -New Wily castle Intro palette\r\n    -Play as Proto Man in your favorite Rockman 2/Mega Man II ROM hack\r\n\r\nThe ending sprites have all been changed to Proto Man as well. This is the most complete Proto Man hack to date. It is to serve as a base for anyone wishing to hack Mega Man 2/Rock Man 2 using Proto Man as a playable character.\r\n"
+      },
+      {
+        "edit_id": 1505293,
+        "game_id": 134825,
+        "timestamp": "2026-02-06 17:46:41",
+        "type": "game_title",
+        "value": "Mega Man II - Proto Man Mode"
+      },
+      {
+        "edit_id": 1505292,
+        "game_id": 134825,
+        "timestamp": "2026-02-06 17:46:41",
+        "type": "platform",
+        "value": "7"
+      },
+      {
+        "edit_id": 1505291,
+        "game_id": 134825,
+        "timestamp": "2026-02-06 17:46:41",
+        "type": "game",
+        "value": "[NEW]"
+      },
+      {
+        "edit_id": 1505290,
+        "game_id": 134824,
+        "timestamp": "2026-02-06 17:44:53",
+        "type": "alternates",
+        "value": [
+          "ルンルン協奏曲",
+          "Run Run Kyousoukyoku"
+        ]
+      },
+      {
+        "edit_id": 1505289,
+        "game_id": 134824,
+        "timestamp": "2026-02-06 17:44:53",
+        "type": "publishers",
+        "value": [3356]
+      },
+      {
+        "edit_id": 1505288,
+        "game_id": 134824,
+        "timestamp": "2026-02-06 17:44:53",
+        "type": "developers",
+        "value": [10193]
+      },
+      {
+        "edit_id": 1505287,
+        "game_id": 134824,
+        "timestamp": "2026-02-06 17:44:53",
+        "type": "genres",
+        "value": [1, 7]
+      },
+      {
+        "edit_id": 1505286,
+        "game_id": 134824,
+        "timestamp": "2026-02-06 17:44:53",
+        "type": "country_id",
+        "value": "28"
+      },
+      {
+        "edit_id": 1505285,
+        "game_id": 134824,
+        "timestamp": "2026-02-06 17:44:53",
+        "type": "region_id",
+        "value": "9"
+      },
+      {
+        "edit_id": 1505284,
+        "game_id": 134824,
+        "timestamp": "2026-02-06 17:44:53",
+        "type": "rating",
+        "value": "AO - Adult Only 18+"
+      },
+      {
+        "edit_id": 1505283,
+        "game_id": 134824,
+        "timestamp": "2026-02-06 17:44:53",
+        "type": "youtube",
+        "value": ""
+      },
+      {
+        "edit_id": 1505282,
+        "game_id": 134824,
+        "timestamp": "2026-02-06 17:44:53",
+        "type": "coop",
+        "value": "No"
+      },
+      {
+        "edit_id": 1505281,
+        "game_id": 134824,
+        "timestamp": "2026-02-06 17:44:53",
+        "type": "players",
+        "value": "2"
+      },
+      {
+        "edit_id": 1505280,
+        "game_id": 134824,
+        "timestamp": "2026-02-06 17:44:53",
+        "type": "release_date",
+        "value": "1989-09-15"
+      },
+      {
+        "edit_id": 1505279,
+        "game_id": 134824,
+        "timestamp": "2026-02-06 17:44:53",
+        "type": "overview",
+        "value": "Run Run Concerto (ルンルン協奏曲) is an Adult Action/Racing video game published by Elf and developed by Elf released on September 15th, 1989 for the PC-98.\r\n\r\nThis is an arcade-style on-foot racing game. It uses a split-screen side-scrolling view and can be player against computer-controlled opponents or in a two-player mode. The latter allows players to choose any stage, while the former follows a linear set of levels, starting in Tokyo and advancing to the USA via China and Europe. The courses typically feature platforming sections alongside flat terrain; it is usually required to jump in a timed fashion to succeed, and jumps can vary in height and length depending on how long the player holds the correspondent key. Runners would also take falling damage in certain spots.\r\n\r\nEach stage consists of the three races. If the player loses one but wins the other two, a mildly explicit erotic picture of a generic girl corresponding to the stage's country is shown. Should the player win the first two races two more explicit images are shown."
+      },
+      {
+        "edit_id": 1505278,
+        "game_id": 134824,
+        "timestamp": "2026-02-06 17:44:53",
+        "type": "game_title",
+        "value": "Run Run Concerto"
+      },
+      {
+        "edit_id": 1505277,
+        "game_id": 134824,
+        "timestamp": "2026-02-06 17:44:53",
+        "type": "platform",
+        "value": "4934"
+      },
+      {
+        "edit_id": 1505276,
+        "game_id": 134824,
+        "timestamp": "2026-02-06 17:44:53",
+        "type": "game",
+        "value": "[NEW]"
+      },
+      {
+        "edit_id": 1505275,
+        "game_id": 134091,
+        "timestamp": "2026-02-06 17:44:44",
+        "type": "clearlogo",
+        "value": "clearlogo/134091-1.png"
+      },
+      {
+        "edit_id": 1505274,
+        "game_id": 134807,
+        "timestamp": "2026-02-06 17:44:23",
+        "type": "boxart",
+        "value": "boxart/front/134807-1.jpg"
+      },
+      {
+        "edit_id": 1505273,
+        "game_id": 134091,
+        "timestamp": "2026-02-06 17:44:00",
+        "type": "titlescreen",
+        "value": "titlescreen/134091-1.jpg"
+      },
+      {
+        "edit_id": 1505272,
+        "game_id": 134823,
+        "timestamp": "2026-02-06 17:40:09",
+        "type": "genres",
+        "value": [15]
+      },
+      {
+        "edit_id": 1505271,
+        "game_id": 134823,
+        "timestamp": "2026-02-06 17:40:09",
+        "type": "country_id",
+        "value": "0"
+      },
+      {
+        "edit_id": 1505270,
+        "game_id": 134823,
+        "timestamp": "2026-02-06 17:40:09",
+        "type": "region_id",
+        "value": "9"
+      },
+      {
+        "edit_id": 1505269,
+        "game_id": 134823,
+        "timestamp": "2026-02-06 17:40:09",
+        "type": "rating",
+        "value": "Not Rated"
+      },
+      {
+        "edit_id": 1505268,
+        "game_id": 134823,
+        "timestamp": "2026-02-06 17:40:09",
+        "type": "youtube",
+        "value": ""
+      },
+      {
+        "edit_id": 1505267,
+        "game_id": 134823,
+        "timestamp": "2026-02-06 17:40:09",
+        "type": "coop",
+        "value": "Yes"
+      },
+      {
+        "edit_id": 1505266,
+        "game_id": 134823,
+        "timestamp": "2026-02-06 17:40:09",
+        "type": "players",
+        "value": "2"
+      },
+      {
+        "edit_id": 1505265,
+        "game_id": 134823,
+        "timestamp": "2026-02-06 17:40:09",
+        "type": "release_date",
+        "value": "2020-05-11"
+      },
+      {
+        "edit_id": 1505264,
+        "game_id": 134823,
+        "timestamp": "2026-02-06 17:40:09",
+        "type": "overview",
+        "value": "Sonic Robo Blast 2 is a 3D open-source Sonic the Hedgehog fangame built using a modified version of the Doom Legacy port of Doom. SRB2 is closely inspired by the original Sonic games from the Sega Genesis, and attempts to recreate the design in 3D. While SRB2 isn't fully completed, it already features tons of levels, enemies, speed, and quite a lot of the fun that the original Sonic games provided!\r\n\r\nDeveloped by Sonic Team Junior"
+      },
+      {
+        "edit_id": 1505263,
+        "game_id": 134823,
+        "timestamp": "2026-02-06 17:40:09",
+        "type": "game_title",
+        "value": "Sonic Robo Blast 2"
+      },
+      {
+        "edit_id": 1505262,
+        "game_id": 134823,
+        "timestamp": "2026-02-06 17:40:09",
+        "type": "platform",
+        "value": "4916"
+      },
+      {
+        "edit_id": 1505261,
+        "game_id": 134823,
+        "timestamp": "2026-02-06 17:40:09",
+        "type": "game",
+        "value": "[NEW]"
+      },
+      {
+        "edit_id": 1505260,
+        "game_id": 134822,
+        "timestamp": "2026-02-06 17:38:37",
+        "type": "screenshot",
+        "value": "screenshot/134822-1.jpg"
+      },
+      {
+        "edit_id": 1505259,
+        "game_id": 134822,
+        "timestamp": "2026-02-06 17:38:32",
+        "type": "clearlogo",
+        "value": "clearlogo/134822-1.png"
+      }
+    ]
+  },
+  "pages": {
+    "previous": "https://api.thegamesdb.net/v1/Games/Updates?apikey=&time=31520&page=6",
+    "current": "https://api.thegamesdb.net/v1/Games/Updates?apikey=&time=31520&page=7",
+    "next": "https://api.thegamesdb.net/v1/Games/Updates?apikey=&time=31520&page=8"
+  },
+  "remaining_monthly_allowance": 0,
+  "extra_allowance": 5462,
+  "allowance_refresh_timer": null
+}

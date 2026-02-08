@@ -15,6 +15,7 @@ import { SharedLibrary } from './pages/SharedLibrary';
 import { Compare } from './pages/Compare';
 import { Settings } from './pages/Settings';
 import { AdminDashboard } from './pages/AdminDashboard';
+import { ReleaseCalendar } from './pages/ReleaseCalendar';
 import { NotFound } from './pages/NotFound';
 import { usePreferences } from './hooks/usePreferences';
 
@@ -74,6 +75,14 @@ function AppContent() {
               element={
                 <ProtectedRoute>
                   <GameDetails />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="calendar"
+              element={
+                <ProtectedRoute>
+                  <ReleaseCalendar />
                 </ProtectedRoute>
               }
             />

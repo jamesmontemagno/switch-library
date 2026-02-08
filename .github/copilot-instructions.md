@@ -23,20 +23,29 @@ The `isSupabaseConfigured()` check determines mode at runtime. No hardcoded assu
 
 ## Data Flow Architecture
 
-### TheGamesDB API Integration (3-tier caching strategy)
+### SQL Database as Primary Data Source
 
-1. **Frontend Cache** (localStorage, 7-30 day TTL)
-2. **Backend Proxy** ([backend-api/TheGamesDbProxy.cs](backend-api/TheGamesDbProxy.cs)) - handles CORS, adds API key server-side, caches search results
-3. **Blob Storage Cache** ([backend-api/GetGameById.cs](backend-api/GetGameById.cs) and [backend-api/GetGamesByIds.cs](backend-api/GetGamesByIds.cs)) - preserves API quota
+All game data queries now use the Azure SQL database as the primary source, synced nightly from TheGamesDB:
 
-**Why**: TheGamesDB has strict rate limits (50 searches/month). Always check cache first. Background caching on search results is fire-and-forget to avoid blocking responses.
+1. **Azure SQL Database** with full-text search ([backend-api/SqlGameService.cs](backend-api/SqlGameService.cs))
+2. **Azure Functions** expose SQL queries via REST endpoints ([backend-api/SqlGameFunctions.cs](backend-api/SqlGameFunctions.cs)):
+   - `/api/search` - Full-text search with pagination
+   - `/api/games/{id}` - Single game details
+   - `/api/games/bulk` - Bulk game lookup
+   - `/api/upcoming` - Upcoming releases
+   - `/api/recommendations/{gameId}` - Similar games by genre/developer/publisher
+   - `/api/lookup/{type}` - Genres, developers, publishers
+   - `/api/stats` - Database statistics
+3. **Nightly Sync** ([backend-api/NightlySyncTimer.cs](backend-api/NightlySyncTimer.cs)) updates SQL from TheGamesDB API
 
-```csharp
-// Search results automatically cache all games in background (TheGamesDbProxy.cs)
-_ = CacheSearchResultsInBackgroundAsync(jsonDocument.RootElement);
-```
+**Frontend Caching**: Short-lived cache (1 hour for searches, 24 hours for game details) in localStorage via [thegamesdb.ts](src/services/thegamesdb.ts).
 
-**Bulk Lookups**: The GetGamesByIds endpoint supports fetching multiple games from blob cache for the trending games feature without consuming API quota.
+**Why SQL**: Eliminates API rate limits, enables full-text search, supports new features like release calendar and recommendations.
+
+### New Features Enabled by SQL
+
+- **Release Calendar** ([src/pages/ReleaseCalendar.tsx](src/pages/ReleaseCalendar.tsx)): Browse upcoming game releases with day/platform filters
+- **Game Recommendations** ([src/components/GameRecommendations.tsx](src/components/GameRecommendations.tsx)): Similar games based on shared genres, developers, publishers (weighted scoring)
 
 ### Database Schema Key Points ([supabase/schema.sql](supabase/schema.sql))
 
@@ -69,6 +78,7 @@ npm run dev  # Runs on http://localhost:5173
 - `VITE_SUPABASE_KEY` - Modern publishable key (sb_publishable_*) preferred, legacy anon key supported
 - `VITE_API_BASE_URL` - Backend URL (default: `/api` for proxy)
 - `VITE_BASE_PATH` - Base path for routing (e.g., `/switch-library/` for GitHub Pages)
+- `VITE_FORCE_DEMO_MODE` - Set to `true` to force demo mode (localStorage only, no Supabase)
 
 **Backend** ([backend-api/local.settings.json](backend-api/local.settings.json)):
 ```json
@@ -100,6 +110,7 @@ npm run dev  # Runs on http://localhost:5173
   - **Compare**: Side-by-side library comparison
   - **SharedLibrary**: Public view of shared collections
   - **GameDetails**: Detailed game information and editing
+  - **ReleaseCalendar**: Upcoming game releases with filters
 - **Components** ([src/components/](src/components/)): Presentational, receive props
   - **ShareLibraryModal** ([src/components/ShareLibraryModal.tsx](src/components/ShareLibraryModal.tsx)): Reusable modal for managing share library settings
     - Used across Library, Friends, and SharedLibrary pages
@@ -107,6 +118,7 @@ npm run dev  # Runs on http://localhost:5173
     - Auto-loads user profile and share settings on mount
     - Triggers `onSharingEnabled` callback when sharing is enabled for parent refresh
   - **AddGameModal/EditGameModal/ManualAddGameModal**: Game entry forms
+  - **GameRecommendations**: Similar games based on genres/developers/publishers
   - **BottomNavigation**: Mobile-friendly navigation bar
   - **NetworkStatus**: Online/offline indicator for PWA
 - **Hooks** ([src/hooks/](src/hooks/)): Reusable logic (useAuth, usePreferences, useSEO)
@@ -231,23 +243,20 @@ logger.error('Failed to save', error, { context });
 - **Dependency Injection** ([Program.cs](backend-api/Program.cs)): HttpClientFactory registered for pooling
 - **Configuration**: `IConfiguration` auto-binds from `local.settings.json` / Azure App Settings
 
-### Proxy Pattern ([TheGamesDbProxy.cs](backend-api/TheGamesDbProxy.cs))
+### SQL Query Pattern ([SqlGameService.cs](backend-api/SqlGameService.cs))
 
+All game data queries use Dapper with Azure SQL:
 ```csharp
-// Route: /api/thegamesdb/{*path}
-// Catches: /api/thegamesdb/Games/ByGameName?name=zelda
-// Forwards: https://api.thegamesdb.net/v1/Games/ByGameName?name=zelda&apikey=***
+// Full-text search with pagination
+public async Task<(List<GameSearchResult> Games, int TotalCount)> SearchGamesAsync(
+    string query, int? platformId, int page, int pageSize)
 ```
 
-**Security**: API key NEVER exposed to frontend. Backend adds it server-side.
+**Key methods**: `SearchGamesAsync`, `GetGameByIdAsync`, `GetUpcomingGamesAsync`, `GetRecommendationsAsync`
 
-### Caching Strategy ([GetGameById.cs](backend-api/GetGameById.cs))
+### Nightly Sync ([NightlySyncTimer.cs](backend-api/NightlySyncTimer.cs))
 
-1. Check blob storage first (game-{id}.json)
-2. If miss, fetch from TheGamesDB API
-3. Cache result, return to frontend
-
-**Important**: Lookup data (Genres, Developers, Publishers) cached for 30 days, game data indefinitely.
+Timer-triggered function syncs from TheGamesDB API to SQL database at 2 AM UTC daily.
 
 ## Common Gotchas
 
@@ -275,22 +284,7 @@ export const supabase = {
 
 **Why**: Prevents null reference errors in demo mode. Code works same way regardless of configuration.
 
-### 3. API Usage Tracking ([src/services/database.ts](src/services/database.ts))
-
-TheGamesDB rate limits are strict. The app tracks searches per month:
-- 50 searches/month limit (configurable via `USAGE_LIMIT`)
-- Tracked in `api_usage` table (Supabase) or localStorage
-- UI shows allowance footer ([ApiAllowanceFooter.tsx](src/components/ApiAllowanceFooter.tsx))
-
-**Cache hits don't count** - always prefer cached results over API calls.
-
-**Handling Allowance Gracefully**:
-- Check allowance before expensive operations: `isAllowanceExhausted()` and `isAllowanceLow()` helpers in [thegamesdb.ts](src/services/thegamesdb.ts)
-- Show [UsageLimitModal](src/components/UsageLimitModal.tsx) when limits are reached
-- Frontend cache (7-30 day TTL) + blob storage cache mean most queries never hit the API
-- Encourage users to add games manually if quota is exhausted
-
-### 4. Share Profile Privacy ([src/services/database.ts](src/services/database.ts))
+### 3. Share Profile Privacy ([src/services/database.ts](src/services/database.ts))
 
 Share IDs expose data via RLS bypass policies. Privacy settings:
 ```typescript
@@ -384,12 +378,14 @@ func azure functionapp publish <function-app-name>
 |------|---------|
 | [src/contexts/AuthContext.tsx](src/contexts/AuthContext.tsx) | Dual-mode auth with GitHub OAuth/email/demo |
 | [src/components/ShareLibraryModal.tsx](src/components/ShareLibraryModal.tsx) | Reusable share settings modal across pages |
+| [src/components/GameRecommendations.tsx](src/components/GameRecommendations.tsx) | Similar games component for game details |
+| [src/pages/ReleaseCalendar.tsx](src/pages/ReleaseCalendar.tsx) | Upcoming game releases calendar |
 | [src/services/database.ts](src/services/database.ts) | Supabase ↔ localStorage abstraction layer |
-| [src/services/thegamesdb.ts](src/services/thegamesdb.ts) | Frontend API client with multi-tier caching |
+| [src/services/thegamesdb.ts](src/services/thegamesdb.ts) | Frontend API client for SQL endpoints |
 | [src/services/logger.ts](src/services/logger.ts) | Universal conditional logger for debugging |
-| [backend-api/TheGamesDbProxy.cs](backend-api/TheGamesDbProxy.cs) | CORS proxy + background blob caching |
-| [backend-api/GetGameById.cs](backend-api/GetGameById.cs) | Blob-first lookup with API fallback |
-| [backend-api/GetGamesByIds.cs](backend-api/GetGamesByIds.cs) | Bulk game lookup for trending feature |
+| [backend-api/SqlGameService.cs](backend-api/SqlGameService.cs) | Central SQL database query service |
+| [backend-api/SqlGameFunctions.cs](backend-api/SqlGameFunctions.cs) | Azure Function HTTP endpoints for SQL |
+| [backend-api/NightlySyncTimer.cs](backend-api/NightlySyncTimer.cs) | Timer trigger for TheGamesDB sync |
 | [supabase/schema.sql](supabase/schema.sql) | Database schema with RLS policies |
 | [vite.config.ts](vite.config.ts) | Dev proxy configuration + PWA settings |
 | [LOGGING-GUIDE.md](LOGGING-GUIDE.md) | Complete logger documentation |
