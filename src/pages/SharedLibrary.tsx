@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useSEO } from '../hooks/useSEO';
 import { useToast } from '../contexts/ToastContext';
-import type { GameEntry, Format, Platform } from '../types';
+import type { GameEntry, Format, Platform, GameStatus } from '../types';
 import { loadSharedGames, getSharedUserProfile, getShareProfile, isFollowing, loadGames, saveGame, getFollowers } from '../services/database';
 import { AddFriendModal } from '../components/AddFriendModal';
 import { ShareLibraryModal } from '../components/ShareLibraryModal';
@@ -66,6 +66,7 @@ export function SharedLibrary() {
   const [quickAddGame, setQuickAddGame] = useState<GameEntry | null>(null);
   const [quickAddFormat, setQuickAddFormat] = useState<Format>('Physical');
   const [quickAddPlatform, setQuickAddPlatform] = useState<Platform>('Nintendo Switch');
+  const [quickAddStatus, setQuickAddStatus] = useState<GameStatus>('Owned');
 
   // Dynamic SEO for shared library
   useSEO({
@@ -187,7 +188,7 @@ export function SharedLibrary() {
         title: quickAddGame.title,
         platform: quickAddPlatform,
         format: quickAddFormat,
-        status: 'Owned',
+        status: quickAddStatus,
         thegamesdbId: quickAddGame.thegamesdbId,
         coverUrl: quickAddGame.coverUrl,
         createdAt: new Date().toISOString(),
@@ -490,7 +491,7 @@ export function SharedLibrary() {
                       </div>
                     </div>
                     {user && !inMyCollection && (
-                      <div className="compact-actions">
+                      <div className="compact-actions" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => openQuickAddModal(game)}
                           disabled={isAdding}
@@ -566,7 +567,7 @@ export function SharedLibrary() {
                         )}
                       </div>
                       {user && (
-                        <div className="game-actions">
+                        <div className="game-actions" onClick={(e) => e.stopPropagation()}>
                           {inMyCollection ? (
                             <div className="in-collection-text">
                               <FontAwesomeIcon icon={faCheck} /> In Your Collection
@@ -641,7 +642,7 @@ export function SharedLibrary() {
                       </span>
                     </div>
                     {user && (
-                      <div className="game-actions">
+                      <div className="game-actions" onClick={(e) => e.stopPropagation()}>
                         {inMyCollection ? (
                           <div className="in-collection-text">
                             <FontAwesomeIcon icon={faCheck} /> In Your Collection
@@ -716,6 +717,22 @@ export function SharedLibrary() {
                 >
                   <option value="Nintendo Switch">Nintendo Switch</option>
                   <option value="Nintendo Switch 2">Nintendo Switch 2</option>
+                </select>
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="add-status">Status</label>
+                <select
+                  id="add-status"
+                  value={quickAddStatus}
+                  onChange={(e) => setQuickAddStatus(e.target.value as GameStatus)}
+                  className="form-select"
+                >
+                  <option value="Owned">Owned</option>
+                  <option value="Wishlist">Wishlist</option>
+                  <option value="Borrowed">Borrowed</option>
+                  <option value="Lent">Lent</option>
+                  <option value="Sold">Sold</option>
                 </select>
               </div>
 

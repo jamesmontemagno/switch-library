@@ -10,7 +10,7 @@ import type { TheGamesDBGame } from '../services/thegamesdb';
 import { EditGameModal } from '../components/EditGameModal';
 import { GameRecommendations } from '../components/GameRecommendations';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPenToSquare, faGamepad, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { faPenToSquare, faGamepad, faCheck, faShoppingCart } from '@fortawesome/free-solid-svg-icons';
 import './GameDetails.css';
 
 export function GameDetails() {
@@ -123,6 +123,18 @@ export function GameDetails() {
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   };
 
+  const getAmazonSearchUrl = (gameTitle: string) => {
+    const searchQuery = `${gameTitle} nintendo switch`;
+    const params = new URLSearchParams({
+      k: searchQuery,
+      tag: 'jamesmontemagno-20',
+      linkCode: 'sl2',
+      linkId: 'c39dc3a5b6ed08ee2c4f1bc5c4b45225',
+      ref: 'as_li_ss_tl'
+    });
+    return `https://www.amazon.com/s?${params.toString()}`;
+  };
+
   if (isLoading) {
     return (
       <div className="game-details">
@@ -201,6 +213,17 @@ export function GameDetails() {
                 <p>{apiData.overview}</p>
               </div>
             )}
+
+            <div className="hero-actions">
+              <a
+                href={getAmazonSearchUrl(game.title)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-amazon"
+              >
+                <FontAwesomeIcon icon={faShoppingCart} /> Buy on Amazon
+              </a>
+            </div>
           </div>
         </div>
 

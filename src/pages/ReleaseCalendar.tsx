@@ -5,8 +5,8 @@ import { usePreferences } from '../hooks/usePreferences';
 import { useSEO } from '../hooks/useSEO';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCalendarDays, faGamepad, faCalendar, faTriangleExclamation, faXmark, faHourglassHalf, faBox, faCloud, faChevronDown, faChevronUp, faGlobe } from '@fortawesome/free-solid-svg-icons';
-import type { GameEntry, Platform, Format } from '../types';
+import { faCalendarDays, faGamepad, faCalendar, faTriangleExclamation, faXmark, faHourglassHalf, faBox, faCloud, faChevronDown, faChevronUp, faGlobe, faCheck, faHeart, faHandHoldingHand, faHandshake, faDollarSign } from '@fortawesome/free-solid-svg-icons';
+import type { GameEntry, Platform, Format, GameStatus } from '../types';
 import { getUpcomingGames, PLATFORM_IDS, getRegionName, type BulkGameResult } from '../services/thegamesdb';
 import { saveGame, loadGames } from '../services/database';
 import { SegmentedControl } from '../components/SegmentedControl';
@@ -55,6 +55,7 @@ export function ReleaseCalendar() {
   const [quickAddGame, setQuickAddGame] = useState<BulkGameResult | null>(null);
   const [quickAddFormat, setQuickAddFormat] = useState<Format>('Physical');
   const [quickAddPlatform, setQuickAddPlatform] = useState<Platform>('Nintendo Switch');
+  const [quickAddStatus, setQuickAddStatus] = useState<GameStatus>('Wishlist');
   const [addingGameId, setAddingGameId] = useState<number | null>(null);
 
   // Game details modal
@@ -192,7 +193,7 @@ export function ReleaseCalendar() {
         title: quickAddGame.title,
         platform: quickAddPlatform,
         format: quickAddFormat,
-        status: 'Wishlist', // Default to wishlist for upcoming games
+        status: quickAddStatus,
         thegamesdbId: quickAddGame.id,
         coverUrl: quickAddGame.coverUrl,
         createdAt: new Date().toISOString(),
@@ -447,7 +448,7 @@ export function ReleaseCalendar() {
         <div className="modal-overlay" onClick={() => setQuickAddGame(null)}>
           <div className="quick-add-modal" onClick={(e) => e.stopPropagation()}>
             <header className="modal-header">
-              <h2>Add to Wishlist</h2>
+              <h2>Add to Collection</h2>
               <button onClick={() => setQuickAddGame(null)} className="modal-close">
                 <FontAwesomeIcon icon={faXmark} />
               </button>
@@ -465,6 +466,23 @@ export function ReleaseCalendar() {
                 </div>
               </div>
               <div className="quick-add-options">
+                <div className="form-group">
+                  <label>Status</label>
+                  <SegmentedControl
+                    options={[
+                      { value: 'Owned', label: 'Owned', icon: <FontAwesomeIcon icon={faCheck} /> },
+                      { value: 'Wishlist', label: 'Wishlist', icon: <FontAwesomeIcon icon={faHeart} /> },
+                      { value: 'Borrowed', label: 'Borrowed', icon: <FontAwesomeIcon icon={faHandHoldingHand} /> },
+                      { value: 'Lent', label: 'Lent', icon: <FontAwesomeIcon icon={faHandshake} /> },
+                      { value: 'Sold', label: 'Sold', icon: <FontAwesomeIcon icon={faDollarSign} /> },
+                    ]}
+                    value={quickAddStatus}
+                    onChange={(value) => setQuickAddStatus(value as GameStatus)}
+                    ariaLabel="Game status"
+                    variant="buttons"
+                    fullWidth
+                  />
+                </div>
                 <div className="form-group">
                   <label>Platform</label>
                   <SegmentedControl
@@ -499,7 +517,7 @@ export function ReleaseCalendar() {
                   Cancel
                 </button>
                 <button className="btn-confirm-add" onClick={handleQuickAdd}>
-                  Add to Wishlist
+                  Add to Collection
                 </button>
               </div>
             </div>

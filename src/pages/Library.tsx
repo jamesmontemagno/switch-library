@@ -10,7 +10,6 @@ import { cacheLibraryData, loadCachedLibraryData } from '../services/offlineCach
 import { EditGameModal } from '../components/EditGameModal';
 import { ShareLibraryModal } from '../components/ShareLibraryModal';
 import { SharePromptBanner } from '../components/SharePromptBanner';
-import { GameDetailsModal } from '../components/GameDetailsModal';
 import { SegmentedControl } from '../components/SegmentedControl';
 import { Button } from '../components/Button';
 import { logger } from '../services/logger';
@@ -42,7 +41,6 @@ export function Library() {
   const [isLoading, setIsLoading] = useState(true);
   const [editingGame, setEditingGame] = useState<GameEntry | null>(null);
   const [gameToDelete, setGameToDelete] = useState<GameEntry | null>(null);
-  const [viewingGameId, setViewingGameId] = useState<number | null>(null);
   const [filterPlatform, setFilterPlatform] = useState<Platform | 'all'>(preferences.library?.filterPlatform || 'all');
   const [filterFormat, setFilterFormat] = useState<FormatFilter>(preferences.library?.filterFormat || 'all');
   const [filterCompleted, setFilterCompleted] = useState<'all' | 'completed' | 'not_completed'>(preferences.library?.filterCompleted || 'all');
@@ -496,19 +494,11 @@ export function Library() {
                 viewMode={viewMode}
                 onDelete={() => handleDeleteGame(game.id)}
                 onEdit={() => setEditingGame(game)}
-                onViewDetails={() => game.thegamesdbId && setViewingGameId(game.thegamesdbId)}
                 isOnline={isOnline}
               />
             ))}
           </div>
         </>
-      )}
-
-      {viewingGameId && (
-        <GameDetailsModal
-          gameId={viewingGameId}
-          onClose={() => setViewingGameId(null)}
-        />
       )}
 
       {editingGame && (
@@ -558,11 +548,11 @@ interface GameCardProps {
   viewMode: ViewMode;
   onDelete: () => void;
   onEdit: () => void;
-  onViewDetails: () => void;
   isOnline: boolean;
 }
 
-function GameCard({ game, viewMode, onDelete, onEdit, onViewDetails, isOnline }: GameCardProps) {
+function GameCard({ game, viewMode, onDelete, onEdit, isOnline }: GameCardProps) {
+  const navigate = useNavigate();
   const formatDate = (dateStr: string | undefined) => {
     if (!dateStr) return null;
     const date = new Date(dateStr);
@@ -576,16 +566,14 @@ function GameCard({ game, viewMode, onDelete, onEdit, onViewDetails, isOnline }:
       return;
     }
     
-    // Prevent opening details when offline
+    // Prevent navigation when offline
     if (!isOnline) {
       alert('You are offline. Game details cannot be viewed in offline mode.');
       return;
     }
     
-    // Open modal if game has TheGamesDB ID
-    if (game.thegamesdbId) {
-      onViewDetails();
-    }
+    // Navigate to full details page
+    navigate(`/game/${game.id}`);
   };
 
   // Compact view - minimal info in a row

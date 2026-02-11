@@ -16,18 +16,10 @@ import { saveGame, loadGames, deleteGame as deleteGameFromDb, getTrendingGames }
 import { ManualAddGameModal } from '../components/ManualAddGameModal';
 import { FirstGameCelebrationModal } from '../components/FirstGameCelebrationModal';
 import { ShareLibraryModal } from '../components/ShareLibraryModal';
-import { GameDetailsModal } from '../components/GameDetailsModal';
 import { SegmentedControl } from '../components/SegmentedControl';
 import './Search.css';
 
 const FIRST_GAME_CELEBRATION_KEY = 'hasSeenFirstGameCelebration';
-
-// Extend Window interface for viewGameDetails function
-declare global {
-  interface Window {
-    _viewGameDetails?: (gameId: number) => void;
-  }
-}
 
 type SortOption = 'relevance' | 'release_desc' | 'release_asc' | 'title_asc' | 'title_desc';
 type ViewMode = 'grid' | 'list' | 'compact';
@@ -60,11 +52,7 @@ function TrendingGameCard({ game, userGames, isAuthenticated, onQuickAdd, adding
   const isAdding = addingGameId === game.thegamesdbId;
   
   return (
-    <article 
-      className="result-card grid trending"
-      onClick={() => game.thegamesdbId && window._viewGameDetails?.(game.thegamesdbId)}
-      style={{ cursor: 'pointer' }}
-    >
+    <article className="result-card grid trending">
       <div className="result-cover">
         {game.coverUrl ? (
           <img src={game.coverUrl} alt={game.title || 'Game cover'} loading="lazy" />
@@ -102,10 +90,7 @@ function TrendingGameCard({ game, userGames, isAuthenticated, onQuickAdd, adding
             ) : (
               <button
                 className="btn-add-to-collection"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onQuickAdd(game);
-                }}
+                onClick={() => onQuickAdd(game)}
                 disabled={isAdding}
               >
                 {isAdding ? <><FontAwesomeIcon icon={faHourglassHalf} /> Adding...</> : '+ Add to Collection'}
@@ -195,19 +180,8 @@ export function Search() {
   // Share modal (for celebration flow)
   const [showShareModal, setShowShareModal] = useState(false);
   
-  // Game details modal
-  const [viewingGameId, setViewingGameId] = useState<number | null>(null);
-  
   const searchRequestIdRef = useRef(0);
   const hasTheGamesDB = isTheGamesDBConfigured();
-
-  // Expose viewGameDetails function globally for child components
-  useEffect(() => {
-    window._viewGameDetails = setViewingGameId;
-    return () => {
-      delete window._viewGameDetails;
-    };
-  }, []);
 
   // Save preferences when filters/sort/view change
   useEffect(() => {
@@ -769,12 +743,7 @@ export function Search() {
                 // Compact view - minimal info in a row
                 if (viewMode === 'compact') {
                   return (
-                    <article 
-                      key={game.id} 
-                      className={`result-card ${viewMode}`}
-                      onClick={() => setViewingGameId(game.id)}
-                      style={{ cursor: 'pointer' }}
-                    >
+                    <article key={game.id} className={`result-card ${viewMode}`}>
                       <div className="result-cover-compact">
                         {game.boxartUrl ? (
                           <img src={game.boxartUrl} alt={game.title} loading="lazy" />
@@ -796,7 +765,7 @@ export function Search() {
                           {game.region_id !== undefined && <span className="region-badge small">{getRegionName(game.region_id)}</span>}
                         </div>
                       </div>
-                      <div className="result-actions-compact" onClick={(e) => e.stopPropagation()}>
+                      <div className="result-actions-compact">
                         {isAuthenticated ? (
                           gameInLibrary ? (
                             <button
@@ -829,12 +798,7 @@ export function Search() {
                 
                 // Grid and List views (original rendering)
                 return (
-                  <article 
-                    key={game.id} 
-                    className={`result-card ${viewMode}`}
-                    onClick={() => setViewingGameId(game.id)}
-                    style={{ cursor: 'pointer' }}
-                  >
+                  <article key={game.id} className={`result-card ${viewMode}`}>
                     <div className="result-cover">
                       {game.boxartUrl ? (
                         <img src={game.boxartUrl} alt={game.title} loading="lazy" />
@@ -865,7 +829,7 @@ export function Search() {
                             : game.overview}
                         </p>
                       )}
-                      <div className="result-actions" onClick={(e) => e.stopPropagation()}>
+                      <div className="result-actions">
                         {isAuthenticated ? (
                           gameInLibrary ? (
                             <button
@@ -1172,14 +1136,6 @@ export function Search() {
           userId={user.id}
           onClose={() => setShowShareModal(false)}
           onSharingEnabled={handleSharingEnabled}
-        />
-      )}
-
-      {/* Game Details Modal */}
-      {viewingGameId && (
-        <GameDetailsModal
-          gameId={viewingGameId}
-          onClose={() => setViewingGameId(null)}
         />
       )}
     </div>
