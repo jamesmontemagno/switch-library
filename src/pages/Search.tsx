@@ -16,6 +16,7 @@ import { saveGame, loadGames, deleteGame as deleteGameFromDb, getTrendingGames }
 import { ManualAddGameModal } from '../components/ManualAddGameModal';
 import { FirstGameCelebrationModal } from '../components/FirstGameCelebrationModal';
 import { ShareLibraryModal } from '../components/ShareLibraryModal';
+import { GameDetailsModal } from '../components/GameDetailsModal';
 import { SegmentedControl } from '../components/SegmentedControl';
 import './Search.css';
 
@@ -45,14 +46,15 @@ interface TrendingGameCardProps {
   isAuthenticated: boolean;
   onQuickAdd: (game: { thegamesdbId: number; title?: string; coverUrl?: string; platformId?: number }) => void;
   addingGameId: number | null;
+  onViewDetails: (gameId: number) => void;
 }
 
-function TrendingGameCard({ game, userGames, isAuthenticated, onQuickAdd, addingGameId }: TrendingGameCardProps) {
+function TrendingGameCard({ game, userGames, isAuthenticated, onQuickAdd, addingGameId, onViewDetails }: TrendingGameCardProps) {
   const isInLibrary = userGames.some(g => g.thegamesdbId === game.thegamesdbId);
   const isAdding = addingGameId === game.thegamesdbId;
   
   return (
-    <article className="result-card grid trending">
+    <article className="result-card grid trending clickable" onClick={() => onViewDetails(game.thegamesdbId)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onViewDetails(game.thegamesdbId); } }} aria-label={`View details for ${game.title || `Game #${game.thegamesdbId}`}`}>
       <div className="result-cover">
         {game.coverUrl ? (
           <img src={game.coverUrl} alt={game.title || 'Game cover'} loading="lazy" />
@@ -90,7 +92,7 @@ function TrendingGameCard({ game, userGames, isAuthenticated, onQuickAdd, adding
             ) : (
               <button
                 className="btn-add-to-collection"
-                onClick={() => onQuickAdd(game)}
+                onClick={(e) => { e.stopPropagation(); onQuickAdd(game); }}
                 disabled={isAdding}
               >
                 {isAdding ? <><FontAwesomeIcon icon={faHourglassHalf} /> Adding...</> : '+ Add to Collection'}
@@ -179,6 +181,9 @@ export function Search() {
   
   // Share modal (for celebration flow)
   const [showShareModal, setShowShareModal] = useState(false);
+  
+  // Game details modal
+  const [detailsGameId, setDetailsGameId] = useState<number | null>(null);
   
   const searchRequestIdRef = useRef(0);
   const hasTheGamesDB = isTheGamesDBConfigured();
@@ -743,7 +748,7 @@ export function Search() {
                 // Compact view - minimal info in a row
                 if (viewMode === 'compact') {
                   return (
-                    <article key={game.id} className={`result-card ${viewMode}`}>
+                    <article key={game.id} className={`result-card ${viewMode} clickable`} onClick={() => setDetailsGameId(game.id)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDetailsGameId(game.id); } }} aria-label={`View details for ${game.title}`}>
                       <div className="result-cover-compact">
                         {game.boxartUrl ? (
                           <img src={game.boxartUrl} alt={game.title} loading="lazy" />
@@ -770,7 +775,7 @@ export function Search() {
                           gameInLibrary ? (
                             <button
                               className="btn-icon-only btn-remove"
-                              onClick={() => handleRemoveGame(game)}
+                              onClick={(e) => { e.stopPropagation(); handleRemoveGame(game); }}
                               disabled={isRemoving}
                               title="Remove from Library"
                               aria-label={`Remove ${game.title} from library`}
@@ -780,7 +785,7 @@ export function Search() {
                           ) : (
                             <button
                               className="btn-icon-only btn-add"
-                              onClick={() => openQuickAdd(game)}
+                              onClick={(e) => { e.stopPropagation(); openQuickAdd(game); }}
                               disabled={addingGameId === game.id}
                               title="Add to Collection"
                               aria-label={`Add ${game.title} to collection`}
@@ -798,7 +803,7 @@ export function Search() {
                 
                 // Grid and List views (original rendering)
                 return (
-                  <article key={game.id} className={`result-card ${viewMode}`}>
+                  <article key={game.id} className={`result-card ${viewMode} clickable`} onClick={() => setDetailsGameId(game.id)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDetailsGameId(game.id); } }} aria-label={`View details for ${game.title}`}>
                     <div className="result-cover">
                       {game.boxartUrl ? (
                         <img src={game.boxartUrl} alt={game.title} loading="lazy" />
@@ -834,7 +839,7 @@ export function Search() {
                           gameInLibrary ? (
                             <button
                               className="btn-remove-from-collection"
-                              onClick={() => handleRemoveGame(game)}
+                              onClick={(e) => { e.stopPropagation(); handleRemoveGame(game); }}
                               disabled={isRemoving}
                             >
                               {isRemoving ? <><FontAwesomeIcon icon={faHourglassHalf} /> Removing...</> : '− Remove from Library'}
@@ -842,7 +847,7 @@ export function Search() {
                           ) : (
                             <button
                               className="btn-add-to-collection"
-                              onClick={() => openQuickAdd(game)}
+                              onClick={(e) => { e.stopPropagation(); openQuickAdd(game); }}
                               disabled={addingGameId === game.id}
                             >
                               {addingGameId === game.id ? <><FontAwesomeIcon icon={faHourglassHalf} /> Adding...</> : '+ Add to Collection'}
@@ -959,6 +964,7 @@ export function Search() {
                         isAuthenticated={isAuthenticated}
                         onQuickAdd={openQuickAdd}
                         addingGameId={addingGameId}
+                        onViewDetails={setDetailsGameId}
                       />
                     ))}
                   </div>
@@ -983,6 +989,7 @@ export function Search() {
                         isAuthenticated={isAuthenticated}
                         onQuickAdd={openQuickAdd}
                         addingGameId={addingGameId}
+                        onViewDetails={setDetailsGameId}
                       />
                     ))}
                   </div>
@@ -1134,6 +1141,14 @@ export function Search() {
           userId={user.id}
           onClose={() => setShowShareModal(false)}
           onSharingEnabled={handleSharingEnabled}
+        />
+      )}
+
+      {/* Game Details Modal */}
+      {detailsGameId && (
+        <GameDetailsModal
+          gameId={detailsGameId}
+          onClose={() => setDetailsGameId(null)}
         />
       )}
     </div>

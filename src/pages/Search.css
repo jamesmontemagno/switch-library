@@ -537,6 +537,10 @@
   gap: 1.5rem;
 }
 
+.result-card.clickable {
+  cursor: pointer;
+}
+
 .result-card.grid {
   background: var(--card-bg);
   border-radius: 12px;
