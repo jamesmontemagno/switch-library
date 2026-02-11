@@ -182,7 +182,15 @@
   gap: 1rem;
   padding: 1rem 1.25rem;
   border-bottom: 1px solid var(--border-color);
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.upcoming-game-card.clickable {
+  cursor: pointer;
+}
+
+.upcoming-game-card.clickable:hover {
+  transform: translateX(4px);
 }
 
 .upcoming-game-card:last-child {
@@ -267,6 +275,21 @@
 .platform-badge.switch2 {
   background: var(--tag-switch2-bg);
   color: var(--tag-switch2-text);
+}
+
+.region-badge {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+  background: var(--info-bg);
+  color: var(--info);
+  border: 1px solid var(--info);
+}
+
+.region-badge svg {
+  margin-right: 0.25rem;
+  font-size: 0.675rem;
 }
 
 .release-date {

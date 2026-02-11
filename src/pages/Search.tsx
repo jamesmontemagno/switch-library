@@ -4,8 +4,8 @@ import { usePreferences } from '../hooks/usePreferences';
 import { useSEO } from '../hooks/useSEO';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMagnifyingGlass, faWrench, faGamepad, faCalendar, faUsers, faStar, faBox, faCloud, faTriangleExclamation, faXmark, faHourglassHalf, faTableCells, faList, faGripLines, faFire, faArrowTrendUp } from '@fortawesome/free-solid-svg-icons';
-import type { GameEntry, Platform, Format, TrendingGame, TrendingResponse } from '../types';
+import { faMagnifyingGlass, faWrench, faGamepad, faCalendar, faUsers, faStar, faBox, faCloud, faTriangleExclamation, faXmark, faHourglassHalf, faTableCells, faList, faGripLines, faFire, faArrowTrendUp, faHeart, faHandHoldingHand, faHandshake, faDollarSign, faCheck } from '@fortawesome/free-solid-svg-icons';
+import type { GameEntry, Platform, Format, GameStatus, TrendingGame, TrendingResponse } from '../types';
 import { 
   searchGames, 
   PLATFORM_IDS,
@@ -16,10 +16,18 @@ import { saveGame, loadGames, deleteGame as deleteGameFromDb, getTrendingGames }
 import { ManualAddGameModal } from '../components/ManualAddGameModal';
 import { FirstGameCelebrationModal } from '../components/FirstGameCelebrationModal';
 import { ShareLibraryModal } from '../components/ShareLibraryModal';
+import { GameDetailsModal } from '../components/GameDetailsModal';
 import { SegmentedControl } from '../components/SegmentedControl';
 import './Search.css';
 
 const FIRST_GAME_CELEBRATION_KEY = 'hasSeenFirstGameCelebration';
+
+// Extend Window interface for viewGameDetails function
+declare global {
+  interface Window {
+    _viewGameDetails?: (gameId: number) => void;
+  }
+}
 
 type SortOption = 'relevance' | 'release_desc' | 'release_asc' | 'title_asc' | 'title_desc';
 type ViewMode = 'grid' | 'list' | 'compact';
@@ -52,7 +60,11 @@ function TrendingGameCard({ game, userGames, isAuthenticated, onQuickAdd, adding
   const isAdding = addingGameId === game.thegamesdbId;
   
   return (
-    <article className="result-card grid trending">
+    <article 
+      className="result-card grid trending"
+      onClick={() => game.thegamesdbId && window._viewGameDetails?.(game.thegamesdbId)}
+      style={{ cursor: 'pointer' }}
+    >
       <div className="result-cover">
         {game.coverUrl ? (
           <img src={game.coverUrl} alt={game.title || 'Game cover'} loading="lazy" />
@@ -90,7 +102,10 @@ function TrendingGameCard({ game, userGames, isAuthenticated, onQuickAdd, adding
             ) : (
               <button
                 className="btn-add-to-collection"
-                onClick={() => onQuickAdd(game)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onQuickAdd(game);
+                }}
                 disabled={isAdding}
               >
                 {isAdding ? <><FontAwesomeIcon icon={faHourglassHalf} /> Adding...</> : '+ Add to Collection'}
@@ -160,6 +175,7 @@ export function Search() {
   const [quickAddGame, setQuickAddGame] = useState<SearchResult | null>(null);
   const [quickAddFormat, setQuickAddFormat] = useState<Format>('Physical');
   const [quickAddPlatform, setQuickAddPlatform] = useState<Platform>('Nintendo Switch');
+  const [quickAddStatus, setQuickAddStatus] = useState<GameStatus>('Owned');
   const [quickAddCompleted, setQuickAddCompleted] = useState(false);
   
   // Manual add modal
@@ -179,8 +195,19 @@ export function Search() {
   // Share modal (for celebration flow)
   const [showShareModal, setShowShareModal] = useState(false);
   
+  // Game details modal
+  const [viewingGameId, setViewingGameId] = useState<number | null>(null);
+  
   const searchRequestIdRef = useRef(0);
   const hasTheGamesDB = isTheGamesDBConfigured();
+
+  // Expose viewGameDetails function globally for child components
+  useEffect(() => {
+    window._viewGameDetails = setViewingGameId;
+    return () => {
+      delete window._viewGameDetails;
+    };
+  }, []);
 
   // Save preferences when filters/sort/view change
   useEffect(() => {
@@ -388,7 +415,7 @@ export function Search() {
         title: quickAddGame.title,
         platform: quickAddPlatform,
         format: quickAddFormat,
-        status: 'Owned',
+        status: quickAddStatus,
         completed: quickAddCompleted || undefined,
         thegamesdbId: quickAddGame.id,
         coverUrl: quickAddGame.boxartUrl,
@@ -402,6 +429,7 @@ export function Search() {
       // Update UI immediately for instant feedback
       setUserGames(prev => [...prev, newGame]);
       setQuickAddGame(null);
+      setQuickAddStatus('Owned'); // Reset status
       setQuickAddCompleted(false); // Reset completed state
       setAddingGameId(null);
       
@@ -741,7 +769,12 @@ export function Search() {
                 // Compact view - minimal info in a row
                 if (viewMode === 'compact') {
                   return (
-                    <article key={game.id} className={`result-card ${viewMode}`}>
+                    <article 
+                      key={game.id} 
+                      className={`result-card ${viewMode}`}
+                      onClick={() => setViewingGameId(game.id)}
+                      style={{ cursor: 'pointer' }}
+                    >
                       <div className="result-cover-compact">
                         {game.boxartUrl ? (
                           <img src={game.boxartUrl} alt={game.title} loading="lazy" />
@@ -763,7 +796,7 @@ export function Search() {
                           {game.region_id !== undefined && <span className="region-badge small">{getRegionName(game.region_id)}</span>}
                         </div>
                       </div>
-                      <div className="result-actions-compact">
+                      <div className="result-actions-compact" onClick={(e) => e.stopPropagation()}>
                         {isAuthenticated ? (
                           gameInLibrary ? (
                             <button
@@ -796,7 +829,12 @@ export function Search() {
                 
                 // Grid and List views (original rendering)
                 return (
-                  <article key={game.id} className={`result-card ${viewMode}`}>
+                  <article 
+                    key={game.id} 
+                    className={`result-card ${viewMode}`}
+                    onClick={() => setViewingGameId(game.id)}
+                    style={{ cursor: 'pointer' }}
+                  >
                     <div className="result-cover">
                       {game.boxartUrl ? (
                         <img src={game.boxartUrl} alt={game.title} loading="lazy" />
@@ -827,7 +865,7 @@ export function Search() {
                             : game.overview}
                         </p>
                       )}
-                      <div className="result-actions">
+                      <div className="result-actions" onClick={(e) => e.stopPropagation()}>
                         {isAuthenticated ? (
                           gameInLibrary ? (
                             <button
@@ -1019,6 +1057,23 @@ export function Search() {
               </div>
               <div className="quick-add-options">
                 <div className="form-group">
+                  <label>Status</label>
+                  <SegmentedControl
+                    options={[
+                      { value: 'Owned', label: 'Owned', icon: <FontAwesomeIcon icon={faCheck} /> },
+                      { value: 'Wishlist', label: 'Wishlist', icon: <FontAwesomeIcon icon={faHeart} /> },
+                      { value: 'Borrowed', label: 'Borrowed', icon: <FontAwesomeIcon icon={faHandHoldingHand} /> },
+                      { value: 'Lent', label: 'Lent', icon: <FontAwesomeIcon icon={faHandshake} /> },
+                      { value: 'Sold', label: 'Sold', icon: <FontAwesomeIcon icon={faDollarSign} /> },
+                    ]}
+                    value={quickAddStatus}
+                    onChange={(value) => setQuickAddStatus(value as GameStatus)}
+                    ariaLabel="Game status"
+                    variant="buttons"
+                    fullWidth
+                  />
+                </div>
+                <div className="form-group">
                   <label>Platform</label>
                   <SegmentedControl
                     options={[
@@ -1117,6 +1172,14 @@ export function Search() {
           userId={user.id}
           onClose={() => setShowShareModal(false)}
           onSharingEnabled={handleSharingEnabled}
+        />
+      )}
+
+      {/* Game Details Modal */}
+      {viewingGameId && (
+        <GameDetailsModal
+          gameId={viewingGameId}
+          onClose={() => setViewingGameId(null)}
         />
       )}
     </div>

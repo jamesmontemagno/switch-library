@@ -8,6 +8,7 @@ import { loadSharedGames, getSharedUserProfile, getShareProfile, isFollowing, lo
 import { AddFriendModal } from '../components/AddFriendModal';
 import { ShareLibraryModal } from '../components/ShareLibraryModal';
 import { UpsellBanner } from '../components/UpsellBanner';
+import { GameDetailsModal } from '../components/GameDetailsModal';
 import { SegmentedControl } from '../components/SegmentedControl';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowsLeftRight, faPlus, faCheck, faUserCheck, faTableCells, faList, faGripLines, faStar, faTrophy, faHeart, faHandHoldingHand, faHandshake, faDollarSign } from '@fortawesome/free-solid-svg-icons';
@@ -56,6 +57,7 @@ export function SharedLibrary() {
   });
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [viewingGameId, setViewingGameId] = useState<number | null>(null);
 
   // For "Add to Collection" functionality
   const [myGames, setMyGames] = useState<GameEntry[]>([]);
@@ -435,10 +437,15 @@ export function SharedLibrary() {
               const inMyCollection = isGameInMyCollection(game);
               const isAdding = addingGameId === game.id;
               
-              // Compact view - minimal info in a row
+               // Compact view - minimal info in a row
               if (viewMode === 'compact') {
                 return (
-                  <article key={game.id} className="game-card compact">
+                  <article 
+                    key={game.id} 
+                    className="game-card compact"
+                    onClick={() => game.thegamesdbId && setViewingGameId(game.thegamesdbId)}
+                    style={{ cursor: game.thegamesdbId ? 'pointer' : 'default' }}
+                  >
                     <div className="compact-cover">
                       {game.coverUrl ? (
                         <img src={game.coverUrl} alt={game.title} />
@@ -501,7 +508,12 @@ export function SharedLibrary() {
               // List view - horizontal card with more details
               if (viewMode === 'list') {
                 return (
-                  <article key={game.id} className="game-card list">
+                  <article 
+                    key={game.id} 
+                    className="game-card list"
+                    onClick={() => game.thegamesdbId && setViewingGameId(game.thegamesdbId)}
+                    style={{ cursor: game.thegamesdbId ? 'pointer' : 'default' }}
+                  >
                     <div className="list-cover">
                       {game.coverUrl ? (
                         <img src={game.coverUrl} alt={game.title} />
@@ -579,7 +591,12 @@ export function SharedLibrary() {
               
               // Grid view (default)
               return (
-                <article key={game.id} className="game-card grid">
+                <article 
+                  key={game.id} 
+                  className="game-card grid"
+                  onClick={() => game.thegamesdbId && setViewingGameId(game.thegamesdbId)}
+                  style={{ cursor: game.thegamesdbId ? 'pointer' : 'default' }}
+                >
                   <div className="game-cover">
                     {game.coverUrl ? (
                       <img src={game.coverUrl} alt={game.title} />
@@ -730,6 +747,14 @@ export function SharedLibrary() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Game Details Modal */}
+      {viewingGameId && (
+        <GameDetailsModal
+          gameId={viewingGameId}
+          onClose={() => setViewingGameId(null)}
+        />
       )}
     </div>
   );

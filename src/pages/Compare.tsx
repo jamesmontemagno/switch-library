@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChartColumn, faTriangleExclamation, faChartLine, faGamepad, faStar, faTrophy, faHeart, faHandHoldingHand, faHandshake, faDollarSign } from '@fortawesome/free-solid-svg-icons';
 import type { GameEntry } from '../types';
 import { loadSharedGames, getSharedUserProfile } from '../services/database';
+import { GameDetailsModal } from '../components/GameDetailsModal';
 import { normalizeGameTitle, gamesMatch, type GameComparisonKey } from '../utils/gameComparison';
 import './Compare.css';
 
@@ -27,6 +28,7 @@ export function Compare() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<CompareTab>('common');
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewingGameId, setViewingGameId] = useState<number | null>(null);
   
   // Dynamic page title based on compared users
   useSEO({
@@ -350,7 +352,12 @@ export function Compare() {
           ) : (
             <div className="compare-games-grid">
               {displayedGames.map(game => (
-                <article key={game.id} className="compare-game-card">
+                <article 
+                  key={game.id} 
+                  className="compare-game-card"
+                  onClick={() => game.thegamesdbId && setViewingGameId(game.thegamesdbId)}
+                  style={{ cursor: game.thegamesdbId ? 'pointer' : 'default' }}
+                >
                   <div className="compare-game-cover">
                     {game.coverUrl ? (
                       <img src={game.coverUrl} alt={game.title} />
@@ -393,6 +400,14 @@ export function Compare() {
             </div>
           )}
         </>
+      )}
+
+      {/* Game Details Modal */}
+      {viewingGameId && (
+        <GameDetailsModal
+          gameId={viewingGameId}
+          onClose={() => setViewingGameId(null)}
+        />
       )}
     </div>
   );

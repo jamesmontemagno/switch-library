@@ -5,13 +5,14 @@ import { usePreferences } from '../hooks/usePreferences';
 import { useSEO } from '../hooks/useSEO';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCalendarDays, faGamepad, faCalendar, faTriangleExclamation, faXmark, faHourglassHalf, faBox, faCloud, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
+import { faCalendarDays, faGamepad, faCalendar, faTriangleExclamation, faXmark, faHourglassHalf, faBox, faCloud, faChevronDown, faChevronUp, faGlobe } from '@fortawesome/free-solid-svg-icons';
 import type { GameEntry, Platform, Format } from '../types';
-import { getUpcomingGames, PLATFORM_IDS, type BulkGameResult } from '../services/thegamesdb';
+import { getUpcomingGames, PLATFORM_IDS, getRegionName, type BulkGameResult } from '../services/thegamesdb';
 import { saveGame, loadGames } from '../services/database';
 import { SegmentedControl } from '../components/SegmentedControl';
 import { FirstGameCelebrationModal } from '../components/FirstGameCelebrationModal';
 import { ShareLibraryModal } from '../components/ShareLibraryModal';
+import { GameDetailsModal } from '../components/GameDetailsModal';
 import './ReleaseCalendar.css';
 
 const FIRST_GAME_CELEBRATION_KEY = 'hasSeenFirstGameCelebration';
@@ -55,6 +56,9 @@ export function ReleaseCalendar() {
   const [quickAddFormat, setQuickAddFormat] = useState<Format>('Physical');
   const [quickAddPlatform, setQuickAddPlatform] = useState<Platform>('Nintendo Switch');
   const [addingGameId, setAddingGameId] = useState<number | null>(null);
+
+  // Game details modal
+  const [viewingGameId, setViewingGameId] = useState<number | null>(null);
 
   // Celebration modal
   const [showCelebrationModal, setShowCelebrationModal] = useState(false);
@@ -337,7 +341,14 @@ export function ReleaseCalendar() {
                         const isAdding = addingGameId === game.id;
 
                         return (
-                          <article key={game.id} className="upcoming-game-card">
+                          <article 
+                            key={game.id} 
+                            className={`upcoming-game-card ${!inLibrary && isAuthenticated ? 'clickable' : ''}`}
+                            onClick={() => {
+                              // Always show details modal when clicking the card
+                              setViewingGameId(game.id);
+                            }}
+                          >
                             <div className="game-cover">
                               {game.coverUrl ? (
                                 <img src={game.coverUrl} alt={game.title} loading="lazy" />
@@ -357,12 +368,17 @@ export function ReleaseCalendar() {
                                 <span className={`platform-badge ${game.platformId === PLATFORM_IDS.NINTENDO_SWITCH_2 ? 'switch2' : 'switch'}`}>
                                   {game.platformId === PLATFORM_IDS.NINTENDO_SWITCH_2 ? 'Switch 2' : 'Switch'}
                                 </span>
+                                {game.region_id !== undefined && (
+                                  <span className="region-badge">
+                                    <FontAwesomeIcon icon={faGlobe} /> {getRegionName(game.region_id)}
+                                  </span>
+                                )}
                                 <span className="release-date">
                                   <FontAwesomeIcon icon={faCalendar} /> {formatReleaseDate(game.releaseDate)}
                                 </span>
                               </div>
 
-                              <div className="game-actions">
+                              <div className="game-actions" onClick={(e) => e.stopPropagation()}>
                                 {isAuthenticated ? (
                                   inLibrary ? (
                                     <Link to="/library" className="btn-view-library">
@@ -371,7 +387,10 @@ export function ReleaseCalendar() {
                                   ) : (
                                     <button
                                       className="btn-add-wishlist"
-                                      onClick={() => openQuickAdd(game)}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        openQuickAdd(game);
+                                      }}
                                       disabled={isAdding}
                                     >
                                       {isAdding ? (
@@ -503,6 +522,14 @@ export function ReleaseCalendar() {
           userId={user.id}
           onClose={() => setShowShareModal(false)}
           onSharingEnabled={() => {}}
+        />
+      )}
+
+      {/* Game Details Modal */}
+      {viewingGameId && (
+        <GameDetailsModal
+          gameId={viewingGameId}
+          onClose={() => setViewingGameId(null)}
         />
       )}
     </div>

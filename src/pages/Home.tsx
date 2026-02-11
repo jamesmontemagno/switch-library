@@ -4,8 +4,9 @@ import { useAuth } from '../hooks/useAuth';
 import { useSEO } from '../hooks/useSEO';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPenToSquare, faClipboardList, faGamepad, faShareNodes, faMagnifyingGlass, faCloud, faCalendarDays, faArrowRight } from '@fortawesome/free-solid-svg-icons';
-import { getUpcomingGames, type BulkGameResult } from '../services/thegamesdb';
+import { faPenToSquare, faClipboardList, faGamepad, faShareNodes, faMagnifyingGlass, faCloud, faCalendarDays, faArrowRight, faGlobe } from '@fortawesome/free-solid-svg-icons';
+import { getUpcomingGames, getRegionName, type BulkGameResult } from '../services/thegamesdb';
+import { GameDetailsModal } from '../components/GameDetailsModal';
 import './Home.css';
 
 export function Home() {
@@ -15,6 +16,7 @@ export function Home() {
   
   const [upcomingGames, setUpcomingGames] = useState<BulkGameResult[]>([]);
   const [isLoadingUpcoming, setIsLoadingUpcoming] = useState(true);
+  const [viewingGameId, setViewingGameId] = useState<number | null>(null);
 
   useSEO({
     title: 'My Switch Library - Track Your Nintendo Switch Game Collection',
@@ -152,7 +154,12 @@ export function Home() {
           ) : upcomingGames.length > 0 ? (
             <div className="upcoming-grid">
               {upcomingGames.map((game) => (
-                <div key={game.id} className="upcoming-card">
+                <div
+                  key={game.id} 
+                  className="upcoming-card"
+                  onClick={() => setViewingGameId(game.id)}
+                  style={{ cursor: 'pointer' }}
+                >
                   {game.coverUrl ? (
                     <img 
                       src={game.coverUrl} 
@@ -172,6 +179,11 @@ export function Home() {
                       <span className={`upcoming-platform ${game.platform === 'Nintendo Switch 2' ? 'switch2' : 'switch'}`}>
                         {game.platform === 'Nintendo Switch 2' ? 'Switch 2' : 'Switch'}
                       </span>
+                      {game.region_id !== undefined && (
+                        <span className="upcoming-region">
+                          <FontAwesomeIcon icon={faGlobe} /> {getRegionName(game.region_id)}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -181,6 +193,14 @@ export function Home() {
             <p className="no-upcoming">No upcoming games found.</p>
           )}
         </section>
+      )}
+
+      {/* Game Details Modal */}
+      {viewingGameId && (
+        <GameDetailsModal
+          gameId={viewingGameId}
+          onClose={() => setViewingGameId(null)}
+        />
       )}
 
       <section className="platforms">
