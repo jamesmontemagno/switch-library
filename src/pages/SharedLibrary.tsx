@@ -10,7 +10,7 @@ import { ShareLibraryModal } from '../components/ShareLibraryModal';
 import { UpsellBanner } from '../components/UpsellBanner';
 import { SegmentedControl } from '../components/SegmentedControl';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowsLeftRight, faPlus, faCheck, faUserCheck, faTableCells, faList, faGripLines, faStar, faTrophy } from '@fortawesome/free-solid-svg-icons';
+import { faArrowsLeftRight, faPlus, faCheck, faUserCheck, faTableCells, faList, faGripLines, faStar, faTrophy, faHeart, faHandHoldingHand, faHandshake, faDollarSign } from '@fortawesome/free-solid-svg-icons';
 import './SharedLibrary.css';
 
 type SortOption = 'title_asc' | 'title_desc' | 'added_newest' | 'platform' | 'format';
@@ -457,6 +457,14 @@ export function SharedLibrary() {
                           <FontAwesomeIcon icon={faTrophy} />
                         </span>
                       )}
+                      {game.status && game.status !== 'Owned' && (
+                        <span className={`badge-status small ${game.status.toLowerCase()}`} role="img" aria-label={game.status}>
+                          {game.status === 'Wishlist' && <FontAwesomeIcon icon={faHeart} />}
+                          {game.status === 'Borrowed' && <FontAwesomeIcon icon={faHandHoldingHand} />}
+                          {game.status === 'Lent' && <FontAwesomeIcon icon={faHandshake} />}
+                          {game.status === 'Sold' && <FontAwesomeIcon icon={faDollarSign} />}
+                        </span>
+                      )}
                     </div>
                     <div className="compact-info">
                       <h3 className="compact-title">{game.title}</h3>
@@ -510,6 +518,15 @@ export function SharedLibrary() {
                       {game.completed && (
                         <span className="badge-beaten" role="img" aria-label="Beaten">
                           <FontAwesomeIcon icon={faTrophy} />
+                        </span>
+                      )}
+                      {game.status && game.status !== 'Owned' && (
+                        <span className={`badge-status ${game.status.toLowerCase()}`} role="img" aria-label={game.status}>
+                          {game.status === 'Wishlist' && <FontAwesomeIcon icon={faHeart} />}
+                          {game.status === 'Borrowed' && <FontAwesomeIcon icon={faHandHoldingHand} />}
+                          {game.status === 'Lent' && <FontAwesomeIcon icon={faHandshake} />}
+                          {game.status === 'Sold' && <FontAwesomeIcon icon={faDollarSign} />}
+                          <span>{game.status}</span>
                         </span>
                       )}
                       {user && inMyCollection && (
@@ -579,6 +596,15 @@ export function SharedLibrary() {
                     {game.completed && (
                       <span className="badge-beaten" role="img" aria-label="Beaten">
                         <FontAwesomeIcon icon={faTrophy} />
+                      </span>
+                    )}
+                    {game.status && game.status !== 'Owned' && (
+                      <span className={`badge-status ${game.status.toLowerCase()}`} role="img" aria-label={game.status}>
+                        {game.status === 'Wishlist' && <FontAwesomeIcon icon={faHeart} />}
+                        {game.status === 'Borrowed' && <FontAwesomeIcon icon={faHandHoldingHand} />}
+                        {game.status === 'Lent' && <FontAwesomeIcon icon={faHandshake} />}
+                        {game.status === 'Sold' && <FontAwesomeIcon icon={faDollarSign} />}
+                        <span>{game.status}</span>
                       </span>
                     )}
                     {user && inMyCollection && (

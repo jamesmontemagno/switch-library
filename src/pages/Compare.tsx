@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSEO } from '../hooks/useSEO';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChartColumn, faTriangleExclamation, faChartLine, faGamepad, faStar, faTrophy } from '@fortawesome/free-solid-svg-icons';
+import { faChartColumn, faTriangleExclamation, faChartLine, faGamepad, faStar, faTrophy, faHeart, faHandHoldingHand, faHandshake, faDollarSign } from '@fortawesome/free-solid-svg-icons';
 import type { GameEntry } from '../types';
 import { loadSharedGames, getSharedUserProfile } from '../services/database';
 import { normalizeGameTitle, gamesMatch, type GameComparisonKey } from '../utils/gameComparison';
@@ -365,6 +365,15 @@ export function Compare() {
                     {game.completed && (
                       <span className="badge-beaten" role="img" aria-label="Beaten">
                         <FontAwesomeIcon icon={faTrophy} />
+                      </span>
+                    )}
+                    {game.status && game.status !== 'Owned' && (
+                      <span className={`badge-status ${game.status.toLowerCase()}`} role="img" aria-label={game.status}>
+                        {game.status === 'Wishlist' && <FontAwesomeIcon icon={faHeart} />}
+                        {game.status === 'Borrowed' && <FontAwesomeIcon icon={faHandHoldingHand} />}
+                        {game.status === 'Lent' && <FontAwesomeIcon icon={faHandshake} />}
+                        {game.status === 'Sold' && <FontAwesomeIcon icon={faDollarSign} />}
+                        <span>{game.status}</span>
                       </span>
                     )}
                   </div>

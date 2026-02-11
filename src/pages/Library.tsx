@@ -14,7 +14,7 @@ import { SegmentedControl } from '../components/SegmentedControl';
 import { Button } from '../components/Button';
 import { logger } from '../services/logger';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPenToSquare, faGamepad, faTrash, faCartShopping, faTrophy, faLink, faMagnifyingGlass, faTableCells, faList, faGripLines, faPlus, faStar } from '@fortawesome/free-solid-svg-icons';
+import { faPenToSquare, faGamepad, faTrash, faCartShopping, faTrophy, faLink, faMagnifyingGlass, faTableCells, faList, faGripLines, faPlus, faStar, faHeart, faHandHoldingHand, faHandshake, faDollarSign } from '@fortawesome/free-solid-svg-icons';
 import './Library.css';
 
 const DISMISSED_SHARE_PROMPT_KEY = 'dismissedSharePrompt';
@@ -595,6 +595,14 @@ function GameCard({ game, viewMode, onDelete, onEdit, isOnline }: GameCardProps)
               <FontAwesomeIcon icon={faTrophy} />
             </span>
           )}
+          {game.status && game.status !== 'Owned' && (
+            <span className={`badge-status small ${game.status.toLowerCase()}`} role="img" aria-label={game.status}>
+              {game.status === 'Wishlist' && <FontAwesomeIcon icon={faHeart} />}
+              {game.status === 'Borrowed' && <FontAwesomeIcon icon={faHandHoldingHand} />}
+              {game.status === 'Lent' && <FontAwesomeIcon icon={faHandshake} />}
+              {game.status === 'Sold' && <FontAwesomeIcon icon={faDollarSign} />}
+            </span>
+          )}
         </div>
         <div className="compact-info">
           <h3 className="compact-title">{game.title}</h3>
@@ -635,6 +643,15 @@ function GameCard({ game, viewMode, onDelete, onEdit, isOnline }: GameCardProps)
           {game.completed && (
             <span className="badge-beaten" role="img" aria-label="Beaten">
               <FontAwesomeIcon icon={faTrophy} />
+            </span>
+          )}
+          {game.status && game.status !== 'Owned' && (
+            <span className={`badge-status ${game.status.toLowerCase()}`} role="img" aria-label={game.status}>
+              {game.status === 'Wishlist' && <FontAwesomeIcon icon={faHeart} />}
+              {game.status === 'Borrowed' && <FontAwesomeIcon icon={faHandHoldingHand} />}
+              {game.status === 'Lent' && <FontAwesomeIcon icon={faHandshake} />}
+              {game.status === 'Sold' && <FontAwesomeIcon icon={faDollarSign} />}
+              <span>{game.status}</span>
             </span>
           )}
         </div>
@@ -687,6 +704,15 @@ function GameCard({ game, viewMode, onDelete, onEdit, isOnline }: GameCardProps)
         {game.completed && (
           <span className="badge-beaten" role="img" aria-label="Beaten">
             <FontAwesomeIcon icon={faTrophy} />
+          </span>
+        )}
+        {game.status && game.status !== 'Owned' && (
+          <span className={`badge-status ${game.status.toLowerCase()}`} role="img" aria-label={game.status}>
+            {game.status === 'Wishlist' && <FontAwesomeIcon icon={faHeart} />}
+            {game.status === 'Borrowed' && <FontAwesomeIcon icon={faHandHoldingHand} />}
+            {game.status === 'Lent' && <FontAwesomeIcon icon={faHandshake} />}
+            {game.status === 'Sold' && <FontAwesomeIcon icon={faDollarSign} />}
+            <span>{game.status}</span>
           </span>
         )}
       </div>
