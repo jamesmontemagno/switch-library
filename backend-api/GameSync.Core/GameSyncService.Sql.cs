@@ -836,6 +836,258 @@ public partial class GameSyncService
         };
     }
 
+    /// <summary>
+    /// Get game IDs from SQL Database that have no boxart entries
+    /// </summary>
+    public async Task<List<int>> GetGameIdsWithMissingBoxartAsync()
+    {
+        if (_storageMode != StorageMode.SqlDatabase && _storageMode != StorageMode.Dual)
+        {
+            throw new InvalidOperationException("Missing boxart sync requires SQL Database storage mode");
+        }
+
+        await using var connection = await GetSqlConnectionAsync();
+
+        var sql = @"
+            SELECT g.game_id
+            FROM games_cache g
+            LEFT JOIN games_boxart b ON g.game_id = b.game_id
+            WHERE b.id IS NULL
+            ORDER BY g.game_id";
+
+        var gameIds = (await connection.QueryAsync<int>(sql)).ToList();
+        return gameIds;
+    }
+
+    /// <summary>
+    /// Sync missing boxart for games that have no boxart entries in the database.
+    /// Queries TheGamesDB API in batches and saves boxart to SQL.
+    /// </summary>
+    /// <param name="interactiveMode">Enable interactive prompts between batches</param>
+    /// <param name="batchSize">Number of game IDs to fetch per API call (max 20)</param>
+    /// <returns>Number of games that had boxart added</returns>
+    public async Task<int> SyncMissingBoxartAsync(bool interactiveMode = false, int batchSize = 20)
+    {
+        _logger.LogInformation("Starting missing boxart sync...");
+
+        // Get all game IDs without boxart
+        var missingIds = await GetGameIdsWithMissingBoxartAsync();
+
+        if (missingIds.Count == 0)
+        {
+            _logger.LogInformation("All games already have boxart - nothing to do!");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("All games already have boxart - nothing to do!");
+            Console.ResetColor();
+            return 0;
+        }
+
+        _logger.LogInformation("Found {Count} games with missing boxart", missingIds.Count);
+        Console.WriteLine($"Found {missingIds.Count} games with missing boxart.");
+        Console.WriteLine();
+
+        var totalUpdated = 0;
+        var totalSkipped = 0;
+        var autoComplete = false;
+
+        // Process in batches (TheGamesDB API supports comma-separated IDs)
+        var batches = missingIds
+            .Select((id, index) => new { id, index })
+            .GroupBy(x => x.index / batchSize)
+            .Select(g => g.Select(x => x.id).ToList())
+            .ToList();
+
+        for (var i = 0; i < batches.Count; i++)
+        {
+            var batch = batches[i];
+            var idsParam = string.Join(",", batch);
+
+            _logger.LogInformation("Fetching boxart for batch {Batch}/{Total} ({Count} games)...",
+                i + 1, batches.Count, batch.Count);
+
+            try
+            {
+                var url = $"{ApiBaseUrl}/Games/ByGameID?apikey={_apiKey}&id={idsParam}&include=boxart";
+
+                _logger.LogDebug("Request URL: {Url}", url.Replace(_apiKey, "***"));
+
+                JsonDocument? jsonDoc = null;
+                var retryCount = 0;
+                var success = false;
+
+                while (retryCount <= MaxRetries && !success)
+                {
+                    try
+                    {
+                        var response = await _httpClient.GetAsync(url);
+
+                        if (!response.IsSuccessStatusCode)
+                        {
+                            _logger.LogError("API request failed: {StatusCode}", response.StatusCode);
+
+                            if (response.StatusCode == System.Net.HttpStatusCode.GatewayTimeout ||
+                                response.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable ||
+                                response.StatusCode == System.Net.HttpStatusCode.RequestTimeout)
+                            {
+                                retryCount++;
+                                if (retryCount <= MaxRetries)
+                                {
+                                    var delay = InitialRetryDelayMs * (int)Math.Pow(2, retryCount - 1);
+                                    _logger.LogWarning("Retrying in {Delay}ms (attempt {Attempt}/{MaxRetries})...",
+                                        delay, retryCount, MaxRetries);
+                                    await Task.Delay(delay);
+                                    continue;
+                                }
+                            }
+                            break;
+                        }
+
+                        var content = await response.Content.ReadAsStringAsync();
+                        jsonDoc = JsonDocument.Parse(content);
+                        success = true;
+                    }
+                    catch (HttpRequestException ex) when (ex.InnerException is System.Net.Sockets.SocketException)
+                    {
+                        retryCount++;
+                        if (retryCount <= MaxRetries)
+                        {
+                            var delay = InitialRetryDelayMs * (int)Math.Pow(2, retryCount - 1);
+                            _logger.LogWarning(ex, "Network error on batch {Batch}. Retrying in {Delay}ms (attempt {Attempt}/{MaxRetries})...",
+                                i + 1, delay, retryCount, MaxRetries);
+                            await Task.Delay(delay);
+                        }
+                        else
+                        {
+                            _logger.LogError(ex, "Network error on batch {Batch} after {MaxRetries} retries", i + 1, MaxRetries);
+                            throw;
+                        }
+                    }
+                    catch (TaskCanceledException ex)
+                    {
+                        retryCount++;
+                        if (retryCount <= MaxRetries)
+                        {
+                            var delay = InitialRetryDelayMs * (int)Math.Pow(2, retryCount - 1);
+                            _logger.LogWarning(ex, "Request timeout on batch {Batch}. Retrying in {Delay}ms (attempt {Attempt}/{MaxRetries})...",
+                                i + 1, delay, retryCount, MaxRetries);
+                            await Task.Delay(delay);
+                        }
+                        else
+                        {
+                            _logger.LogError(ex, "Request timeout on batch {Batch} after {MaxRetries} retries", i + 1, MaxRetries);
+                            throw;
+                        }
+                    }
+                }
+
+                if (!success || jsonDoc == null)
+                {
+                    _logger.LogError("Failed to fetch batch {Batch} after retries, skipping {Count} games",
+                        i + 1, batch.Count);
+                    totalSkipped += batch.Count;
+                    continue;
+                }
+
+                // Extract boxart from the include section
+                // Note: TheGamesDB returns "data" as an object keyed by game ID when boxart exists,
+                // but as an empty array [] when no games in the batch have boxart.
+                var hasInclude = jsonDoc.RootElement.TryGetProperty("include", out var include);
+                var boxartInclude = default(JsonElement);
+                var hasBoxart = hasInclude && include.TryGetProperty("boxart", out boxartInclude);
+                var boxartData = default(JsonElement);
+                var hasBoxartData = hasBoxart && boxartInclude.TryGetProperty("data", out boxartData);
+
+                if (hasBoxartData && boxartData.ValueKind == JsonValueKind.Object)
+                {
+                    foreach (var entry in boxartData.EnumerateObject())
+                    {
+                        if (int.TryParse(entry.Name, out var gameId))
+                        {
+                            await SaveBoxartToSqlAsync(gameId, entry.Value);
+                            totalUpdated++;
+                            _logger.LogDebug("Saved boxart for game {GameId}", gameId);
+                        }
+                    }
+
+                    // Count games in this batch that didn't have boxart in the API response
+                    var gamesWithBoxart = boxartData.EnumerateObject()
+                        .Select(e => int.TryParse(e.Name, out var id) ? id : 0)
+                        .Where(id => id > 0)
+                        .ToHashSet();
+                    var noBoxartInApi = batch.Count(id => !gamesWithBoxart.Contains(id));
+                    if (noBoxartInApi > 0)
+                    {
+                        totalSkipped += noBoxartInApi;
+                        _logger.LogDebug("{Count} games in batch {Batch} had no boxart available from TheGamesDB",
+                            noBoxartInApi, i + 1);
+                    }
+                }
+                else
+                {
+                    totalSkipped += batch.Count;
+                    _logger.LogDebug("No boxart available on TheGamesDB for any game in batch {Batch}", i + 1);
+                }
+
+                Console.WriteLine($"  Batch {i + 1}/{batches.Count}: {totalUpdated} updated, {totalSkipped} not available on TheGamesDB");
+
+                // Interactive mode prompt
+                if (interactiveMode && !autoComplete && i < batches.Count - 1)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("-------------------------------------------");
+                    Console.WriteLine($"Batch {i + 1}/{batches.Count} completed.");
+                    Console.WriteLine("  [C] Continue to next batch");
+                    Console.WriteLine("  [A] Auto-complete remaining batches");
+                    Console.WriteLine("  [Q] Quit");
+                    Console.WriteLine("-------------------------------------------");
+                    Console.Write("Your choice (C/A/Q): ");
+
+                    var choice = Console.ReadLine()?.Trim().ToUpperInvariant();
+                    Console.WriteLine();
+
+                    switch (choice)
+                    {
+                        case "Q":
+                            _logger.LogWarning("Missing boxart sync cancelled by user at batch {Batch}", i + 1);
+                            Console.WriteLine($"Sync cancelled. {totalUpdated} games had boxart added.");
+                            return totalUpdated;
+                        case "A":
+                            autoComplete = true;
+                            Console.WriteLine("Auto-completing remaining batches...");
+                            break;
+                        case "C":
+                        case "":
+                            break;
+                        default:
+                            Console.WriteLine("Invalid choice. Continuing...");
+                            break;
+                    }
+                }
+
+                // Rate limiting delay between batches
+                if (i < batches.Count - 1)
+                {
+                    await Task.Delay(2000);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error processing batch {Batch}, skipping", i + 1);
+                totalSkipped += batch.Count;
+            }
+        }
+
+        _logger.LogInformation("Missing boxart sync completed: {Updated} games updated, {Skipped} not available on TheGamesDB",
+            totalUpdated, totalSkipped);
+
+        Console.WriteLine();
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine($"Summary: {totalUpdated} games had boxart added, {totalSkipped} games have no boxart available on TheGamesDB.");
+        Console.ResetColor();
+
+        return totalUpdated;
+    }
+
     private class SyncMetadata
     {
         public DateTime LastSyncTime { get; set; }

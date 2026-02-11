@@ -167,10 +167,11 @@ partial class Program
         Console.WriteLine("5. Sync Genres only");
         Console.WriteLine("6. Sync Developers only");
         Console.WriteLine("7. Sync Publishers only");
-        Console.WriteLine("8. Show Statistics");
-        Console.WriteLine("9. Exit");
+        Console.WriteLine("8. Sync Missing Boxart - Find and update games without boxart");
+        Console.WriteLine("9. Show Statistics");
+        Console.WriteLine("10. Exit");
         Console.WriteLine();
-        Console.Write("Select an option (1-9): ");
+        Console.Write("Select an option (1-10): ");
 
             var choice = Console.ReadLine()?.Trim();
             Console.WriteLine();
@@ -206,16 +207,20 @@ partial class Program
                     break;
 
                 case "8":
-                    await ShowStatisticsAsync(syncService);
+                    await SyncMissingBoxartAsync(syncService);
                     break;
 
                 case "9":
+                    await ShowStatisticsAsync(syncService);
+                    break;
+
+                case "10":
                     Console.WriteLine("Goodbye!");
                     return 0;
 
                 default:
                     Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine("Invalid option. Please select 1-9.");
+                    Console.WriteLine("Invalid option. Please select 1-10.");
                     Console.ResetColor();
                     Console.WriteLine();
                     break;
@@ -306,6 +311,11 @@ partial class Program
                     await SyncPublishersOnlyAsync(syncService);
                     return 0;
 
+                case "boxart":
+                case "missing-boxart":
+                    await SyncMissingBoxartAsync(syncService, interactiveMode: false);
+                    return 0;
+
                 default:
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine($"Unknown mode: {mode}");
@@ -319,6 +329,7 @@ partial class Program
                     Console.WriteLine("  --mode=genres      - Sync only genres lookup data");
                     Console.WriteLine("  --mode=developers  - Sync only developers lookup data");
                     Console.WriteLine("  --mode=publishers  - Sync only publishers lookup data");
+                    Console.WriteLine("  --mode=boxart      (or --mode=missing-boxart) - Sync missing boxart");
                     Console.WriteLine("  --mode=stats       (or --mode=statistics) - Show statistics");
                     Console.WriteLine();
                     return 1;
@@ -895,6 +906,39 @@ partial class Program
         {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine($"✗ Error syncing publishers: {ex.Message}");
+            Console.ResetColor();
+        }
+
+        Console.WriteLine("===========================================");
+        Console.WriteLine();
+    }
+
+    static async Task SyncMissingBoxartAsync(GameSyncService syncService, bool interactiveMode = true)
+    {
+        Console.WriteLine("===========================================");
+        Console.WriteLine("Syncing Missing Boxart:");
+        Console.WriteLine("===========================================");
+        Console.WriteLine("This will find games without boxart in the database");
+        Console.WriteLine("and fetch boxart from TheGamesDB API.");
+        Console.WriteLine();
+
+        var startTime = DateTime.UtcNow;
+
+        try
+        {
+            var updatedCount = await syncService.SyncMissingBoxartAsync(interactiveMode);
+
+            var duration = DateTime.UtcNow - startTime;
+            Console.WriteLine();
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"✓ Missing boxart sync completed in {duration.TotalMinutes:F2} minutes!");
+            Console.WriteLine($"  {updatedCount} games had boxart added.");
+            Console.ResetColor();
+        }
+        catch (Exception ex)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"✗ Error syncing missing boxart: {ex.Message}");
             Console.ResetColor();
         }
 

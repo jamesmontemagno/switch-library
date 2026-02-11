@@ -40,10 +40,11 @@ Main Menu:
 5. Sync Genres only
 6. Sync Developers only
 7. Sync Publishers only
-8. Show Statistics
-9. Exit
+8. Sync Missing Boxart - Find and update games without boxart
+9. Show Statistics
+10. Exit
 
-Select an option (1-9):
+Select an option (1-10):
 ```
 
 **Option 1: Full Sync** - Downloads all games and lookup data for both platforms:
@@ -75,7 +76,14 @@ Select an option (1-9):
 - Option 6: Sync only Developers
 - Option 7: Sync only Publishers
 
-**Option 8: Show Statistics** - Display cache info:
+**Option 8: Sync Missing Boxart** - Find and update games without boxart:
+- Queries the SQL database for games that have no boxart entries
+- Fetches boxart from TheGamesDB API in batches of 20
+- Saves boxart to SQL database
+- Supports interactive pagination (Continue/Auto-complete/Quit)
+- Useful after initial sync or when new games were added without boxart
+
+**Option 9: Show Statistics** - Display cache info:
 ```
 ===========================================
 Cache Statistics:
@@ -196,6 +204,12 @@ dotnet run -- \
   --TheGamesDB:ApiKey=abc123xyz \
   --BlobStorage:ConnectionString="DefaultEndpointsProtocol=https;AccountName=..." \
   --mode=stats
+
+# Sync missing boxart
+dotnet run -- \
+  --TheGamesDB:ApiKey=abc123xyz \
+  --BlobStorage:ConnectionString="DefaultEndpointsProtocol=https;AccountName=..." \
+  --mode=boxart
 ```
 
 ### Using Environment Variables

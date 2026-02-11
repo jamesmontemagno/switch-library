@@ -7,6 +7,7 @@ A .NET console application for syncing Nintendo Switch and Nintendo Switch 2 gam
 - **Full Sync**: Download all games for Nintendo Switch and Switch 2 platforms
 - **Switch 2 Only Sync**: Sync only Nintendo Switch 2 games with page resume support
 - **Incremental Sync**: Update only games that have been modified since the last sync
+- **Missing Boxart Sync**: Find games without boxart in the database and fetch it from TheGamesDB
 - **Interactive Mode**: User-friendly menu-driven interface with pagination control
 - **Non-Interactive Mode**: Command-line automation for scheduled tasks
 - **Resume Capability**: Resume interrupted syncs from the last successful page
@@ -99,8 +100,9 @@ You'll see a menu with options:
 5. Sync Genres only
 6. Sync Developers only
 7. Sync Publishers only
-8. Show Statistics
-9. Exit
+8. Sync Missing Boxart - Find and update games without boxart
+9. Show Statistics
+10. Exit
 
 ### Non-Interactive Mode
 
@@ -192,6 +194,16 @@ dotnet run -- --mode=incremental
 
 ```bash
 dotnet run -- --mode=stats
+```
+
+#### Sync Missing Boxart
+
+Find games in the database that have no boxart and fetch it from TheGamesDB:
+
+```bash
+dotnet run -- --mode=boxart
+# or
+dotnet run -- --mode=missing-boxart
 ```
 
 ### Short Mode Flag
