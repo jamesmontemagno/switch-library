@@ -4,7 +4,7 @@ import { usePreferences } from '../hooks/usePreferences';
 import { useSEO } from '../hooks/useSEO';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMagnifyingGlass, faWrench, faGamepad, faCalendar, faUsers, faStar, faBox, faCloud, faTriangleExclamation, faXmark, faHourglassHalf, faTableCells, faList, faGripLines, faFire, faArrowTrendUp, faHeart, faHandHoldingHand, faHandshake, faDollarSign, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { faMagnifyingGlass, faWrench, faGamepad, faCalendar, faUsers, faStar, faBox, faCloud, faTriangleExclamation, faXmark, faHourglassHalf, faTableCells, faList, faGripLines, faFire, faArrowTrendUp } from '@fortawesome/free-solid-svg-icons';
 import type { GameEntry, Platform, Format, GameStatus, TrendingGame, TrendingResponse } from '../types';
 import { 
   searchGames, 
@@ -1021,21 +1021,19 @@ export function Search() {
               </div>
               <div className="quick-add-options">
                 <div className="form-group">
-                  <label>Status</label>
-                  <SegmentedControl
-                    options={[
-                      { value: 'Owned', label: 'Owned', icon: <FontAwesomeIcon icon={faCheck} /> },
-                      { value: 'Wishlist', label: 'Wishlist', icon: <FontAwesomeIcon icon={faHeart} /> },
-                      { value: 'Borrowed', label: 'Borrowed', icon: <FontAwesomeIcon icon={faHandHoldingHand} /> },
-                      { value: 'Lent', label: 'Lent', icon: <FontAwesomeIcon icon={faHandshake} /> },
-                      { value: 'Sold', label: 'Sold', icon: <FontAwesomeIcon icon={faDollarSign} /> },
-                    ]}
+                  <label htmlFor="quick-add-status">Status</label>
+                  <select
+                    id="quick-add-status"
                     value={quickAddStatus}
-                    onChange={(value) => setQuickAddStatus(value as GameStatus)}
-                    ariaLabel="Game status"
-                    variant="buttons"
-                    fullWidth
-                  />
+                    onChange={(e) => setQuickAddStatus(e.target.value as GameStatus)}
+                    className="form-select"
+                  >
+                    <option value="Owned">Owned</option>
+                    <option value="Wishlist">Wishlist</option>
+                    <option value="Borrowed">Borrowed</option>
+                    <option value="Lent">Lent</option>
+                    <option value="Sold">Sold</option>
+                  </select>
                 </div>
                 <div className="form-group">
                   <label>Platform</label>
