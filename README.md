@@ -4,6 +4,8 @@ A web app for tracking your Nintendo Switch and Nintendo Switch 2 game collectio
 
 > 📝 **Want to learn more?** Read the [Architecture Blog Post](ARCHITECTURE-BLOG.md) for a deep dive into the technical architecture, design decisions, and how this app was built with GitHub Copilot (cloud agents, custom instructions, MCP servers, and more).
 
+![](./public/og-image.png)
+
 ## Features
 
 - 🎮 **Track Your Collection** - Manage physical and digital games across Nintendo Switch and Switch 2
