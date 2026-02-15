@@ -81,6 +81,9 @@ public class NightlySyncTimer
             // Perform incremental sync (updates only, not full sync)
             var syncResult = await _syncService.SyncUpdatesAsync();
 
+            // Also sync missing boxart after incremental updates
+            var boxartUpdatedCount = await _syncService.SyncMissingBoxartAsync(interactiveMode: false);
+
             var endTime = DateTime.UtcNow;
             var duration = endTime - startTime;
 
@@ -92,6 +95,7 @@ public class NightlySyncTimer
             _logger.LogInformation("Duration: {Duration:hh\\:mm\\:ss}", duration);
             _logger.LogInformation("Games processed this sync: {Processed} ({New} new, {Updated} updated)",
                 syncResult.TotalProcessed, syncResult.NewGamesAdded, syncResult.GamesUpdated);
+            _logger.LogInformation("Boxart updated this sync: {BoxartUpdatedCount}", boxartUpdatedCount);
             _logger.LogInformation("  - Nintendo Switch: {SwitchCount} games", syncResult.SwitchGamesProcessed);
             _logger.LogInformation("  - Nintendo Switch 2: {Switch2Count} games", syncResult.Switch2GamesProcessed);
             _logger.LogInformation("Total games cached: {GameCount}", stats.TotalGamesCached);
@@ -119,6 +123,7 @@ public class NightlySyncTimer
                 GamesProcessed = syncResult.TotalProcessed,
                 NewGamesAdded = syncResult.NewGamesAdded,
                 GamesUpdated = syncResult.GamesUpdated,
+                BoxartUpdated = boxartUpdatedCount,
                 SwitchGamesProcessed = syncResult.SwitchGamesProcessed,
                 Switch2GamesProcessed = syncResult.Switch2GamesProcessed,
                 TotalGamesCached = stats.TotalGamesCached,
@@ -235,6 +240,7 @@ public class SyncLogEntry
     public int GamesProcessed { get; set; }
     public int NewGamesAdded { get; set; }
     public int GamesUpdated { get; set; }
+    public int BoxartUpdated { get; set; }
     public int SwitchGamesProcessed { get; set; }
     public int Switch2GamesProcessed { get; set; }
     
