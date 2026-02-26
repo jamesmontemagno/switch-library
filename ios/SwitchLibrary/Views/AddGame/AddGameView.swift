@@ -251,12 +251,7 @@ struct AddGameView: View {
         let coverUrl = apiGame.coverImageURL?.absoluteString
 
         // Determine platform from API game
-        let gamePlatform: GamePlatform
-        if apiGame.platform == GamePlatform.nintendoSwitch2.platformId {
-            gamePlatform = .nintendoSwitch2
-        } else {
-            gamePlatform = platform
-        }
+        let gamePlatform = GamePlatform.from(platformId: apiGame.platform, fallback: platform)
 
         var game = GameEntry.create(
             userId: userId,

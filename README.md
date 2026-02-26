@@ -58,9 +58,16 @@ Change themes in **Settings** from the user menu.
 
 See [Themes.md](docs/Themes.md) for detailed documentation including color palettes and implementation details.
 
+## iOS App
+
+A fully native **iOS app** built with **SwiftUI** is available in the [`ios/`](ios/) directory. It connects to the same Supabase backend and Azure Functions API.
+
+See [ios/README.md](ios/README.md) for setup instructions.
+
 ## Tech Stack
 
 - **Frontend**: React 19 + TypeScript
+- **iOS App**: SwiftUI + Swift (iOS 17+)
 - **Build Tool**: Vite 7
 - **Routing**: React Router 6
 - **Database**: Supabase (PostgreSQL)

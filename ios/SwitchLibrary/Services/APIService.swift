@@ -26,7 +26,8 @@ actor APIService {
 
     /// Whether the API is configured with a valid base URL.
     var isConfigured: Bool {
-        !baseURL.isEmpty
+        guard !baseURL.isEmpty else { return false }
+        return URL(string: baseURL) != nil
     }
 
     // MARK: - Search Games

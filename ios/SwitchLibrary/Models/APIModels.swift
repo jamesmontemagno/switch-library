@@ -133,6 +133,7 @@ struct AppUser: Identifiable, Equatable {
 // MARK: - Region Mapping
 
 enum GameRegion {
+    // TheGamesDB uses region IDs 1 and 2 for different North American sub-regions
     static let names: [Int: String] = [
         0: "Global",
         1: "North America",

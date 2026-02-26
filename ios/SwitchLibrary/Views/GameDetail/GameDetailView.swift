@@ -160,10 +160,11 @@ struct GameDetailView: View {
             }
 
             if let coop = game.coop {
+                let coopLower = coop.lowercased()
                 MetadataCard(
                     icon: "person.2.wave.2.fill",
                     label: "Co-op",
-                    value: coop.lowercased() == "yes" || coop.lowercased() == "true" ? "Yes" : "No"
+                    value: coopLower == "yes" || coopLower == "true" ? "Yes" : "No"
                 )
             }
 

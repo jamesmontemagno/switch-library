@@ -35,6 +35,7 @@ final class SearchViewModel: ObservableObject {
         isSearching = true
         errorMessage = nil
         currentPage = 1
+        defer { isSearching = false }
 
         do {
             let result = try await APIService.shared.searchGames(
@@ -50,8 +51,6 @@ final class SearchViewModel: ObservableObject {
             errorMessage = error.localizedDescription
             results = []
         }
-
-        isSearching = false
     }
 
     /// Loads the next page of results.
@@ -61,6 +60,7 @@ final class SearchViewModel: ObservableObject {
 
         isSearching = true
         currentPage += 1
+        defer { isSearching = false }
 
         do {
             let result = try await APIService.shared.searchGames(
@@ -75,8 +75,6 @@ final class SearchViewModel: ObservableObject {
             errorMessage = error.localizedDescription
             currentPage -= 1
         }
-
-        isSearching = false
     }
 
     /// Clears the search results.

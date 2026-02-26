@@ -21,6 +21,15 @@ enum GamePlatform: String, Codable, CaseIterable, Identifiable {
         case .nintendoSwitch2: return "Switch 2"
         }
     }
+
+    /// Returns the matching platform for a given API platform ID.
+    static func from(platformId: Int, fallback: GamePlatform = .nintendoSwitch) -> GamePlatform {
+        switch platformId {
+        case GamePlatform.nintendoSwitch2.platformId: return .nintendoSwitch2
+        case GamePlatform.nintendoSwitch.platformId: return .nintendoSwitch
+        default: return fallback
+        }
+    }
 }
 
 enum GameFormat: String, Codable, CaseIterable, Identifiable {

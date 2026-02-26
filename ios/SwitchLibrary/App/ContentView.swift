@@ -42,9 +42,7 @@ struct ContentView: View {
     private func addGameFromSearch(_ apiGame: APIGame) {
         let userId = supabase.currentUser?.id ?? "local"
         let coverUrl = apiGame.coverImageURL?.absoluteString
-        let platform: GamePlatform = apiGame.platform == GamePlatform.nintendoSwitch2.platformId
-            ? .nintendoSwitch2
-            : .nintendoSwitch
+        let platform = GamePlatform.from(platformId: apiGame.platform)
 
         let game = GameEntry.create(
             userId: userId,

@@ -53,15 +53,7 @@ final class SupabaseService: ObservableObject {
 
         do {
             let session = try await client.auth.session
-            let user = session.user
-            currentUser = AppUser(
-                id: user.id.uuidString,
-                email: user.email,
-                displayName: user.userMetadata["display_name"]?.value as? String
-                    ?? user.email
-                    ?? "User",
-                avatarUrl: user.userMetadata["avatar_url"]?.value as? String
-            )
+            currentUser = mapUser(session.user)
             isAuthenticated = true
         } catch {
             currentUser = nil
@@ -76,15 +68,7 @@ final class SupabaseService: ObservableObject {
         guard let client else { throw SupabaseServiceError.notConfigured }
 
         let session = try await client.auth.signIn(email: email, password: password)
-        let user = session.user
-        currentUser = AppUser(
-            id: user.id.uuidString,
-            email: user.email,
-            displayName: user.userMetadata["display_name"]?.value as? String
-                ?? user.email
-                ?? "User",
-            avatarUrl: user.userMetadata["avatar_url"]?.value as? String
-        )
+        currentUser = mapUser(session.user)
         isAuthenticated = true
     }
 
@@ -98,12 +82,7 @@ final class SupabaseService: ObservableObject {
             data: ["display_name": .string(displayName)]
         )
         if let user = result.user {
-            currentUser = AppUser(
-                id: user.id.uuidString,
-                email: user.email,
-                displayName: displayName,
-                avatarUrl: nil
-            )
+            currentUser = mapUser(user)
             isAuthenticated = true
         }
     }
@@ -173,6 +152,21 @@ final class SupabaseService: ObservableObject {
     // MARK: - Local Storage Fallback
 
     private let localStorageKey = "switch_library_games"
+
+    // MARK: - Private Helpers
+
+    private func mapUser(_ user: Supabase.User) -> AppUser {
+        let displayName = user.userMetadata["display_name"]?.value as? String
+            ?? user.email
+            ?? "User"
+        let avatarUrl = user.userMetadata["avatar_url"]?.value as? String
+        return AppUser(
+            id: user.id.uuidString,
+            email: user.email,
+            displayName: displayName,
+            avatarUrl: avatarUrl
+        )
+    }
 
     private func loadGamesFromLocal() -> [GameEntry] {
         guard let data = UserDefaults.standard.data(forKey: localStorageKey) else { return [] }
