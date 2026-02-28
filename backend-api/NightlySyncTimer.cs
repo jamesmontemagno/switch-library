@@ -37,12 +37,22 @@ public class NightlySyncTimer
         // Bind sync settings from configuration with smart defaults
         _syncSettings = new SyncSettings();
         configuration.GetSection("Sync").Bind(_syncSettings);
-        
-        // Smart defaults: SyncEnabled = true, StorageMode = Dual
-        _syncSettings.SyncEnabled = configuration.GetValue<bool>("SyncEnabled", true);
-        
-        // Parse StorageMode with Dual as default
-        var storageModeConfig = configuration["StorageMode"];
+
+        // Resolve SyncEnabled with explicit precedence:
+        // Sync:SyncEnabled/Sync__SyncEnabled -> SyncEnabled -> default(true)
+        var syncEnabledConfig = configuration["Sync:SyncEnabled"]
+            ?? configuration["Sync__SyncEnabled"]
+            ?? configuration["SyncEnabled"];
+        if (!string.IsNullOrWhiteSpace(syncEnabledConfig) && bool.TryParse(syncEnabledConfig, out var syncEnabled))
+        {
+            _syncSettings.SyncEnabled = syncEnabled;
+        }
+
+        // Resolve StorageMode with explicit precedence:
+        // Sync:StorageMode/Sync__StorageMode -> StorageMode -> SyncSettings default(Dual)
+        var storageModeConfig = configuration["Sync:StorageMode"]
+            ?? configuration["Sync__StorageMode"]
+            ?? configuration["StorageMode"];
         if (!string.IsNullOrEmpty(storageModeConfig))
         {
             if (Enum.TryParse<StorageMode>(storageModeConfig, ignoreCase: true, out var mode))
@@ -140,12 +150,12 @@ public class NightlySyncTimer
             var endTime = DateTime.UtcNow;
             var duration = endTime - startTime;
 
-            _logger.LogError(ex, "=================================================");
-            _logger.LogError(ex, "Nightly sync FAILED at {EndTime} UTC", endTime);
-            _logger.LogError(ex, "Duration before failure: {Duration:hh\\:mm\\:ss}", duration);
-            _logger.LogError(ex, "Error: {ErrorMessage}", ex.Message);
-            _logger.LogError(ex, "Stack trace: {StackTrace}", ex.StackTrace);
-            _logger.LogError(ex, "=================================================");
+            _logger.LogError(
+                ex,
+                "Nightly sync FAILED at {EndTime} UTC after {Duration:hh\\:mm\\:ss}. Error: {ErrorMessage}",
+                endTime,
+                duration,
+                ex.Message);
 
             // Write failure log to blob storage
             await WriteSyncLogAsync(new SyncLogEntry

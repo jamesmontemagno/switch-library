@@ -283,7 +283,7 @@ public partial class GameSyncService
                 _logger.LogInformation("Fetching page {Page} for {Platform}...", page, platformName);
 
                 // Fetch games by platform with pagination (with retry logic)
-                JsonDocument? jsonDoc = null;
+                string? responseContent = null;
                 var retryCount = 0;
                 var success = false;
 
@@ -321,8 +321,7 @@ public partial class GameSyncService
                             break;
                         }
 
-                        var content = await response.Content.ReadAsStringAsync();
-                        jsonDoc = JsonDocument.Parse(content);
+                        responseContent = await response.Content.ReadAsStringAsync();
                         success = true;
                     }
                     catch (HttpRequestException ex) when (ex.InnerException is System.Net.Sockets.SocketException)
@@ -367,11 +366,13 @@ public partial class GameSyncService
                     }
                 }
 
-                if (!success || jsonDoc == null)
+                if (!success || string.IsNullOrEmpty(responseContent))
                 {
                     _logger.LogError("Failed to fetch page {Page} after {MaxRetries} retries", page, MaxRetries);
                     break;
                 }
+
+                using var jsonDoc = JsonDocument.Parse(responseContent);
 
                 // Check if there are games in the response
                 if (!jsonDoc.RootElement.TryGetProperty("data", out var data))
@@ -568,7 +569,7 @@ public partial class GameSyncService
                 }
 
                 var content = await response.Content.ReadAsStringAsync();
-                var jsonDoc = JsonDocument.Parse(content);
+                using var jsonDoc = JsonDocument.Parse(content);
 
                 if (!jsonDoc.RootElement.TryGetProperty("data", out var data) ||
                     !data.TryGetProperty("updates", out var updatesArray) ||
@@ -747,7 +748,7 @@ public partial class GameSyncService
                         if (gameResponse.IsSuccessStatusCode)
                         {
                             var gameContent = await gameResponse.Content.ReadAsStringAsync();
-                            var gameDoc = JsonDocument.Parse(gameContent);
+                            using var gameDoc = JsonDocument.Parse(gameContent);
                             if (gameDoc.RootElement.TryGetProperty("data", out var gameData) &&
                                 gameData.TryGetProperty("games", out var gamesArray) &&
                                 gamesArray.GetArrayLength() > 0)
@@ -845,7 +846,8 @@ public partial class GameSyncService
         }
 
         stream.Position = 0;
-        return JsonDocument.Parse(stream).RootElement.Clone();
+        using var gameDoc = JsonDocument.Parse(stream);
+        return gameDoc.RootElement.Clone();
     }
 
     /// <summary>
@@ -922,7 +924,7 @@ public partial class GameSyncService
             if (genresResponse.IsSuccessStatusCode)
             {
                 var content = await genresResponse.Content.ReadAsStringAsync();
-                var jsonDoc = JsonDocument.Parse(content);
+                using var jsonDoc = JsonDocument.Parse(content);
                 await SaveLookupDataAsync("genres", jsonDoc.RootElement);
                 
                 if (jsonDoc.RootElement.TryGetProperty("data", out var data) &&
@@ -953,7 +955,7 @@ public partial class GameSyncService
             if (developersResponse.IsSuccessStatusCode)
             {
                 var content = await developersResponse.Content.ReadAsStringAsync();
-                var jsonDoc = JsonDocument.Parse(content);
+                using var jsonDoc = JsonDocument.Parse(content);
                 await SaveLookupDataAsync("developers", jsonDoc.RootElement);
                 
                 if (jsonDoc.RootElement.TryGetProperty("data", out var data) &&
@@ -984,7 +986,7 @@ public partial class GameSyncService
             if (publishersResponse.IsSuccessStatusCode)
             {
                 var content = await publishersResponse.Content.ReadAsStringAsync();
-                var jsonDoc = JsonDocument.Parse(content);
+                using var jsonDoc = JsonDocument.Parse(content);
                 await SaveLookupDataAsync("publishers", jsonDoc.RootElement);
                 
                 if (jsonDoc.RootElement.TryGetProperty("data", out var data) &&
@@ -1265,7 +1267,7 @@ public partial class GameSyncService
         if (stats.HasGenres)
         {
             var genreContent = await genreBlob.DownloadContentAsync();
-            var genreDoc = JsonDocument.Parse(genreContent.Value.Content);
+            using var genreDoc = JsonDocument.Parse(genreContent.Value.Content);
             if (genreDoc.RootElement.TryGetProperty("data", out var dataRoot) &&
                 dataRoot.TryGetProperty("genres", out var genreItems) &&
                 genreItems.ValueKind == JsonValueKind.Object)
@@ -1279,7 +1281,7 @@ public partial class GameSyncService
         if (stats.HasDevelopers)
         {
             var developerContent = await developerBlob.DownloadContentAsync();
-            var developerDoc = JsonDocument.Parse(developerContent.Value.Content);
+            using var developerDoc = JsonDocument.Parse(developerContent.Value.Content);
             if (developerDoc.RootElement.TryGetProperty("data", out var dataRoot) &&
                 dataRoot.TryGetProperty("developers", out var developerItems) &&
                 developerItems.ValueKind == JsonValueKind.Object)
@@ -1293,7 +1295,7 @@ public partial class GameSyncService
         if (stats.HasPublishers)
         {
             var publisherContent = await publisherBlob.DownloadContentAsync();
-            var publisherDoc = JsonDocument.Parse(publisherContent.Value.Content);
+            using var publisherDoc = JsonDocument.Parse(publisherContent.Value.Content);
             if (publisherDoc.RootElement.TryGetProperty("data", out var dataRoot) &&
                 dataRoot.TryGetProperty("publishers", out var publisherItems) &&
                 publisherItems.ValueKind == JsonValueKind.Object)

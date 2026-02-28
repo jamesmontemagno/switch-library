@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System;
 using SwitchLibraryApi;
 
 var builder = FunctionsApplication.CreateBuilder(args);
@@ -119,18 +120,22 @@ var host = builder.Build();
 using (var scope = host.Services.CreateScope())
 {
     var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
-    var storageMode = configuration["StorageMode"];
+    var storageModeConfig = configuration["StorageMode"];
     var enableDbInit = configuration.GetValue<bool>("Sync:EnableDatabaseInitialization", true);
-    
+
+    var shouldInitializeDatabase =
+        Enum.TryParse<StorageMode>(storageModeConfig, ignoreCase: true, out var parsedStorageMode) &&
+        (parsedStorageMode == StorageMode.SqlDatabase || parsedStorageMode == StorageMode.Dual);
+
     // Initialize if using SqlDatabase or Dual mode
-    if (enableDbInit && (storageMode == "SqlDatabase" || storageMode == "Dual"))
+    if (enableDbInit && shouldInitializeDatabase)
     {
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
         var dbInitializer = scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
         
         try
         {
-            logger.LogInformation("Initializing database schema for storage mode: {StorageMode}", storageMode);
+            logger.LogInformation("Initializing database schema for storage mode: {StorageMode}", parsedStorageMode);
             await dbInitializer.EnsureDatabaseAsync();
             logger.LogInformation("Database schema initialization completed");
         }

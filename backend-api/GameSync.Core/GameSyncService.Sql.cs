@@ -21,7 +21,7 @@ public partial class GameSyncService
         }
 
         var connection = new SqlConnection(_sqlSettings.ConnectionString);
-        connection.Open();
+        await connection.OpenAsync();
         return connection;
     }
 
@@ -911,7 +911,7 @@ public partial class GameSyncService
 
                 _logger.LogDebug("Request URL: {Url}", url.Replace(_apiKey, "***"));
 
-                JsonDocument? jsonDoc = null;
+                string? responseContent = null;
                 var retryCount = 0;
                 var success = false;
 
@@ -942,8 +942,7 @@ public partial class GameSyncService
                             break;
                         }
 
-                        var content = await response.Content.ReadAsStringAsync();
-                        jsonDoc = JsonDocument.Parse(content);
+                        responseContent = await response.Content.ReadAsStringAsync();
                         success = true;
                     }
                     catch (HttpRequestException ex) when (ex.InnerException is System.Net.Sockets.SocketException)
@@ -980,13 +979,15 @@ public partial class GameSyncService
                     }
                 }
 
-                if (!success || jsonDoc == null)
+                if (!success || string.IsNullOrEmpty(responseContent))
                 {
                     _logger.LogError("Failed to fetch batch {Batch} after retries, skipping {Count} games",
                         i + 1, batch.Count);
                     totalSkipped += batch.Count;
                     continue;
                 }
+
+                using var jsonDoc = JsonDocument.Parse(responseContent);
 
                 // Extract boxart from the include section
                 // Note: TheGamesDB returns "data" as an object keyed by game ID when boxart exists,
