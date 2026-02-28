@@ -7,10 +7,9 @@ import Foundation
 actor APIService {
     static let shared = APIService()
 
-    /// Base URL for the backend API. Configure via Settings.
+    /// Base URL for the backend API, configured in Info.plist.
     var baseURL: String {
-        get { UserDefaults.standard.string(forKey: "api_base_url") ?? "" }
-        set { UserDefaults.standard.set(newValue, forKey: "api_base_url") }
+        AppConfiguration.apiBaseURL
     }
 
     private let session: URLSession
@@ -177,7 +176,7 @@ enum APIError: LocalizedError {
         case .decodingError(let error):
             return "Failed to parse the response: \(error.localizedDescription)"
         case .notConfigured:
-            return "The API is not configured. Please set the API URL in Settings."
+            return "The API is not configured for this build."
         }
     }
 }

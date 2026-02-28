@@ -28,7 +28,7 @@ final class SearchViewModel: ObservableObject {
         }
 
         guard await APIService.shared.isConfigured else {
-            errorMessage = "API is not configured. Please set the API URL in Settings."
+            errorMessage = "API is not configured for this build."
             return
         }
 

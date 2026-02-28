@@ -46,11 +46,19 @@ Xcode will automatically resolve the Swift Package Manager dependency (Supabase 
 
 ### 4. Configure the App
 
-On first launch, go to the **Settings** tab and configure:
+Connection values are bundled at build time and are not editable in the app UI.
 
-- **API Base URL**: Your Azure Functions endpoint (e.g., `https://your-api.azurewebsites.net/api`)
-- **Supabase URL**: Your Supabase project URL
-- **Supabase Anon Key**: Your Supabase publishable/anon key
+Set these keys in `project.yml` under the `SwitchLibrary` target settings:
+
+- `INFOPLIST_KEY_API_BASE_URL`
+- `INFOPLIST_KEY_SUPABASE_URL`
+- `INFOPLIST_KEY_SUPABASE_KEY`
+
+Then regenerate the project:
+
+```bash
+xcodegen generate
+```
 
 Without Supabase configured, the app works in local-only mode (games stored on device).
 

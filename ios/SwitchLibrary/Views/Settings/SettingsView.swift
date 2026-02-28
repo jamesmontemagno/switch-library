@@ -6,9 +6,6 @@ import SwiftUI
 struct SettingsView: View {
     @ObservedObject private var supabase = SupabaseService.shared
 
-    @State private var apiBaseURL: String
-    @State private var supabaseURL: String
-    @State private var supabaseKey: String
     @State private var showingSignIn = false
     @State private var showingSignUp = false
 
@@ -19,23 +16,14 @@ struct SettingsView: View {
     @State private var authError: String?
     @State private var isAuthenticating = false
 
-    init() {
-        _apiBaseURL = State(initialValue: UserDefaults.standard.string(forKey: "api_base_url") ?? "")
-        _supabaseURL = State(initialValue: UserDefaults.standard.string(forKey: "supabase_url") ?? "")
-        _supabaseKey = State(initialValue: UserDefaults.standard.string(forKey: "supabase_key") ?? "")
-    }
-
     var body: some View {
         NavigationStack {
             Form {
                 // Account section
                 accountSection
 
-                // API Configuration
-                apiSection
-
-                // Supabase Configuration
-                supabaseSection
+                // Connection status
+                connectionSection
 
                 // About section
                 aboutSection
@@ -107,57 +95,30 @@ struct SettingsView: View {
                     showingSignUp = true
                 }
             } else {
-                Text("Configure Supabase below to enable authentication")
+                Text("Supabase authentication is unavailable in this build.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
         }
     }
 
-    // MARK: - API Section
+    // MARK: - Connection Section
 
-    private var apiSection: some View {
+    private var connectionSection: some View {
         Section {
-            TextField("API Base URL", text: $apiBaseURL)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .keyboardType(.URL)
-                .accessibilityLabel("API Base URL")
+            LabeledContent("Game Search API") {
+                Text(AppConfiguration.apiBaseURL.isEmpty ? "Not configured" : "Configured")
+                    .foregroundStyle(AppConfiguration.apiBaseURL.isEmpty ? .secondary : .primary)
+            }
 
-            Button("Save API Settings") {
-                UserDefaults.standard.set(apiBaseURL, forKey: "api_base_url")
+            LabeledContent("Supabase") {
+                Text(supabase.isConfigured ? "Configured" : "Not configured")
+                    .foregroundStyle(supabase.isConfigured ? .primary : .secondary)
             }
         } header: {
-            Text("Game Search API")
+            Text("Connections")
         } footer: {
-            Text("The Azure Functions API URL for game search and details (e.g., https://your-api.azurewebsites.net/api).")
-        }
-    }
-
-    // MARK: - Supabase Section
-
-    private var supabaseSection: some View {
-        Section {
-            TextField("Supabase URL", text: $supabaseURL)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .keyboardType(.URL)
-                .accessibilityLabel("Supabase Project URL")
-
-            SecureField("Supabase Anon Key", text: $supabaseKey)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .accessibilityLabel("Supabase anonymous key")
-
-            Button("Save & Connect") {
-                UserDefaults.standard.set(supabaseURL, forKey: "supabase_url")
-                UserDefaults.standard.set(supabaseKey, forKey: "supabase_key")
-                supabase.configureClient()
-            }
-        } header: {
-            Text("Supabase (Library Storage)")
-        } footer: {
-            Text("Connect to Supabase for cloud-synced game library and authentication. Without this, games are stored locally on device.")
+            Text("Connection values are bundled at build time and are not editable in-app.")
         }
     }
 

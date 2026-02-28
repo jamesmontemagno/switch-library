@@ -27,10 +27,10 @@ final class SupabaseService: ObservableObject {
 
     // MARK: - Configuration
 
-    /// Reads Supabase URL and key from UserDefaults and initializes the client.
+    /// Reads Supabase URL and key from Info.plist and initializes the client.
     func configureClient() {
-        let url = UserDefaults.standard.string(forKey: "supabase_url") ?? ""
-        let key = UserDefaults.standard.string(forKey: "supabase_key") ?? ""
+        let url = AppConfiguration.supabaseURL
+        let key = AppConfiguration.supabaseKey
 
         guard !url.isEmpty, !key.isEmpty, let supabaseURL = URL(string: url) else {
             client = nil
@@ -81,10 +81,8 @@ final class SupabaseService: ObservableObject {
             password: password,
             data: ["display_name": .string(displayName)]
         )
-        if let user = result.user {
-            currentUser = mapUser(user)
-            isAuthenticated = true
-        }
+        currentUser = mapUser(result.user)
+        isAuthenticated = true
     }
 
     /// Signs out the current user.
@@ -203,7 +201,7 @@ enum SupabaseServiceError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .notConfigured:
-            return "Supabase is not configured. Please set the URL and Key in Settings."
+            return "Supabase is not configured for this build."
         case .saveFailed:
             return "Failed to save the game. Please try again."
         }
