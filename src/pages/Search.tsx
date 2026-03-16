@@ -4,14 +4,16 @@ import { usePreferences } from '../hooks/usePreferences';
 import { useSEO } from '../hooks/useSEO';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMagnifyingGlass, faWrench, faGamepad, faCalendar, faUsers, faStar, faBox, faCloud, faTriangleExclamation, faXmark, faHourglassHalf, faTableCells, faList, faGripLines, faFire, faArrowTrendUp } from '@fortawesome/free-solid-svg-icons';
+import { faMagnifyingGlass, faWrench, faGamepad, faCalendar, faUsers, faStar, faBox, faCloud, faTriangleExclamation, faXmark, faHourglassHalf, faTableCells, faList, faGripLines, faFire, faArrowTrendUp, faClockRotateLeft } from '@fortawesome/free-solid-svg-icons';
 import type { GameEntry, Platform, Format, GameStatus, TrendingGame, TrendingResponse } from '../types';
 import { 
   searchGames, 
   PLATFORM_IDS,
   isTheGamesDBConfigured,
   getRegionName,
+  getRecentGames,
 } from '../services/thegamesdb';
+import type { BulkGameResult } from '../services/thegamesdb';
 import { saveGame, loadGames, deleteGame as deleteGameFromDb, getTrendingGames } from '../services/database';
 import { ManualAddGameModal } from '../components/ManualAddGameModal';
 import { FirstGameCelebrationModal } from '../components/FirstGameCelebrationModal';
@@ -24,7 +26,7 @@ const FIRST_GAME_CELEBRATION_KEY = 'hasSeenFirstGameCelebration';
 
 type SortOption = 'relevance' | 'release_desc' | 'release_asc' | 'title_asc' | 'title_desc';
 type ViewMode = 'grid' | 'list' | 'compact';
-type SearchMode = 'search' | 'trending';
+type SearchMode = 'search' | 'trending' | 'recent';
 
 interface SearchResult {
   id: number;
@@ -132,6 +134,13 @@ export function Search() {
   const [isTrendingLoading, setIsTrendingLoading] = useState(false);
   const [hasTrendingLoaded, setHasTrendingLoaded] = useState(false);
   
+  // Recent releases state
+  const [recentGames, setRecentGames] = useState<BulkGameResult[]>([]);
+  const [isRecentLoading, setIsRecentLoading] = useState(false);
+  const [hasRecentLoaded, setHasRecentLoaded] = useState(false);
+  const [recentPage, setRecentPage] = useState(1);
+  const [recentTotalPages, setRecentTotalPages] = useState(1);
+  
   // User's existing games (for demo mode support)
   const [userGames, setUserGames] = useState<GameEntry[]>([]);
   
@@ -186,6 +195,7 @@ export function Search() {
   const [detailsGameId, setDetailsGameId] = useState<number | null>(null);
   
   const searchRequestIdRef = useRef(0);
+  const isRecentLoadingRef = useRef(false);
   const hasTheGamesDB = isTheGamesDBConfigured();
 
   // Save preferences when filters/sort/view change
@@ -230,6 +240,41 @@ export function Search() {
       loadTrendingData();
     }
   }, [mode, hasTrendingLoaded, loadTrendingData]);
+
+  // Load recent releases data when switching to recent mode
+  const loadRecentData = useCallback(async (page: number = 1) => {
+    if (isRecentLoadingRef.current) return;
+    isRecentLoadingRef.current = true;
+
+    setIsRecentLoading(true);
+    try {
+      let platformId: number | undefined = undefined;
+      if (platform === 'Nintendo Switch') {
+        platformId = PLATFORM_IDS.NINTENDO_SWITCH;
+      } else if (platform === 'Nintendo Switch 2') {
+        platformId = PLATFORM_IDS.NINTENDO_SWITCH_2;
+      }
+
+      const result = await getRecentGames(platformId, page, 20);
+      setRecentGames(result.games);
+      setRecentPage(result.page);
+      setRecentTotalPages(result.totalPages);
+      setHasRecentLoaded(true);
+    } catch (err) {
+      console.error('Failed to load recent games:', err);
+    } finally {
+      setIsRecentLoading(false);
+      isRecentLoadingRef.current = false;
+    }
+  }, [platform]);
+
+  // Load recent data when mode changes to recent (reset when platform filter changes)
+  useEffect(() => {
+    if (mode === 'recent') {
+      setHasRecentLoaded(false);
+      loadRecentData(1);
+    }
+  }, [mode, platform, loadRecentData]);
 
   // Apply filters and sorting reactively whenever rawResults or filter states change
   const results = useMemo(() => {
@@ -554,12 +599,13 @@ export function Search() {
         </div>
       </header>
 
-      {/* Mode Toggle - Search / Trending */}
+      {/* Mode Toggle - Search / Trending / Recent Releases */}
       <div className="mode-toggle-container">
         <SegmentedControl
           options={[
             { value: 'search', label: 'Search', icon: <FontAwesomeIcon icon={faMagnifyingGlass} /> },
             { value: 'trending', label: 'Trending', icon: <FontAwesomeIcon icon={faFire} /> },
+            { value: 'recent', label: 'Recent Releases', icon: <FontAwesomeIcon icon={faClockRotateLeft} /> },
           ]}
           value={mode}
           onChange={(value) => {
@@ -567,7 +613,7 @@ export function Search() {
               alert('You are offline. Search and trending features are not available in offline mode.');
               return;
             }
-            setMode(value as 'search' | 'trending');
+            setMode(value as SearchMode);
           }}
           ariaLabel="Search mode"
           variant="default"
@@ -1004,6 +1050,177 @@ export function Search() {
               <h3>Unable to load trending data</h3>
               <p>Please try again later</p>
             </div>
+          )}
+        </div>
+      )}
+
+      {/* Recent Releases Mode Content */}
+      {mode === 'recent' && (
+        <div className="trending-container">
+          {/* Platform filter bar for recent releases */}
+          <div className="recent-filters-bar">
+            <div className="filter-item">
+              <label htmlFor="recent-platform-filter">Platform</label>
+              <select
+                id="recent-platform-filter"
+                value={platform}
+                onChange={(e) => setPlatform(e.target.value as 'all' | Platform)}
+              >
+                <option value="all">All Switch</option>
+                <option value="Nintendo Switch">Nintendo Switch</option>
+                <option value="Nintendo Switch 2">Nintendo Switch 2</option>
+              </select>
+            </div>
+          </div>
+
+          {isRecentLoading && (
+            <div className="search-loading">
+              <div className="loading-spinner" />
+              <p>Loading recent releases...</p>
+            </div>
+          )}
+
+          {!isRecentLoading && hasRecentLoaded && recentGames.length === 0 && (
+            <div className="search-no-results">
+              <div className="no-results-icon"><FontAwesomeIcon icon={faClockRotateLeft} /></div>
+              <h3>No recent releases found</h3>
+              <p>Try changing the platform filter</p>
+            </div>
+          )}
+
+          {!isRecentLoading && recentGames.length > 0 && (
+            <section className="trending-section">
+              <h2 className="trending-section-title">
+                <FontAwesomeIcon icon={faClockRotateLeft} /> Recent Releases
+              </h2>
+              <p className="trending-section-subtitle">The latest Nintendo Switch games, sorted by release date</p>
+
+              {/* Pagination - Top */}
+              {recentTotalPages > 1 && (
+                <div className="pagination-controls">
+                  <button
+                    onClick={() => {
+                      const prev = recentPage - 1;
+                      setRecentPage(prev);
+                      loadRecentData(prev);
+                    }}
+                    disabled={recentPage === 1 || isRecentLoading}
+                    className="btn-pagination"
+                  >
+                    ← Previous
+                  </button>
+                  <span className="page-indicator">Page {recentPage} of {recentTotalPages}</span>
+                  <button
+                    onClick={() => {
+                      const next = recentPage + 1;
+                      setRecentPage(next);
+                      loadRecentData(next);
+                    }}
+                    disabled={recentPage >= recentTotalPages || isRecentLoading}
+                    className="btn-pagination"
+                  >
+                    Next →
+                  </button>
+                </div>
+              )}
+
+              <div className="results-grid">
+                {recentGames.map((game) => {
+                  const gameInLibrary = getGameInLibrary(game.id);
+                  const isAdding = addingGameId === game.id;
+                  return (
+                    <article
+                      key={`${game.id}-${game.region_id}`}
+                      className="result-card grid trending clickable"
+                      onClick={() => setDetailsGameId(game.id)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDetailsGameId(game.id); } }}
+                      aria-label={`View details for ${game.title}`}
+                    >
+                      <div className="result-cover">
+                        {game.coverUrl ? (
+                          <img src={game.coverUrl} alt={game.title} loading="lazy" />
+                        ) : (
+                          <div className="cover-placeholder">
+                            <span><FontAwesomeIcon icon={faGamepad} /></span>
+                          </div>
+                        )}
+                        {gameInLibrary && (
+                          <div className="added-badge">✓ In Library</div>
+                        )}
+                      </div>
+                      <div className="result-info">
+                        <h3 className="result-title">{game.title}</h3>
+                        <div className="result-meta">
+                          <span className={`platform-badge ${game.platformId === PLATFORM_IDS.NINTENDO_SWITCH_2 ? 'switch2' : 'switch'}`}>
+                            {game.platformId === PLATFORM_IDS.NINTENDO_SWITCH_2 ? 'Switch 2' : 'Switch'}
+                          </span>
+                          {game.region_id !== undefined && <span className="region-badge">{getRegionName(game.region_id)}</span>}
+                          {game.releaseDate && (
+                            <span className="release-date"><FontAwesomeIcon icon={faCalendar} /> {formatDate(game.releaseDate)}</span>
+                          )}
+                        </div>
+                        <div className="result-actions">
+                          {isAuthenticated ? (
+                            gameInLibrary ? (
+                              <span className="in-library-text">In your library</span>
+                            ) : (
+                              <button
+                                className="btn-add-to-collection"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openQuickAdd({
+                                    thegamesdbId: game.id,
+                                    title: game.title,
+                                    coverUrl: game.coverUrl,
+                                    platformId: game.platformId,
+                                  });
+                                }}
+                                disabled={isAdding}
+                              >
+                                {isAdding ? <><FontAwesomeIcon icon={faHourglassHalf} /> Adding...</> : '+ Add to Collection'}
+                              </button>
+                            )
+                          ) : (
+                            <span className="login-hint">Sign in to add games</span>
+                          )}
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+
+              {/* Pagination - Bottom */}
+              {recentTotalPages > 1 && (
+                <div className="pagination-controls pagination-bottom">
+                  <button
+                    onClick={() => {
+                      const prev = recentPage - 1;
+                      setRecentPage(prev);
+                      loadRecentData(prev);
+                    }}
+                    disabled={recentPage === 1 || isRecentLoading}
+                    className="btn-pagination"
+                  >
+                    ← Previous
+                  </button>
+                  <span className="page-indicator">Page {recentPage} of {recentTotalPages}</span>
+                  <button
+                    onClick={() => {
+                      const next = recentPage + 1;
+                      setRecentPage(next);
+                      loadRecentData(next);
+                    }}
+                    disabled={recentPage >= recentTotalPages || isRecentLoading}
+                    className="btn-pagination"
+                  >
+                    Next →
+                  </button>
+                </div>
+              )}
+            </section>
           )}
         </div>
       )}
