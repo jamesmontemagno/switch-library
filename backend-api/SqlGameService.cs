@@ -558,6 +558,124 @@ public class SqlGameService
     }
 
     /// <summary>
+    /// Get recently released games from SQL database (release_date in the past, ordered newest first).
+    /// Cached for 15 minutes.
+    /// </summary>
+    public async Task<GameSearchResult> GetRecentGamesAsync(
+        int? platformId = null,
+        int page = 1,
+        int pageSize = 20)
+    {
+        var cacheKey = GetRecentCacheKey(platformId, page, pageSize);
+        if (_cache.TryGetValue(cacheKey, out GameSearchResult? cached) && cached != null)
+        {
+            _logger.LogDebug("Returning cached recent games");
+            return cached;
+        }
+
+        _logger.LogInformation("Getting recent games: platform={Platform}", platformId);
+
+        await using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
+
+        var parameters = new DynamicParameters();
+        parameters.Add("Today", DateTime.UtcNow.Date);
+        parameters.Add("Offset", (page - 1) * pageSize);
+        parameters.Add("PageSize", pageSize);
+
+        var platformFilter = platformId.HasValue ? "AND g.platform = @PlatformId" : "";
+        if (platformId.HasValue)
+        {
+            parameters.Add("PlatformId", platformId.Value);
+        }
+
+        // Get total count
+        var countSql = $@"
+            SELECT COUNT(*)
+            FROM games_cache g
+            WHERE g.release_date <= @Today
+              AND g.release_date IS NOT NULL
+              {platformFilter}";
+
+        var totalCount = await connection.ExecuteScalarAsync<int>(countSql, parameters);
+
+        // Get paged results ordered by most recent release first
+        var sql = $@"
+            SELECT 
+                g.game_id AS Id,
+                g.game_title AS GameTitle,
+                g.release_date AS ReleaseDate,
+                g.platform AS Platform,
+                p.name AS PlatformName,
+                g.region_id AS RegionId,
+                g.players AS Players,
+                g.overview AS Overview,
+                g.rating AS Rating,
+                g.coop AS Coop,
+                g.alternates AS Alternates,
+                b.filename AS BoxartFilename,
+                genre_agg.GenreIds,
+                genre_agg.GenreNames,
+                dev_agg.DeveloperIds,
+                dev_agg.DeveloperNames,
+                pub_agg.PublisherIds,
+                pub_agg.PublisherNames
+            FROM games_cache g
+            LEFT JOIN platforms p ON g.platform = p.platform_id
+            LEFT JOIN games_boxart b ON g.game_id = b.game_id AND b.type = 'boxart' AND b.side = 'front'
+            OUTER APPLY (
+                SELECT 
+                    STRING_AGG(CAST(gg.genre_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY lg.name) AS GenreIds,
+                    STRING_AGG(lg.name, '|') WITHIN GROUP (ORDER BY lg.name) AS GenreNames
+                FROM games_genres gg
+                JOIN lookup_genres lg ON gg.genre_id = lg.genre_id
+                WHERE gg.game_id = g.game_id
+            ) genre_agg
+            OUTER APPLY (
+                SELECT 
+                    STRING_AGG(CAST(gd.developer_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY ld.name) AS DeveloperIds,
+                    STRING_AGG(ld.name, '|') WITHIN GROUP (ORDER BY ld.name) AS DeveloperNames
+                FROM games_developers gd
+                JOIN lookup_developers ld ON gd.developer_id = ld.developer_id
+                WHERE gd.game_id = g.game_id
+            ) dev_agg
+            OUTER APPLY (
+                SELECT 
+                    STRING_AGG(CAST(gp.publisher_id AS VARCHAR), ',') WITHIN GROUP (ORDER BY lp.name) AS PublisherIds,
+                    STRING_AGG(lp.name, '|') WITHIN GROUP (ORDER BY lp.name) AS PublisherNames
+                FROM games_publishers gp
+                JOIN lookup_publishers lp ON gp.publisher_id = lp.publisher_id
+                WHERE gp.game_id = g.game_id
+            ) pub_agg
+            WHERE g.release_date <= @Today
+              AND g.release_date IS NOT NULL
+              {platformFilter}
+            ORDER BY g.release_date DESC, g.game_title
+            OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+
+        var games = (await connection.QueryAsync<GameSearchRowWithAggregates>(sql, parameters, commandTimeout: 120)).ToList();
+
+        // Parse aggregated data
+        foreach (var game in games)
+        {
+            game.ParseAggregatedData();
+        }
+
+        var result = new GameSearchResult
+        {
+            Games = games.Select(MapToGameDto).ToList(),
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize,
+            TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
+        };
+
+        _cache.Set(cacheKey, result, UpcomingGamesCacheExpiration);
+
+        return result;
+    }
+
+    /// <summary>
     /// Get game recommendations based on genres, developers, publishers (cached for 30 minutes)
     /// </summary>
     public async Task<List<GameDto>> GetRecommendationsAsync(int gameId, int limit = 10)
@@ -906,6 +1024,9 @@ public class SqlGameService
 
     private static string GetUpcomingCacheKey(int days, int? platformId, int page, int pageSize) =>
         $"upcoming_{days}_{platformId}_{page}_{pageSize}";
+
+    private static string GetRecentCacheKey(int? platformId, int page, int pageSize) =>
+        $"recent_{platformId}_{page}_{pageSize}";
 
     private static string GetRecommendationsCacheKey(int gameId, int limit) =>
         $"recs_{gameId}_{limit}";

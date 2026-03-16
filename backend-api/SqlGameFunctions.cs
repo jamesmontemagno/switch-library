@@ -220,6 +220,37 @@ public class SqlGameFunctions
     }
 
     /// <summary>
+    /// Get recently released games from SQL database
+    /// Route: GET /api/recent
+    /// Query params: platformId, page, pageSize
+    /// </summary>
+    [Function("GetRecentGames")]
+    public async Task<IActionResult> GetRecentGames(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "recent")] HttpRequest req)
+    {
+        try
+        {
+            int? platformId = int.TryParse(req.Query["platformId"], out var pId) ? pId : null;
+            int page = int.TryParse(req.Query["page"], out var p) ? p : 1;
+            int pageSize = int.TryParse(req.Query["pageSize"], out var ps) ? Math.Min(ps, 50) : 20;
+
+            _logger.LogInformation("SQL GetRecent: platform={Platform}, page={Page}", platformId, page);
+
+            var result = await _gameService.GetRecentGamesAsync(platformId, page, pageSize);
+
+            return new OkObjectResult(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting recent games from SQL");
+            return new ObjectResult(new { error = "Failed to get recent games", message = ex.Message })
+            {
+                StatusCode = (int)HttpStatusCode.InternalServerError
+            };
+        }
+    }
+
+    /// <summary>
     /// Get game recommendations based on a source game
     /// Route: GET /api/recommendations/{gameId}
     /// Query params: limit

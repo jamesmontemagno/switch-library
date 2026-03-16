@@ -649,6 +649,53 @@ export async function getUpcomingGames(
   }
 }
 
+// Get recently released games (release date in the past, ordered newest first)
+export async function getRecentGames(
+  platformId?: number,
+  page: number = 1,
+  pageSize: number = 20
+): Promise<UpcomingGamesResult> {
+  logger.apiUsage('SQL.getRecentGames', { platformId, page });
+
+  try {
+    const params = new URLSearchParams();
+    if (platformId) params.set('platformId', platformId.toString());
+    params.set('page', page.toString());
+    params.set('pageSize', pageSize.toString());
+
+    const response = await fetch(`${API_BASE_URL}/recent?${params}`);
+
+    if (!response.ok) {
+      logger.error('Recent games fetch error', new Error(`Status ${response.status}`));
+      throw new Error(`Recent games error: ${response.status}`);
+    }
+
+    const data: SqlSearchResult = await response.json();
+
+    const games: BulkGameResult[] = data.games.map((game: SqlGameDto) => ({
+      id: game.id,
+      title: game.gameTitle,
+      releaseDate: game.releaseDate,
+      platform: game.platformName || (game.platform === PLATFORM_IDS.NINTENDO_SWITCH_2 ? 'Nintendo Switch 2' : 'Nintendo Switch'),
+      platformId: game.platform,
+      region_id: game.regionId,
+      coverUrl: game.boxart?.thumb || game.boxart?.small || game.boxart?.medium,
+      overview: game.overview,
+    }));
+
+    return {
+      games,
+      totalCount: data.totalCount,
+      page: data.page,
+      pageSize: data.pageSize,
+      totalPages: data.totalPages,
+    };
+  } catch (error) {
+    logger.error('Failed to get recent games', error);
+    return { games: [], totalCount: 0, page: 1, pageSize, totalPages: 0 };
+  }
+}
+
 // Get game recommendations
 export async function getGameRecommendations(
   gameId: number,
