@@ -89,7 +89,9 @@
   --tag-digital-bg: #e0e8f4;
   --tag-digital-text: #2d4a6a;
   --tag-switch-bg: #e60012;
+  --tag-switch-text: #ffffff;
   --tag-switch2-bg: #1a1a1a;
+  --tag-switch2-text: #ffffff;
   
   /* Apply base colors */
   color: var(--text-primary);
@@ -164,7 +166,9 @@
   --tag-digital-bg: #1a2a3a;
   --tag-digital-text: #8fa7c7;
   --tag-switch-bg: #e60012;
+  --tag-switch-text: #ffffff;
   --tag-switch2-bg: #444444;
+  --tag-switch2-text: #ffffff;
   
   /* Apply base colors */
   color: var(--text-primary);
@@ -240,7 +244,9 @@
     --tag-digital-bg: #1a2a3a;
     --tag-digital-text: #8fa7c7;
     --tag-switch-bg: #e60012;
+    --tag-switch-text: #ffffff;
     --tag-switch2-bg: #444444;
+    --tag-switch2-text: #ffffff;
     
     /* Apply base colors */
     color: var(--text-primary);
@@ -316,7 +322,9 @@
   --tag-digital-bg: #e40521;
   --tag-digital-text: #ffffff;
   --tag-switch-bg: #e40521;
+  --tag-switch-text: #ffffff;
   --tag-switch2-bg: #404048;
+  --tag-switch2-text: #ffffff;
   
   /* Apply base colors */
   color: var(--text-primary);
@@ -391,7 +399,9 @@
   --tag-digital-bg: #d4a520;
   --tag-digital-text: #2a1010;
   --tag-switch-bg: #ce2029;
+  --tag-switch-text: #ffffff;
   --tag-switch2-bg: #6b4020;
+  --tag-switch2-text: #ffffff;
   
   /* Apply base colors */
   color: var(--text-primary);
