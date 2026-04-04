@@ -7,6 +7,7 @@ export interface SEOProps {
   url?: string;
   type?: string;
   keywords?: string;
+  noindex?: boolean;
 }
 
 const defaultSEO: Required<SEOProps> = {
@@ -16,6 +17,7 @@ const defaultSEO: Required<SEOProps> = {
   url: 'https://myswitchlibrary.com/',
   type: 'website',
   keywords: 'Nintendo Switch, Switch 2, game collection, game tracker, library manager, Nintendo games, video game collection',
+  noindex: false,
 };
 
 export function useSEO(props: SEOProps = {}) {
@@ -68,6 +70,10 @@ export function useSEO(props: SEOProps = {}) {
       canonical.href = seo.url;
       document.head.appendChild(canonical);
     }
+
+    // Update robots meta tag for noindex pages
+    const robotsContent = props.noindex ? 'noindex, follow' : 'index, follow';
+    updateMetaTag('meta[name="robots"]', robotsContent);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.title, props.description, props.image, props.url, props.type, props.keywords]);
+  }, [props.title, props.description, props.image, props.url, props.type, props.keywords, props.noindex]);
 }

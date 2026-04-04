@@ -33,14 +33,17 @@ export function Auth() {
   const [displayName, setDisplayName] = useState('');
   
   // Dynamic page title based on auth mode
-  useSEO({
-    title: mode === 'signin' ? 'Sign In' : mode === 'signup' ? 'Sign Up' : 'Reset Password',
-    description: mode === 'signin' 
-      ? 'Sign in to your Nintendo Switch Library account'
-      : mode === 'signup'
-      ? 'Create a free account to track your Nintendo Switch games'
-      : 'Reset your account password',
-  });
+  const authTitles: Record<AuthMode, string> = {
+    signin: 'Sign In - My Switch Library',
+    signup: 'Create Account - My Switch Library',
+    reset: 'Reset Password - My Switch Library',
+  };
+  const authDescriptions: Record<AuthMode, string> = {
+    signin: 'Sign in to your Nintendo Switch Library account',
+    signup: 'Create a free account to track your Nintendo Switch games',
+    reset: 'Reset your account password',
+  };
+  useSEO({ title: authTitles[mode], description: authDescriptions[mode] });
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
