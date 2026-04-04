@@ -605,7 +605,7 @@ export function Search() {
           options={[
             { value: 'search', label: 'Search', icon: <FontAwesomeIcon icon={faMagnifyingGlass} /> },
             { value: 'trending', label: 'Trending', icon: <FontAwesomeIcon icon={faFire} /> },
-            { value: 'recent', label: 'Recent Releases', icon: <FontAwesomeIcon icon={faClockRotateLeft} /> },
+            { value: 'recent', label: 'Recent', icon: <FontAwesomeIcon icon={faClockRotateLeft} /> },
           ]}
           value={mode}
           onChange={(value) => {
