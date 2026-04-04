@@ -33,6 +33,7 @@ export function AdminDashboard() {
   useSEO({
     title: 'Admin Dashboard',
     description: 'Admin dashboard with usage statistics and application insights',
+    noindex: true,
   });
 
   useEffect(() => {

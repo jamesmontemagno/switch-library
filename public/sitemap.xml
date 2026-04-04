@@ -7,7 +7,7 @@
   <!-- Homepage -->
   <url>
     <loc>https://myswitchlibrary.com/</loc>
-    <lastmod>2026-01-09</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
@@ -15,7 +15,7 @@
   <!-- Authentication -->
   <url>
     <loc>https://myswitchlibrary.com/auth</loc>
-    <lastmod>2026-01-09</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -23,7 +23,7 @@
   <!-- Library -->
   <url>
     <loc>https://myswitchlibrary.com/library</loc>
-    <lastmod>2026-01-09</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
@@ -31,11 +31,19 @@
   <!-- Search -->
   <url>
     <loc>https://myswitchlibrary.com/search</loc>
-    <lastmod>2026-01-09</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
+
+  <!-- Release Calendar - Upcoming Nintendo Switch Games -->
+  <url>
+    <loc>https://myswitchlibrary.com/calendar</loc>
+    <lastmod>2026-04-04</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
   
-  <!-- Note: Shared library URLs are dynamically generated and indexed as users share -->
+  <!-- Note: Shared library URLs (/shared/:shareId) are dynamically generated and indexed as users share -->
   
 </urlset>
